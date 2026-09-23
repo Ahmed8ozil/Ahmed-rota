@@ -435,7 +435,7 @@ td.tdy .rc{outline:2px solid var(--accent);outline-offset:2px}
 <main class="wrap" id="app"></main>
 <div id="modal-root"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -493,32 +493,36 @@ norm();
 
 const SUPABASE_URL = "https://uprtxqnjajtmvhxwicaq.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwcnR4cW5qYWp0bXZoeHdpY2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxODE0NzYsImV4cCI6MjEwNTc1NzQ3Nn0.DAWlaysrAViFIZS6ss3bWWRWf0lf555KZA_oNiPZjo4";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_TABLE = "roster_data";
+const SUPABASE_USER = "ahmed";
+const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-let saveTimer=null, saving=false, pendingSave=false, dirty=false, gotRemote=false;
+let db=null, docRef=null, saveTimer=null, saving=false, pendingSave=false, dirty=false, gotRemote=false;
 const saveEl=document.getElementById("save");
 function setSave(kind,txt){saveEl.className="save "+kind;saveEl.querySelector("span").textContent=txt;}
 
 function persist(){
   dirty=true;
   try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
-  sbSchedule();
-  if(!docRef){ if(!sbOn()) setSave("local","محفوظ على هذا الجهاز"); return; }
+  try{localStorage.setItem(LS_KEY+":ts",String(Date.now()));}catch(e){}
+  if(!docRef&&!supabaseClient){ setSave("local","محفوظ على هذا الجهاز فقط"); return; }
   setSave("busy","جارٍ الحفظ…");
   clearTimeout(saveTimer); saveTimer=setTimeout(flush,500);
 }
 async function flush(){
-  if(!docRef) return;
+  if(!docRef&&!supabaseClient) return;
   if(saving){pendingSave=true;return;}
   saving=true;
-  try{ await supabaseClient
-        .from("roster_data")
-        .upsert({
-          user_id:"ahmed",
-          data:S,
-          updated_at:new Date()
-        }); dirty=false; setSave("","محفوظ"); }
-  catch(e){ setSave("local", e&&e.code==="quota_exceeded"?"امتلأت المساحة":"تعذّر الحفظ — محفوظ محلياً"); }
+  try{
+    if(docRef){ await docRef.set(JSON.parse(JSON.stringify(S))); }
+    else {
+      const now=new Date().toISOString();
+      const {error}=await supabaseClient.from(SUPABASE_TABLE).upsert({user_id:SUPABASE_USER,data:S,updated_at:now},{onConflict:"user_id"});
+      if(error) throw error;
+      try{localStorage.setItem(LS_KEY+":synced",now);}catch(e){}
+    }
+    dirty=false; setSave("","محفوظ في Supabase"); }
+  catch(e){ console.error("Supabase save:",e); setSave("local", sbErrText(e)); }
   saving=false;
   if(pendingSave){pendingSave=false;flush();}
 }
@@ -569,22 +573,35 @@ const app=document.getElementById("app");
 
 document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]"); if(!b) return; tab=b.dataset.tab; try{localStorage.setItem(LS_KEY+":tab",tab);}catch(e){} render();});
 
+function sbErrText(e){
+  const m=(e&&(e.message||e.msg))||"";
+  if(/row-level security|42501|permission denied/i.test(m+(e&&e.code||""))) return "Supabase رفض الحفظ — فعّلي سياسة RLS للجدول";
+  if(/relation .* does not exist|42P01|Could not find the table/i.test(m+(e&&e.code||""))) return "جدول roster_data غير موجود في Supabase";
+  if(/Failed to fetch|NetworkError|network/i.test(m)) return "لا يوجد اتصال — محفوظ على الجهاز";
+  return "تعذّر الحفظ في Supabase — محفوظ على الجهاز";
+}
 async function loadSupabase(){
+  if(!supabaseClient){ setSave("local","تعذّر تحميل مكتبة Supabase — محفوظ على الجهاز"); return; }
+  setSave("busy","جارٍ التحميل من Supabase…");
   try{
-    const {data,error}=await supabaseClient
-      .from("roster_data")
-      .select("*")
-      .eq("user_id","ahmed")
-      .single();
-
-    if(data && data.data){
-      S=data.data;
-      norm();
+    const {data,error}=await supabaseClient.from(SUPABASE_TABLE).select("data,updated_at").eq("user_id",SUPABASE_USER).maybeSingle();
+    if(error) throw error;
+    let localTs=0, synced=""; try{ localTs=+localStorage.getItem(LS_KEY+":ts")||0; synced=localStorage.getItem(LS_KEY+":synced")||""; }catch(e){}
+    if(data && data.data && data.data.types){
+      const remoteTs=Date.parse(data.updated_at)||0;
+      const localUnsynced = localTs && (!synced || localTs > Date.parse(synced)+2000);
+      if(localUnsynced && localTs>remoteTs){ await flush(); }
+      else {
+        S=data.data; norm(); viewStart=S.start;
+        try{ localStorage.setItem(LS_KEY,JSON.stringify(S)); localStorage.setItem(LS_KEY+":synced",data.updated_at); localStorage.setItem(LS_KEY+":ts",String(remoteTs)); }catch(e){}
+        render(); setSave("","محفوظ في Supabase");
+      }
+    } else {
+      await flush();   // first time: upload this device's data
     }
   }catch(e){
-    console.log("Supabase load:",e.message);
+    console.error("Supabase load:",e); setSave("local", sbErrText(e));
   }
-  render();
 }
 
 function render(){
@@ -965,7 +982,7 @@ async function sbPull(){
   if(tab==="types") render();
 }
 function sbPanel(){
-  if(window.claude) return "";
+  if(window.claude||supabaseClient) return "";
   const on=!!SB.access;
   return `<section class="panel settings sbp">
     <div class="field" style="grid-column:1/-1"><span class="label">المزامنة مع Supabase</span>
@@ -1277,7 +1294,9 @@ scanRoot.addEventListener("click",e=>{
   const lim=await s.limits().catch(()=>null); sampleImgOK=!!(lim&&lim.images); sampleMax=sampleImgOK?(lim.images.maxCount||1):0; if(sampleImgOK) render(); }catch(e){} })();
 
 /* ---------- boot ---------- */
+render();
 loadSupabase();
+})();
 </script>
 
 </body>
