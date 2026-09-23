@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>روستر أحمد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap">
+<style>
+:root{
+  --ground:#EDF1F2; --surface:#FFFFFF; --surface-2:#F6F8F9; --ink:#10272F; --muted:#5A6F77; --line:#D6DFE2; --line-strong:#B9C7CC;
+  --accent:#0B6E78; --accent-ink:#FFFFFF; --accent-soft:#DDEFF0;
+  --warn:#B4541A; --warn-soft:#FBEADF; --danger:#B42842; --ok:#1E7F53;
+  --shadow:0 1px 2px rgba(16,39,47,.06),0 6px 20px rgba(16,39,47,.06);
+  --sans:"Readex Pro",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --mono:"Readex Pro",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#0B1618; --surface:#122127; --surface-2:#0F1C21; --ink:#E2EDEF; --muted:#8EA3AA; --line:#22363D; --line-strong:#334B53;
+    --accent:#3DB3BC; --accent-ink:#06191C; --accent-soft:#143339;
+    --warn:#F0955A; --warn-soft:#3A2518; --danger:#F07088; --ok:#4FC28D;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0B1618; --surface:#122127; --surface-2:#0F1C21; --ink:#E2EDEF; --muted:#8EA3AA; --line:#22363D; --line-strong:#334B53;
+  --accent:#3DB3BC; --accent-ink:#06191C; --accent-soft:#143339;
+  --warn:#F0955A; --warn-soft:#3A2518; --danger:#F07088; --ok:#4FC28D;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:0 48px}
+.num,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1180px;margin:0 auto;padding-inline:16px;display:flex;align-items:center;gap:16px;min-height:60px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;white-space:nowrap}
+.brand-mark{width:30px;height:30px;border-radius:7px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.02em}
+.brand small{display:block;font-weight:500;color:var(--muted);font-size:11.5px;font-family:var(--mono);letter-spacing:.06em}
+nav.tabs{display:flex;gap:2px;margin-inline-start:auto;overflow-x:auto;scrollbar-width:none}
+nav.tabs button{background:none;border:0;padding:18px 12px 16px;border-bottom:2px solid transparent;color:var(--muted);font-weight:500;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.save{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.save i{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+.save.busy i{background:var(--warn)} .save.local i{background:var(--line-strong)}
+@media (max-width:760px){ .top-in{gap:0 12px} nav.tabs{order:3;width:100%;margin:0} nav.tabs button{padding:10px 10px 10px} .save{margin-inline-start:auto} }
+
+h1{font-size:22px;margin:0;font-weight:700;text-wrap:balance}
+h2{font-size:15px;margin:0;font-weight:600}
+.eyebrow{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--mono)}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:24px 0 16px}
+.page-head p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:7px;padding:7px 13px;font-weight:500;font-size:13.5px;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,var(--line))}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:7px;width:34px;height:34px;display:grid;place-items:center;font-family:var(--mono)}
+
+.banner{margin-top:18px;border:1px dashed var(--line-strong);background:var(--surface-2);border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:13.5px}
+.banner b{font-weight:600}
+.banner .sp{flex:1;min-width:200px}
+
+/* shift chip */
+.chip{--c:#999;display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:24px;padding:0 7px;border-radius:5px;background:var(--c);color:var(--ct,#fff);font-family:var(--mono);font-weight:600;font-size:12.5px;letter-spacing:.02em}
+.chip.lg{min-width:62px;height:44px;font-size:20px;border-radius:8px}
+.chip.ghost{background:transparent;color:var(--muted);border:1px dashed var(--line-strong)}
+.strike{text-decoration:line-through;opacity:.7}
+
+/* dashboard */
+.dash{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px}
+@media (max-width:860px){.dash{grid-template-columns:1fr}}
+.today{padding:20px;display:flex;flex-direction:column;gap:16px;border-inline-start:5px solid var(--c,var(--line));}
+.today-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.today-name{font-size:24px;font-weight:700;line-height:1.2}
+.today-time{direction:ltr;text-align:right;font-family:var(--mono);color:var(--muted);font-size:14px}
+.today-meta{display:flex;gap:8px;flex-wrap:wrap}
+.tag{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
+.tag.changed{background:var(--warn-soft);color:var(--warn);border-color:transparent;font-weight:600}
+.next{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:8px}
+.next-item{display:flex;align-items:center;gap:10px;font-size:13.5px}
+.next-item .d{color:var(--muted);min-width:92px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stat{background:var(--surface);padding:14px 14px 12px;display:flex;flex-direction:column;gap:2px}
+.stat .v{font-family:var(--mono);font-size:26px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:13px;color:var(--muted);font-weight:500;margin-inline-start:3px}
+.stat .l{font-size:12.5px;color:var(--muted)}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.week-strip{margin-top:16px;padding:14px 16px}
+.strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
+.strip-d{border:1px solid var(--line);border-radius:7px;padding:8px 4px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--surface-2);cursor:pointer}
+.strip-d.is-today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.strip-d .dn{font-size:11.5px;color:var(--muted)}
+.strip-d .h{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.bars{margin-top:16px;padding:14px 16px}
+.bar-row{display:grid;grid-template-columns:88px 1fr 64px;gap:10px;align-items:center;font-size:13px;margin-top:8px}
+.bar{height:10px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bar-row .n{font-family:var(--mono);text-align:end;color:var(--muted)}
+
+/* roster */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cycle-nav{display:flex;align-items:center;gap:6px}
+.cycle-nav .lbl{font-family:var(--mono);font-size:13px;min-width:170px;text-align:center}
+.mode{display:flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.mode button{border:0;background:var(--surface);padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted)}
+.mode button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.paint{margin-bottom:12px;padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:10px}
+.paint .chip{cursor:pointer;border:2px solid transparent;height:28px}
+.paint .chip[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:2px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .dot{width:10px;height:10px;border-radius:3px;background:var(--c)}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.grid .dh{font-size:12px;font-weight:600;color:var(--muted);text-align:center;padding:4px 0}
+.wk{grid-column:1/-1;display:flex;justify-content:space-between;align-items:baseline;padding:10px 2px 2px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line)}
+.wk b{font-family:var(--mono);color:var(--ink);font-weight:600}
+.cell{--c:var(--line-strong);position:relative;text-align:start;background:color-mix(in srgb,var(--c) 11%,var(--surface));border:1px solid color-mix(in srgb,var(--c) 32%,var(--line));border-top:4px solid var(--c);border-radius:7px;padding:8px 9px 9px;min-height:112px;display:flex;flex-direction:column;gap:5px;transition:transform .12s ease,box-shadow .12s ease}
+.cell:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.cell.empty{background:var(--surface-2);border-style:dashed;border-top-width:1px}
+.cell.is-today{box-shadow:0 0 0 2px var(--accent)}
+.cell .top-l{display:flex;justify-content:space-between;align-items:baseline;gap:4px}
+.cell .dnum{font-family:var(--mono);font-size:17px;font-weight:600;line-height:1}
+.cell .mon{font-size:11px;color:var(--muted)}
+.cell .day{font-size:11.5px;color:var(--muted);line-height:1.2}
+.cell .nm{font-size:12.5px;font-weight:600;line-height:1.2}
+.cell .tm{font-family:var(--mono);font-size:11px;color:var(--muted);direction:ltr;text-align:right}
+.cell .hrs{font-family:var(--mono);font-size:12px;margin-top:auto}
+.cell .flag{position:absolute;top:6px;inset-inline-end:6px;font-size:10px;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:4px;padding:0 5px;line-height:17px}
+.cell .was{font-size:10.5px;color:var(--muted);display:flex;gap:4px;align-items:center}
+.cell .was .chip{height:16px;min-width:22px;font-size:10px;padding:0 4px}
+.cell .note-dot{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:700px){
+  .grid{gap:4px}
+  .cell{min-height:86px;padding:6px 5px;gap:3px}
+  .cell .tm,.cell .nm,.cell .note-dot,.cell .mon,.cell .day{display:none}
+  .cell .dnum{font-size:14px}
+  .cell .chip{min-width:0;padding:0 4px;font-size:11px;height:20px}
+  .cell .was{display:none}
+  .cell .flag{top:3px;inset-inline-end:3px;padding:0 3px;font-size:9px;line-height:14px}
+  .cycle-nav .lbl{min-width:0}
+}
+
+/* tables */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-size:12px;text-align:start;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.arrow{color:var(--muted);font-family:var(--mono)}
+.empty-state{padding:36px 16px;text-align:center;color:var(--muted);font-size:14px}
+.types td input[type=text],.types td input[type=time]{border:1px solid var(--line);background:var(--surface-2);border-radius:6px;padding:5px 8px;width:100%;min-width:70px}
+.types td input.code{font-family:var(--mono);font-weight:600;width:70px;text-transform:uppercase}
+.types input[type=color]{width:38px;height:30px;border:1px solid var(--line);border-radius:6px;padding:2px;background:var(--surface)}
+.settings{margin-top:16px;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.settings .field{display:flex;flex-direction:column;gap:6px}
+.hint{font-size:12.5px;color:var(--muted)}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(8,20,24,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--surface);border-radius:12px;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.m-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.m-body{padding:16px 18px;display:flex;flex-direction:column;gap:16px}
+.m-foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.m-foot .sp{flex:1}
+.label{font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px;display:block}
+.pick{display:flex;flex-wrap:wrap;gap:6px}
+.pick button{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:6px 10px 6px 8px;display:flex;align-items:center;gap:8px;font-size:13px}
+.pick button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:var(--surface)}
+.row2{display:grid;grid-template-columns:1fr 1fr 110px;gap:10px;align-items:end}
+@media (max-width:480px){.row2{grid-template-columns:1fr 1fr}.row2 .calc{grid-column:1/-1}}
+.inp{width:100%;border:1px solid var(--line-strong);background:var(--surface);border-radius:7px;padding:8px 10px}
+textarea.inp{min-height:62px;resize:vertical}
+.calc{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:8px 10px;font-family:var(--mono);text-align:center}
+.cmp{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px}
+.cmp .side{display:flex;flex-direction:column;gap:4px}
+.cmp .t{font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:.04em}
+.hist{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.hist div{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.t12{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.rota{overflow:hidden}
+table.rl{font-size:12px;border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+table.rl th,table.rl td{padding:4px 3px;text-align:center;border-bottom:1px solid var(--line);border-inline-start:1px solid var(--line);white-space:nowrap}
+table.rl th{font-weight:500;font-size:11px;background:var(--surface-2)}
+table.rl th .mono{font-size:10.5px;color:var(--ink);font-weight:600}
+table.rl .sticky{position:sticky;inset-inline-start:0;background:var(--surface);z-index:1;text-align:start;padding-inline:10px;min-width:120px;font-weight:600;font-size:12px}
+table.rl th.sticky{background:var(--surface-2);font-size:11px;color:var(--muted);white-space:normal;max-width:150px}
+table.rl .wks{border-inline-start:2px solid var(--line-strong)}
+table.rl .tdy{background:var(--accent-soft)}
+table.rl tr.oh td{font-family:var(--mono);color:var(--muted);font-size:11px}
+table.rl tr.orow td{font-family:var(--mono);color:var(--muted);font-size:11px}
+table.rl .sum{font-weight:600;min-width:62px;background:var(--surface-2)}
+.rc{--c:var(--line);width:34px;height:30px;border-radius:5px;border:0;background:var(--c);color:var(--ct,var(--muted));font-family:var(--mono);font-weight:600;font-size:11.5px}
+.rc.chg{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--warn)}
+.balp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:16px;padding:0;text-align:start;overflow:hidden;width:100%}
+.balp .bp{padding:12px 14px;display:flex;flex-direction:column;gap:2px;border-inline-start:1px solid var(--line)}
+.balp .bp:first-child{border-inline-start:0}
+.balp .bp .l{font-size:12px;color:var(--muted)}
+.balp .bp .v{font-family:var(--mono);font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+.balp .bp.main{background:var(--accent-soft)}
+.balp .bp.main .v{font-size:17px}
+.balp:hover{box-shadow:var(--shadow)}
+table.ledger td{vertical-align:top}
+table.ledger tr.now td{background:color-mix(in srgb,var(--accent-soft) 60%,transparent)}
+.nowrap{white-space:nowrap}
+.stat .v.bv{font-family:var(--sans);font-size:22px;font-weight:700}
+.balp .bp .v{font-family:var(--sans)!important}
+.adj{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+.adj input{width:58px;border:1px solid var(--line);background:var(--surface-2);border-radius:6px;padding:4px 6px;font-family:var(--mono)}
+.adj-note{margin-top:4px;width:100%;min-width:140px;border:1px solid var(--line);background:var(--surface-2);border-radius:6px;padding:4px 6px;font-size:12px}
+.hidden-mobile{}
+@media (max-width:600px){.hidden-mobile{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---- v4 refresh ---- */
+body{font-size:14.5px;letter-spacing:0}
+h1{font-size:24px;font-weight:600;letter-spacing:-.01em}
+.page-head{align-items:center;margin:22px 0 14px}
+.page-head p{font-size:13px}
+.num,.mono{font-variant-numeric:tabular-nums lining-nums}
+.chip{font-weight:600;letter-spacing:0;border-radius:6px}
+.brand small{font-family:var(--sans);letter-spacing:.12em;font-size:10.5px}
+.lbl{font-size:12.5px;color:var(--muted)}
+.dash{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);align-items:start}
+.today{gap:14px}
+.today-name{font-size:26px;font-weight:600}
+.today-time{direction:rtl;text-align:start;font-family:var(--sans);font-size:13.5px}
+.strip{margin-top:4px;gap:6px}
+.strip-d{padding:8px 2px 10px;gap:5px;background:var(--surface)}
+.strip-d .dn{font-size:11px}
+.strip-d .dd{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.side{display:flex;flex-direction:column;gap:14px}
+.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.stat{padding:14px 16px}
+.stat .v{font-family:var(--sans);font-size:28px;font-weight:600}
+.stat .v small{font-size:14px}
+.balp{margin-top:0}
+.balp .bp .v{font-weight:600}
+/* roster header */
+.page-head h1+.cycle-nav{margin-top:6px}
+.cycle-nav .lbl{font-family:var(--sans);font-size:13.5px;min-width:0;text-align:start;color:var(--muted)}
+.icon-btn{font-family:var(--sans);font-size:18px;line-height:1;width:30px;height:30px;border-radius:50%}
+.mode button{font-size:13px;padding:6px 14px}
+.mode{border-radius:999px}
+.mode button[aria-pressed="true"]{border-radius:999px}
+.sumrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.sumrow>div{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 16px;display:flex;align-items:baseline;gap:8px}
+.sumrow .k{font-size:12px;color:var(--muted)}
+.sumrow b{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.sumrow b.pos{color:var(--ok)} .sumrow b.neg{color:var(--danger)}
+.paint{background:var(--surface);border-color:var(--line)}
+/* grid cells */
+.grid{gap:8px}
+.grid .dh{font-size:12px;font-weight:500;padding:0 0 2px}
+.wk{padding:12px 4px 4px;border:0;font-size:12px}
+.wk span:last-child{font-weight:500;color:var(--ink)}
+.cell{border:1px solid var(--line);border-top:0;background:var(--surface);border-radius:10px;min-height:96px;padding:10px;gap:6px;box-shadow:inset 0 3px 0 var(--c)}
+.cell.wkend{background:var(--surface-2)}
+.cell.empty{border:1px dashed var(--line-strong);box-shadow:none;background:transparent}
+.cell.is-today{box-shadow:inset 0 3px 0 var(--c),0 0 0 2px var(--accent)}
+.c-top{display:flex;justify-content:space-between;align-items:center}
+.cell .dnum{font-family:var(--sans);font-size:18px;font-weight:600}
+.cell .flag{position:static;font-size:10.5px;font-weight:600;line-height:18px;padding:0 7px;border-radius:999px}
+.c-shift{display:flex;align-items:center;gap:6px;min-width:0}
+.cell .nm{unicode-bidi:plaintext;font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell .tm{font-family:var(--sans);font-size:11px;text-align:start;margin-top:auto}
+.c-empty{margin:auto;color:var(--line-strong);font-size:22px;font-weight:300}
+@media (max-width:700px){ .grid{gap:4px} .cell{min-height:64px;padding:6px 4px;gap:4px;border-radius:8px} .cell .nm,.cell .tm{display:none} .cell .dnum{font-size:13px} .c-top{justify-content:center} .c-shift{justify-content:center} .cell .flag{font-size:0;width:7px;height:7px;padding:0;background:var(--warn);position:absolute;top:5px;inset-inline-end:5px} }
+/* rota line */
+.rota{padding:10px 6px}
+table.rl{border-collapse:separate;border-spacing:2px 0;margin:0 auto}
+table.rl th,table.rl td{border:0;padding:4px 1px;text-align:center}
+table.rl th{background:transparent;font-weight:400}
+table.rl th .wd{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+table.rl th .dn{display:block;font-size:14px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+table.rl .we{background:var(--surface-2)}
+table.rl th.we{border-radius:8px 8px 0 0} table.rl td.we{border-radius:0 0 8px 8px}
+table.rl .wks{border-left:0;padding-left:10px}
+table.rl th.tdy .dn{color:var(--accent)}
+table.rl th.tdy .wd{color:var(--accent);font-weight:600}
+.rc{width:32px;height:38px;border-radius:8px;font-family:var(--sans);font-size:12.5px;font-weight:600}
+.rc.none{background:transparent;border:1px dashed var(--line-strong);color:var(--line-strong)}
+.rc.chg{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--warn)}
+td.tdy .rc{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---- v5 dashboard ---- */
+.d-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:28px 0 18px}
+.d-top h1{font-size:28px}
+.d-top p{margin:4px 0 0;color:var(--muted);font-size:13.5px}
+.d-cyc{font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px}
+.d-cyc b{color:var(--ink);font-weight:600}
+.hero{position:relative;overflow:hidden;border-radius:18px;padding:28px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--c) 22%,var(--surface)) 0%,color-mix(in srgb,var(--c) 6%,var(--surface)) 70%);
+  border:1px solid color-mix(in srgb,var(--c) 30%,var(--line))}
+.hero::after{content:"";position:absolute;inset-inline-end:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:color-mix(in srgb,var(--c) 14%,transparent);pointer-events:none}
+.hero-main{display:flex;align-items:center;gap:22px;min-width:0;position:relative;z-index:1}
+.hero-code{width:88px;height:88px;flex:none;border-radius:22px;background:var(--c);color:var(--ct);display:grid;place-items:center;font-size:34px;font-weight:700;box-shadow:0 10px 24px color-mix(in srgb,var(--c) 35%,transparent)}
+.hero-date{font-size:13px;color:var(--muted)}
+.hero-name{font-size:34px;font-weight:700;line-height:1.15;margin:2px 0 4px}
+.hero-time{font-size:14.5px;color:var(--ink);opacity:.85;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hero-time .dot{opacity:.4}
+.hero-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.hero-side{display:flex;flex-direction:column;align-items:flex-end;gap:12px;position:relative;z-index:1}
+.hero-side .btn{background:var(--surface);border-color:transparent;box-shadow:var(--shadow)}
+.clock{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500;background:color-mix(in srgb,var(--surface) 75%,transparent);border-radius:999px;padding:6px 14px}
+.clock i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.clock.now i{background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 25%,transparent)}
+.clock.soon i{background:var(--warn)}
+@media (max-width:600px){ .hero{padding:20px;border-radius:14px} .hero-code{width:64px;height:64px;font-size:26px;border-radius:16px} .hero-name{font-size:26px} .hero-side{align-items:stretch;width:100%} .clock{justify-content:center} }
+.d-sec{margin-top:28px}
+.d-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.d-head h2{font-size:17px}
+.d-head span{font-size:13px;color:var(--muted)} .d-head b{color:var(--ink);font-weight:600}
+.wkrow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+.wday{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 6px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .15s ease,box-shadow .15s ease}
+.wday:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.wday.past{opacity:.55}
+.wday.is-today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);opacity:1}
+.wday.chg .wd-code{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--warn)}
+.wd-n{font-size:12px;color:var(--muted)}
+.wd-d{font-size:20px;font-weight:600;line-height:1}
+.wd-code{width:44px;height:44px;border-radius:12px;background:var(--c);color:var(--ct);display:grid;place-items:center;font-weight:700;font-size:15px;margin-top:4px}
+.wd-h{font-size:11px;color:var(--muted);min-height:15px;direction:ltr;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+@media (max-width:600px){ .wkrow{gap:4px} .wday{padding:10px 2px 8px;border-radius:10px;gap:4px} .wd-n{font-size:10px} .wd-d{font-size:15px} .wd-code{width:32px;height:32px;border-radius:9px;font-size:12px} .wd-h{display:none} }
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:28px}
+@media (max-width:860px){.cards{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:12px;text-align:start}
+.card-l{font-size:13px;color:var(--muted);font-weight:500}
+.big{font-size:38px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.big span{font-size:16px;font-weight:500;color:var(--muted)}
+.big.sm{font-size:28px;line-height:1.2}
+.meter{height:8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.split{display:flex;height:8px;border-radius:999px;overflow:hidden;gap:3px}
+.split i{display:block;border-radius:999px}
+.split .w,.sw.w{background:var(--accent)} .split .o,.sw.o{background:var(--line-strong)} .split .l,.sw.l{background:#6FA86A}
+.card-f{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:auto}
+.card-f.col{flex-direction:column;gap:4px}
+.card-f b{font-weight:600}
+.pos{color:var(--ok)!important} .neg{color:var(--danger)!important}
+.sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:5px}
+.card.bal{background:linear-gradient(160deg,var(--accent-soft),var(--surface));border-color:color-mix(in srgb,var(--accent) 25%,var(--line));cursor:pointer}
+.card.bal:hover{box-shadow:var(--shadow)}
+
+.base-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+.bb-t{display:flex;flex-direction:column;gap:2px}
+.bb-t b{font-weight:600;color:var(--warn)}
+.bb-t span{font-size:12.5px;color:var(--ink);opacity:.8}
+.r-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;font-size:12.5px;color:var(--muted)}
+.linkish{background:none;border:0;padding:0;color:var(--accent);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+
+.sc-modal{width:min(760px,100%)}
+.sc-p{margin:0;font-size:13.5px;line-height:1.7}
+.drop{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed var(--line-strong);border-radius:14px;padding:28px 16px;cursor:pointer;text-align:center;background:var(--surface-2)}
+.drop:hover{border-color:var(--accent)}
+.drop-i{font-size:30px} .drop span{font-size:12.5px;color:var(--muted)}
+.sc-row{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+@media (max-width:500px){.sc-row{grid-template-columns:1fr}}
+.sc-tools{display:flex;gap:8px;flex-wrap:wrap}
+.sc-cv-wrap{width:100%;display:flex;justify-content:center;background:var(--surface-2);border-radius:10px;overflow:hidden}
+#sc-cv{max-width:100%;touch-action:none;cursor:crosshair;display:block}
+.sc-busy{display:flex;flex-direction:column;align-items:center;gap:8px;padding:36px 0;text-align:center}
+.sc-busy span{font-size:12.5px;color:var(--muted)}
+.spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sc-err{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:12px 14px;font-size:13.5px}
+.sc-sum{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.sc-sum .k{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.rv-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.rv-h{font-size:11px;color:var(--muted);text-align:center}
+.rv{border:1px solid var(--line);border-top:3px solid var(--c);border-radius:8px;padding:4px;display:flex;flex-direction:column;gap:3px;background:var(--surface)}
+.rv.unc{border-color:var(--warn);background:var(--warn-soft);border-top-color:var(--warn)}
+.rv-d{font-size:10.5px;color:var(--muted);text-align:center;direction:ltr}
+.rv select{width:100%;border:1px solid var(--line);border-radius:6px;padding:3px 2px;font-weight:600;background:var(--surface);text-align:center}
+.sc-checks{display:flex;flex-direction:column;gap:6px}
+.ck{font-size:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ck.ok{background:color-mix(in srgb,var(--ok) 12%,var(--surface));border-color:color-mix(in srgb,var(--ok) 35%,transparent)}
+.ck.bad{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
+
+.eng{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:12px;padding:12px}
+.eng-o{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;padding:8px 10px;border-radius:8px;cursor:pointer}
+.eng-o.on{background:var(--accent-soft)}
+.eng-o input{margin-top:4px}
+.eng-k{display:grid;grid-template-columns:2fr 1fr;gap:8px;padding-inline-start:30px}
+.eng-k .hint{grid-column:1/-1}
+@media (max-width:500px){.eng-k{grid-template-columns:1fr;padding-inline-start:0}}
+
+.grp-list{display:flex;flex-direction:column;gap:8px}
+.grp{display:grid;grid-template-columns:56px 1fr 110px;grid-template-areas:"img info sel" "more more more";gap:6px 12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--surface)}
+.grp.guess{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));background:var(--warn-soft)}
+.grp>img{grid-area:img;width:56px;height:56px;border-radius:8px;border:1px solid var(--line);background:#fff;image-rendering:auto}
+.grp-i{grid-area:info;display:flex;flex-direction:column}
+.grp-n{font-weight:600;font-size:14px} .grp-s{font-size:12px;color:var(--muted)}
+.grp.guess .grp-s{color:var(--warn)}
+.grp select{grid-area:sel;border:1px solid var(--line-strong);border-radius:8px;padding:8px;font-weight:600;font-size:15px;background:var(--surface);text-align:center}
+.grp-more{grid-area:more;display:flex;gap:4px;flex-wrap:wrap}
+.grp-more img{width:28px;height:28px;border-radius:4px;border:1px solid var(--line);background:#fff}
+.grp-more:empty{display:none}
+
+.sbp{margin-top:16px}
+.sb-on{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:13.5px}
+.dot-ok{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 20%,transparent)}
+.sql{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;overflow-x:auto;white-space:pre;text-align:left}
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="brand-mark">DR</span><span>جدول دوامي<small>DUTY ROSTER</small></span></div>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="dash" aria-selected="true">الرئيسية</button>
+      <button role="tab" data-tab="roster" aria-selected="false">الروستر</button>
+      <button role="tab" data-tab="bal" aria-selected="false">الرصيد</button>
+      <button role="tab" data-tab="log" aria-selected="false">سجل التغييرات</button>
+      <button role="tab" data-tab="types" aria-selected="false">الشفتات والإعدادات</button>
+    </nav>
+    <div class="save local" id="save"><i></i><span>محفوظ على هذا الجهاز</span></div>
+  </div>
+</header>
+
+<main class="wrap" id="app"></main>
+<div id="modal-root"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+"use strict";
+const DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const MONTHS=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const LS_KEY="duty-roster-v2";
+const DOC_PATH="roster/main";
+
+/* ---------- dates (UTC math on ISO strings) ---------- */
+const toD=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(Date.UTC(y,m-1,d));};
+const iso=d=>d.toISOString().slice(0,10);
+const addDays=(s,n)=>{const d=toD(s);d.setUTCDate(d.getUTCDate()+n);return iso(d);};
+const dow=s=>toD(s).getUTCDay();
+const todayIso=()=>{const n=new Date();return iso(new Date(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())));};
+const sundayOf=s=>addDays(s,-dow(s));
+const fmtShort=s=>{const d=toD(s);return d.getUTCDate()+" "+MONTHS[d.getUTCMonth()];};
+const fmtLong=s=>DAYS[dow(s)]+" "+fmtShort(s)+" "+toD(s).getUTCFullYear();
+const fmtStamp=t=>{const d=new Date(t);return d.getDate()+" "+MONTHS[d.getMonth()]+" "+d.getFullYear()+" · "+fmt12(String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"));};
+
+/* ---------- time ---------- */
+function fmt12(t){ if(!t) return ""; let [h,m]=t.split(":").map(Number); const ap=h>=12?"PM":"AM"; h=h%12||12; return h+":"+String(m).padStart(2,"0")+" "+ap; }
+function diffH(a,b){ if(!a||!b) return 0; const [h1,m1]=a.split(":").map(Number),[h2,m2]=b.split(":").map(Number); let x=(h2*60+m2)-(h1*60+m1); if(x<=0) x+=1440; return Math.round(x/6)/10; }
+const fmtH=n=>(Math.round(n*10)/10).toString();
+
+/* ---------- state ---------- */
+const DEFAULT_TYPES=[
+  {code:"M",name:"Morning",start:"07:00",end:"14:00",color:"#E9A91E",work:true},
+  {code:"E",name:"Evening",start:"14:00",end:"21:00",color:"#DD6A34",work:true},
+  {code:"N",name:"Night",start:"21:00",end:"07:00",color:"#3B4FA6",work:true},
+  {code:"O",name:"Off",start:"",end:"",color:"#8E9CA2",work:false},
+  {code:"L",name:"Leave",start:"",end:"",color:"#2A9467",work:false},
+  {code:"SL",name:"Sick Leave",start:"",end:"",color:"#C83D57",work:false},
+  {code:"AL",name:"Annual Leave",start:"",end:"",color:"#6FA86A",work:false},
+  {code:"PO",name:"PO",start:"",end:"",color:"#A77BC4",work:false},
+  {code:"CE",name:"Continuing Education",start:"07:00",end:"14:00",color:"#2B8FB3",work:true},
+  {code:"OC",name:"On Call",start:"",end:"",color:"#5E6B70",work:false},
+  {code:"M1",name:"M1",start:"07:00",end:"14:00",color:"#D94C8A",work:true}
+];
+const DEFAULT_CFG={official:7,weekend:[5,6],unit:"Suhar Hospital · Main Operation Theater",name:"Ahmed Ali Al Mamari",staff:"76221"};
+function sampleState(){
+  const start="2026-09-20";
+  const pat="N N O O M E O M E E E O O O M E O M M1 O E O CE M M N O M".split(" ");
+  const st={v:1,sample:false,cfg:{...DEFAULT_CFG},start,types:JSON.parse(JSON.stringify(DEFAULT_TYPES)),original:{},days:{},log:[]};
+  pat.forEach((c,i)=>{const t=DEFAULT_TYPES.find(x=>x.code===c);st.original[addDays(start,i)]={code:c,start:t.start,end:t.end};});
+  return st;
+}
+function emptyState(keepTypes){
+  return {v:1,sample:false,cfg:(S&&S.cfg)||{...DEFAULT_CFG},start:sundayOf(todayIso()),types:keepTypes||JSON.parse(JSON.stringify(DEFAULT_TYPES)),original:{},days:{},log:[]};
+}
+let S=null;
+try{ const raw=localStorage.getItem(LS_KEY); if(raw) S=JSON.parse(raw);}catch(e){}
+if(!S||!S.types) S=sampleState();
+function norm(){ if(!S.cfg) S.cfg={...DEFAULT_CFG}; if(!S.bal) S.bal={from:"2026-09-20",po:77,hrs:6}; if(!S.adj) S.adj={}; }
+norm();
+
+const SUPABASE_URL = "https://uprtxqnjajtmvhxwicaq.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwcnR4cW5qYWp0bXZoeHdpY2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxODE0NzYsImV4cCI6MjEwNTc1NzQ3Nn0.DAWlaysrAViFIZS6ss3bWWRWf0lf555KZA_oNiPZjo4";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let saveTimer=null, saving=false, pendingSave=false, dirty=false, gotRemote=false;
+const saveEl=document.getElementById("save");
+function setSave(kind,txt){saveEl.className="save "+kind;saveEl.querySelector("span").textContent=txt;}
+
+function persist(){
+  dirty=true;
+  try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
+  sbSchedule();
+  if(!docRef){ if(!sbOn()) setSave("local","محفوظ على هذا الجهاز"); return; }
+  setSave("busy","جارٍ الحفظ…");
+  clearTimeout(saveTimer); saveTimer=setTimeout(flush,500);
+}
+async function flush(){
+  if(!docRef) return;
+  if(saving){pendingSave=true;return;}
+  saving=true;
+  try{ await supabaseClient
+        .from("roster_data")
+        .upsert({
+          user_id:"ahmed",
+          data:S,
+          updated_at:new Date()
+        }); dirty=false; setSave("","محفوظ"); }
+  catch(e){ setSave("local", e&&e.code==="quota_exceeded"?"امتلأت المساحة":"تعذّر الحفظ — محفوظ محلياً"); }
+  saving=false;
+  if(pendingSave){pendingSave=false;flush();}
+}
+
+/* ---------- helpers ---------- */
+const typeOf=c=>S.types.find(t=>t.code===c);
+const cur=d=>S.days[d]||S.original[d]||null;
+function sameShift(a,b){ if(!a&&!b) return true; if(!a||!b) return false; return a.code===b.code&&(a.start||"")===(b.start||"")&&(a.end||"")===(b.end||""); }
+const isChanged=d=>!!S.days[d]&&!sameShift(S.days[d],S.original[d]);
+function hoursOf(e){ if(!e) return 0; const t=typeOf(e.code); if(!t||!t.work) return 0; return diffH(e.start,e.end); }
+function textOn(hex){ const h=(hex||"#888").replace("#",""); const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16); const L=(0.299*r+0.587*g+0.114*b)/255; return L>0.62?"#10272F":"#FFFFFF"; }
+function chip(code,cls){ const t=typeOf(code); const c=t?t.color:"#888"; return `<span class="chip ${cls||""}" style="--c:${c};--ct:${textOn(c)}">${esc(code||"?")}</span>`; }
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function timeRange(e){ return e&&e.start&&e.end? fmt12(e.start)+" – "+fmt12(e.end):""; }
+function shiftLabel(e){ if(!e) return "غير محدد"; const t=typeOf(e.code); return t?t.name:e.code; }
+function isLeave(e){ if(!e) return false; const t=typeOf(e.code); return !!t&&!t.work&&e.code!=="O"&&e.code!=="OC"; }
+function officialOf(d){ return S.cfg.weekend.includes(dow(d))?0:(+S.cfg.official||0); }
+function dueOf(dates){ return dates.reduce((a,d)=>a+(isLeave(cur(d))?0:officialOf(d)),0); }
+function poH(){ return +S.cfg.official||7; }
+function balParts(h){ let a=Math.round(Math.abs(h)*10)/10; const d=Math.floor(a/poH()+1e-9); const r=Math.round((a-d*poH())*10)/10; const parts=[]; if(d) parts.push(d+" يوم"); if(r) parts.push(fmtH(r)+" س"); return parts.length?parts.join(" و "):"0"; }
+function fmtBal(h){ return (h<0?"سالب ":"")+balParts(h); }
+function fmtBalShort(h){ const neg=h<0; let a=Math.round(Math.abs(h)*10)/10; const d=Math.floor(a/poH()+1e-9); const r=Math.round((a-d*poH())*10)/10; return {sign:neg?"−":"",po:d,hrs:r}; }
+function fmtSigned(h){ return h>0?"زيادة "+balParts(h):h<0?"نقص "+balParts(h):"بدون تغيير"; }
+function ledger(){
+  const out=[]; const openH=(+S.bal.po||0)*poH()+(+S.bal.hrs||0);
+  let bal=openH; let st=S.bal.from;
+  const keys=[...Object.keys(S.original),...Object.keys(S.days)].sort();
+  const last=[S.start,keys.length?keys[keys.length-1]:S.start].sort()[1];
+  const today=todayIso();
+  for(let i=0;i<60&&st<=last;i++){
+    const ds=cycleDays(st); const worked=ds.reduce((a,d)=>a+hoursOf(cur(d)),0); const due=dueOf(ds);
+    const has=ds.some(d=>cur(d));
+    const a=S.adj[st]||{}; const man=(+a.po||0)*poH()+(+a.hrs||0);
+    const ot=has?worked-due:0; const old=bal; bal=bal+ot+man;
+    out.push({start:st,end:ds[27],worked,due,ot,man,note:a.note||"",old,fin:bal,has,status:today>ds[27]?"done":today>=st?"now":"next"});
+    st=addDays(st,28);
+  }
+  return {open:openH,rows:out};
+}
+const DAY_EN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const cycleDays=start=>Array.from({length:28},(_,i)=>addDays(start,i));
+
+/* ---------- view state ---------- */
+let tab="dash"; let viewStart=null; let mode="current"; let brush=null; let layout="grid";
+try{const l=localStorage.getItem(LS_KEY+":layout"); if(l) layout=l;}catch(e){}
+try{const t=localStorage.getItem(LS_KEY+":tab"); if(t) tab=t;}catch(e){}
+const app=document.getElementById("app");
+
+document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]"); if(!b) return; tab=b.dataset.tab; try{localStorage.setItem(LS_KEY+":tab",tab);}catch(e){} render();});
+
+async function loadSupabase(){
+  try{
+    const {data,error}=await supabaseClient
+      .from("roster_data")
+      .select("*")
+      .eq("user_id","ahmed")
+      .single();
+
+    if(data && data.data){
+      S=data.data;
+      norm();
+    }
+  }catch(e){
+    console.log("Supabase load:",e.message);
+  }
+  render();
+}
+
+function render(){
+  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===tab)));
+  if(!viewStart) viewStart=S.start;
+  let h="";
+  if(S.sample) h+=`<div class="banner"><div class="sp"><b>هذه بيانات مثال</b> لتري كيف يعمل الموقع. ابدئي جدولك الحقيقي، ثم أدخلي الروستر الأصلي من صفحة «الروستر» بوضع <b>الجدول الأصلي</b>.</div><button class="btn primary" data-act="start-fresh">ابدئي جدولي</button><button class="btn ghost" data-act="keep-sample">إخفاء</button></div>`;
+  h+= tab==="dash"?viewDash(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): viewTypes();
+  app.innerHTML=h;
+}
+
+/* ---------- dashboard ---------- */
+function shiftClock(){
+  // returns {state:"now"|"soon"|"later", text} for the shift in progress or the next one
+  const now=new Date(); const today=todayIso(); const mins=now.getHours()*60+now.getMinutes();
+  const toM=t=>{const [h,m]=t.split(":").map(Number);return h*60+m;};
+  const y=cur(addDays(today,-1));
+  if(y&&y.start&&y.end&&typeOf(y.code)&&typeOf(y.code).work&&toM(y.end)<=toM(y.start)&&mins<toM(y.end))
+    return {state:"now",text:"شفت "+esc(shiftLabel(y))+" جارٍ · باقي "+fmtDur(toM(y.end)-mins)};
+  const e=cur(today);
+  if(e&&e.start&&e.end&&typeOf(e.code)&&typeOf(e.code).work){
+    const s=toM(e.start), en=toM(e.end)<=s?toM(e.end)+1440:toM(e.end);
+    if(mins<s) return {state:"soon",text:"يبدأ بعد "+fmtDur(s-mins)};
+    if(mins<en) return {state:"now",text:"الشفت جارٍ · باقي "+fmtDur(en-mins)};
+  }
+  for(let i=1;i<=14;i++){ const d=addDays(today,i), x=cur(d); if(x&&typeOf(x.code)&&typeOf(x.code).work&&x.start)
+    return {state:"later",text:"الشفت القادم: "+esc(shiftLabel(x))+" · "+(i===1?"غداً":DAYS[dow(d)]+" "+fmtShort(d))+' · <span class="t12">'+fmt12(x.start)+"</span>"}; }
+  return null;
+}
+function fmtDur(m){ const h=Math.floor(m/60), r=m%60; return (h?h+" س ":"")+(r||!h?r+" د":""); }
+function viewDash(){
+  const today=todayIso(); const e=cur(today); const t=e&&typeOf(e.code);
+  const wkStart=sundayOf(today); const wk=Array.from({length:7},(_,i)=>addDays(wkStart,i));
+  const wkH=wk.reduce((a,d)=>a+hoursOf(cur(d)),0);
+  const cyc=cycleDays(S.start); const cycH=cyc.reduce((a,d)=>a+hoursOf(cur(d)),0); const due=dueOf(cyc);
+  let work=0,off=0,leave=0; cyc.forEach(d=>{const x=cur(d); if(!x) return; const ty=typeOf(x.code); if(!ty) return; if(ty.work) work++; else if(x.code==="O") off++; else leave++;});
+  const inCycle=today>=S.start&&today<=addDays(S.start,27);
+  const clk=shiftClock();
+  const L=ledger(); const rNow=L.rows.find(r=>r.start===S.start)||L.rows[L.rows.length-1];
+  const change=rNow?rNow.ot+rNow.man:0; const balNow=rNow?rNow.fin:L.open;
+  const pct=due?Math.min(100,cycH/due*100):0;
+  const col=t?t.color:"#8E9CA2";
+  const tot=Math.max(1,work+off+leave);
+
+  const hero=`<section class="hero" style="--c:${col};--ct:${textOn(col)}">
+    <div class="hero-main">
+      <div class="hero-code">${e?esc(e.code):"—"}</div>
+      <div class="hero-txt">
+        <div class="hero-date">${esc(DAYS[dow(today)])} · ${esc(fmtShort(today))}</div>
+        <div class="hero-name">${esc(shiftLabel(e))}</div>
+        <div class="hero-time">${e&&e.start?`<span class="t12">${esc(timeRange(e))}</span><span class="dot">•</span>${fmtH(hoursOf(e))} ساعات`:(e?"يوم بدون دوام":"لم يُحدَّد شفت لهذا اليوم")}</div>
+        ${isChanged(today)||(e&&e.note)?`<div class="hero-tags">${isChanged(today)?`<span class="tag changed">معدَّل · الأصلي ${esc(S.original[today]?S.original[today].code:"—")}</span>`:""}${e&&e.note?`<span class="tag">${esc(e.note)}</span>`:""}</div>`:""}
+      </div>
+    </div>
+    <div class="hero-side">
+      ${clk?`<div class="clock ${clk.state}"><i></i><span>${clk.text}</span></div>`:""}
+      <button class="btn" data-edit="${today}">تعديل شفت اليوم</button>
+    </div>
+  </section>`;
+
+  const week=`<section class="d-sec">
+    <div class="d-head"><h2>هذا الأسبوع</h2><span>${fmtShort(wk[0])} – ${fmtShort(wk[6])} · <b>${fmtH(wkH)}</b> ساعة</span></div>
+    <div class="wkrow">${wk.map(d=>{const x=cur(d);const ty=x&&typeOf(x.code);const past=d<today;return `<button class="wday ${d===today?"is-today":""} ${past?"past":""} ${isChanged(d)?"chg":""}" data-edit="${d}" style="--c:${ty?ty.color:"var(--line-strong)"};--ct:${textOn(ty?ty.color:"#cccccc")}">
+      <span class="wd-n">${DAYS[dow(d)]}</span><span class="wd-d">${toD(d).getUTCDate()}</span>
+      <span class="wd-code">${x?esc(x.code):"+"}</span>
+      <span class="wd-h">${x&&x.start?fmt12(x.start).replace(":00",""):(x?shiftLabel(x):"")}</span></button>`;}).join("")}</div>
+  </section>`;
+
+  const cards=`<div class="cards">
+    <section class="card">
+      <div class="card-l">ساعات الروستر</div>
+      <div class="big">${fmtH(cycH)}<span> / ${fmtH(due)}</span></div>
+      <div class="meter"><i style="width:${pct}%"></i></div>
+      <div class="card-f"><span>Worked / Due</span><b class="${cycH-due>0?"pos":cycH-due<0?"neg":""}">${cycH-due>0?"زيادة "+fmtH(cycH-due)+" س":cycH-due<0?"نقص "+fmtH(due-cycH)+" س":"مطابق"}</b></div>
+    </section>
+    <section class="card">
+      <div class="card-l">أيام الروستر</div>
+      <div class="big">${work}<span> يوم عمل</span></div>
+      <div class="split"><i class="w" style="flex:${work}"></i><i class="o" style="flex:${off}"></i>${leave?`<i class="l" style="flex:${leave}"></i>`:""}</div>
+      <div class="card-f"><span><i class="sw w"></i>عمل ${work}</span><span><i class="sw o"></i>راحة ${off}</span>${leave?`<span><i class="sw l"></i>إجازة ${leave}</span>`:""}</div>
+    </section>
+    <button class="card bal" data-go="bal">
+      <div class="card-l">الرصيد الحالي</div>
+      <div class="big sm">${fmtBal(balNow)}</div>
+      <div class="card-f col"><span>السابق: ${fmtBal(rNow?rNow.old:L.open)}</span><span class="${change>0?"pos":change<0?"neg":""}">هذا الروستر: ${fmtSigned(change)}</span></div>
+    </button>
+  </div>`;
+
+  return `<div class="d-top"><div><h1>أهلاً ${esc((S.cfg.name||"").split(" ")[0]||"")}</h1><p>${esc(S.cfg.unit||"")}</p></div><div class="d-cyc">${inCycle?`الروستر <b>${fmtShort(S.start)} – ${fmtShort(addDays(S.start,27))}</b>`:`اليوم خارج الروستر الحالي`}</div></div>
+  ${hero}${week}${cards}`;
+}
+function viewBal(){
+  const L=ledger(); const H=poH();
+  const ob=fmtBalShort(L.open);
+  const rows=L.rows.map(r=>{ const a=S.adj[r.start]||{};
+    const t=r.ot+r.man;
+    return `<tr class="${r.status==="now"?"now":""}">
+      <td><div style="font-weight:600;white-space:nowrap">${fmtShort(r.start)} – ${fmtShort(r.end)}</div><div class="hint">${r.status==="done"?"منتهي":r.status==="now"?"الروستر الحالي":"قادم"}${r.has?"":" · بدون جدول"}</div></td>
+      <td class="num">${fmtH(r.worked)}</td><td class="num">${fmtH(r.due)}</td>
+      <td class="num" style="color:${r.ot>0?"var(--ok)":r.ot<0?"var(--danger)":"inherit"}">${r.ot>0?"+":""}${fmtH(r.ot)}</td>
+      <td><div class="adj"><input type="number" step="1" id="aj-po-${r.start}" data-adj="${r.start}" data-f="po" value="${a.po||""}" placeholder="0" aria-label="PO"><span>PO</span><input type="number" step="0.5" id="aj-h-${r.start}" data-adj="${r.start}" data-f="hrs" value="${a.hrs||""}" placeholder="0" aria-label="ساعات"><span>س</span></div><input class="adj-note" id="aj-n-${r.start}" data-adj="${r.start}" data-f="note" value="${esc(a.note||"")}" placeholder="سبب الإضافة / الخصم"></td>
+      <td class="num nowrap">${fmtBal(r.old)}</td>
+      <td class="num nowrap" style="font-weight:600">${fmtBal(r.fin)}</td>
+    </tr>`;}).join("");
+  const last=L.rows.find(r=>r.start===S.start)||L.rows[L.rows.length-1];
+  return `<div class="page-head"><div><h1>الرصيد</h1><p>الرصيد السابق ± Overtime ± الإضافة أو الخصم اليدوي · اليوم (PO) = ${fmtH(H)} ساعات</p></div></div>
+  <div class="stats" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="stat"><span class="v bv">${fmtBal(L.open)}</span><span class="l">الرصيد السابق (قبل ${fmtShort(S.bal.from)}) · ${ob.po} PO + ${fmtH(ob.hrs)} Hrs</span></div>
+    <div class="stat"><span class="v bv" style="color:${last&&last.ot+last.man>0?"var(--ok)":last&&last.ot+last.man<0?"var(--danger)":"inherit"}">${last?fmtSigned(last.ot+last.man):"—"}</span><span class="l">تغيّر الروستر الحالي</span></div>
+    <div class="stat"><span class="v bv">${fmtBal(last?last.fin:L.open)}</span><span class="l">الرصيد الحالي (حسب الروستر) · ${(()=>{const b=fmtBalShort(last?last.fin:L.open);return b.sign+b.po+" PO + "+fmtH(b.hrs)+" Hrs";})()}</span></div>
+  </div>
+  <section class="panel" style="margin-top:16px"><div class="tbl-wrap"><table class="ledger"><thead><tr><th>الروستر</th><th>Worked</th><th>Due</th><th>Overtime</th><th>إضافة / خصم يدوي</th><th>Old</th><th>Final</th></tr></thead><tbody>${rows}</tbody></table></div></section>
+  <section class="panel settings">
+    <div class="field"><span class="label">الرصيد الافتتاحي</span><div class="adj"><input type="number" step="1" id="ob-po" value="${esc(S.bal.po)}" aria-label="PO"><span>PO (يوم)</span><input type="number" step="0.5" id="ob-h" value="${esc(S.bal.hrs)}" aria-label="ساعات"><span>ساعة</span></div><span class="hint">من عمود Balance → Old في الروستر.</span></div>
+    <div class="field"><label class="label" for="ob-from">يبدأ من روستر</label><input class="inp" type="date" id="ob-from" value="${S.bal.from}"><span class="hint">تاريخ بداية أول روستر يُحسب عليه الرصيد (يُضبط على الأحد).</span></div>
+  </section>`;
+}
+
+/* ---------- roster ---------- */
+function viewRoster(){
+  const days=cycleDays(viewStart); const today=todayIso();
+  const isBase=mode==="original";
+  const get=d=>isBase?S.original[d]:cur(d);
+  const total=days.reduce((a,d)=>a+hoursOf(get(d)),0);
+  const due=days.reduce((a,d)=>a+(isLeave(get(d))?0:officialOf(d)),0);
+  const ot=total-due;
+  let g=DAYS.map(d=>`<div class="dh">${d}</div>`).join("");
+  for(let w=0;w<4;w++){
+    const ds=days.slice(w*7,w*7+7);
+    const hh=ds.reduce((a,d)=>a+hoursOf(get(d)),0);
+    g+=`<div class="wk"><span>${fmtShort(ds[0])} – ${fmtShort(ds[6])}</span><span>${fmtH(hh)} ساعة</span></div>`;
+    ds.forEach(d=>{
+      const e=get(d); const t=e&&typeOf(e.code); const ch=!isBase&&isChanged(d);
+      g+=`<button class="cell ${e?"":"empty"} ${d===today?"is-today":""} ${officialOf(d)?"":"wkend"}" style="${t?`--c:${t.color}`:""}" data-cell="${d}" aria-label="${esc(fmtLong(d))}">
+        <div class="c-top"><span class="dnum">${toD(d).getUTCDate()}</span>${ch?'<span class="flag" title="الأصلي: '+esc(S.original[d]?S.original[d].code:"—")+'">معدَّل</span>':""}</div>
+        ${e?`<div class="c-shift">${chip(e.code)}<span class="nm">${esc(shiftLabel(e))}</span></div>${e.start?`<div class="tm t12">${fmt12(e.start)} – ${fmt12(e.end)}</div>`:""}`:'<div class="c-empty">+</div>'}
+      </button>`;
+    });
+  }
+  const line=`<div class="panel rota"><div class="tbl-wrap" dir="ltr"><table class="rl">
+    <thead><tr>${days.map((d,i)=>`<th class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}"><span class="wd">${DAY_EN[dow(d)]}</span><span class="dn">${toD(d).getUTCDate()}</span></th>`).join("")}</tr></thead>
+    <tbody><tr>${days.map((d,i)=>{const e=get(d);const t=e&&typeOf(e.code);const ch=!isBase&&isChanged(d);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}"><button class="rc ${e?"":"none"} ${ch?"chg":""}" data-cell="${d}" title="${esc(fmtLong(d))}${ch&&S.original[d]?" · الأصلي "+esc(S.original[d].code):""}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${e?esc(e.code):"+"}</button></td>`;}).join("")}</tr></tbody>
+  </table></div></div>`;
+  const paint=isBase?`<div class="paint base-bar"><div class="bb-t"><b>تعديل الجدول الأصلي</b><span>التعديل هنا لا يُسجَّل كتغيير. اختاري شفتاً ثم اضغطي على الأيام، أو اضغطي على يوم لتعديله.</span></div><div style="display:flex;gap:8px;flex-wrap:wrap">${scanBtn("btn")}<button class="btn primary" data-mode="current">تم</button></div></div><div class="paint">
+    ${S.types.map(t=>`<span class="chip" role="button" tabindex="0" data-brush="${esc(t.code)}" aria-pressed="${brush===t.code}" style="--c:${t.color};--ct:${textOn(t.color)}">${esc(t.code)}</span>`).join("")}
+    <span class="chip ghost" role="button" tabindex="0" data-brush="__clear" aria-pressed="${brush==="__clear"}">مسح</span></div>`:"";
+  return `<div class="page-head"><div><h1>${isBase?"الجدول الأصلي":"الروستر"}</h1>
+      <div class="cycle-nav"><button class="icon-btn" data-shift="-28" aria-label="الروستر السابق">›</button><span class="lbl">${fmtShort(days[0])} – ${fmtShort(days[27])}</span><button class="icon-btn" data-shift="28" aria-label="الروستر التالي">‹</button>${viewStart!==S.start?`<button class="btn ghost" data-shift="0">الحالي</button>`:""}</div></div>
+    <div class="toolbar">
+      <div class="mode" role="group" aria-label="طريقة العرض"><button data-layout="grid" aria-pressed="${layout==="grid"}">مربعات</button><button data-layout="line" aria-pressed="${layout==="line"}">سطر</button></div>
+    </div></div>
+  <div class="sumrow"><div><span class="k">Worked</span><b>${fmtH(total)}</b></div><div><span class="k">Due</span><b>${fmtH(due)}</b></div><div><span class="k">Overtime</span><b dir="ltr" class="${ot>0?"pos":ot<0?"neg":""}">${ot>0?"+":""}${fmtH(ot)}</b></div></div>
+  ${paint}${layout==="line"?line:`<div class="grid">${g}</div>`}
+  <div class="r-foot">${scanBtn("btn")}${isBase?"":`<button class="linkish" data-mode="original">تعديل الجدول الأصلي يدوياً</button>`}</div>`;
+}
+/* ---------- log ---------- */
+function viewLog(){
+  const rows=[...S.log].sort((a,b)=>b.at.localeCompare(a.at));
+  const body=rows.length?`<div class="tbl-wrap"><table><thead><tr><th>اليوم</th><th>Original Shift</th><th></th><th>Changed Shift</th><th>تاريخ التعديل</th><th>سبب التعديل</th><th></th></tr></thead><tbody>
+    ${rows.map(r=>`<tr>
+      <td><div style="font-weight:600">${esc(fmtShort(r.date))}</div><div class="hint">${DAYS[dow(r.date)]}</div></td>
+      <td>${r.orig?chip(r.orig.code):'<span class="chip ghost">—</span>'} <span class="hint mono t12 hidden-mobile">${esc(timeRange(r.orig))}</span>${r.from&&!sameShift(r.from,r.orig)?`<div class="hint">قبل التعديل: ${esc(r.from.code)}</div>`:""}</td>
+      <td class="arrow">←</td>
+      <td>${chip(r.to.code)} <span class="hint mono t12 hidden-mobile">${esc(timeRange(r.to))}</span>${r.revert?'<div class="hint">استرجاع للأصلي</div>':""}</td>
+      <td class="mono hint" style="white-space:nowrap">${esc(fmtStamp(r.at))}</td>
+      <td>${r.reason?esc(r.reason):'<span class="hint">—</span>'}${r.note?`<div class="hint">📝 ${esc(r.note)}</div>`:""}</td>
+      <td><button class="btn ghost" data-dellog="${esc(r.id)}">حذف</button></td>
+    </tr>`).join("")}</tbody></table></div>`
+    :`<div class="empty-state">لا توجد تغييرات مسجّلة بعد.<br>أي تعديل على شفت من صفحة الروستر يظهر هنا مع الشفت الأصلي والسبب.</div>`;
+  return `<div class="page-head"><div><h1>سجل التغييرات</h1><p>${rows.length} تعديل</p></div></div><section class="panel">${body}</section>`;
+}
+
+/* ---------- types & settings ---------- */
+function viewTypes(){
+  const used=new Set([...Object.values(S.original).map(x=>x.code),...Object.values(S.days).map(x=>x.code)]);
+  return `<div class="page-head"><div><h1>الشفتات والإعدادات</h1></div><button class="btn primary" data-act="add-type">+ شفت جديد</button></div>
+  <section class="panel types"><div class="tbl-wrap"><table><thead><tr><th>اللون</th><th>الرمز</th><th>الاسم</th><th>البداية</th><th>النهاية</th><th>الساعات</th><th>يُحسب دوام</th><th></th></tr></thead><tbody>
+  ${S.types.map((t,i)=>`<tr>
+    <td><input type="color" id="tc-${i}" value="${esc(t.color)}" data-ti="${i}" data-f="color" aria-label="لون ${esc(t.code)}"></td>
+    <td><input type="text" id="tk-${i}" class="code" value="${esc(t.code)}" maxlength="4" data-ti="${i}" data-f="code"></td>
+    <td><input type="text" id="tn-${i}" value="${esc(t.name)}" data-ti="${i}" data-f="name"></td>
+    <td><input type="time" id="ts-${i}" value="${esc(t.start)}" data-ti="${i}" data-f="start"></td>
+    <td><input type="time" id="te-${i}" value="${esc(t.end)}" data-ti="${i}" data-f="end"></td>
+    <td class="mono">${t.work&&t.start&&t.end?fmtH(diffH(t.start,t.end)):"0"}</td>
+    <td><input type="checkbox" id="tw-${i}" ${t.work?"checked":""} data-ti="${i}" data-f="work" aria-label="يُحسب دوام"></td>
+    <td>${used.has(t.code)?'<span class="hint">مستخدم</span>':`<button class="btn ghost" data-deltype="${i}">حذف</button>`}</td>
+  </tr>`).join("")}</tbody></table></div></section>
+  <section class="panel settings">
+    <div class="field"><label class="label" for="set-start">بداية الروستر (الأحد)</label><input class="inp" type="date" id="set-start" value="${S.start}"><span class="hint">أي تاريخ تختارينه يُضبط تلقائياً على الأحد في نفس الأسبوع. الروستر: ${fmtShort(S.start)} – ${fmtShort(addDays(S.start,27))}</span></div>
+    <div class="field"><label class="label" for="set-name">الاسم</label><input class="inp" id="set-name" value="${esc(S.cfg.name||"")}"><label class="label" for="set-staff" style="margin-top:6px">St.No</label><input class="inp" id="set-staff" value="${esc(S.cfg.staff||"")}"><label class="label" for="set-unit" style="margin-top:6px">المستشفى / القسم</label><input class="inp" id="set-unit" value="${esc(S.cfg.unit)}"><label class="label" for="set-off" style="margin-top:6px">Official hours لكل يوم دوام رسمي</label><input class="inp" type="number" min="0" step="0.5" id="set-off" value="${esc(S.cfg.official)}"><span class="hint">تُحسب Due = الساعات الرسمية × أيام الدوام الرسمي (بدون الجمعة والسبت وأيام الإجازة). Overtime = Worked − Due.</span></div>
+    <div class="field"><span class="label">روستر جديد (28 يوم تالية)</span><div style="display:flex;gap:8px;flex-wrap:wrap">${scanBtn("btn primary")}<button class="btn" data-act="next-copy">بدء روستر جديد بنفس النمط</button><button class="btn" data-act="next-empty">بدء روستر فارغ</button></div><span class="hint">الروستر السابق وسجله يبقيان محفوظين ويمكن الرجوع لهما بالأسهم في صفحة الروستر.</span></div>
+    <div class="field"><span class="label">إعادة ضبط</span><div><button class="btn danger" data-act="wipe" id="wipe-btn">مسح كل البيانات</button></div><span class="hint">يحذف الروستر والسجل ويُبقي أنواع الشفتات.</span></div>
+  </section>${sbPanel()}`;
+}
+
+/* ---------- modal ---------- */
+const mroot=document.getElementById("modal-root");
+let M=null;
+function openEdit(date){
+  const base=mode==="original"&&tab==="roster";
+  const e=base?S.original[date]:cur(date);
+  M={date,base,code:e?e.code:null,start:e?e.start||"":"",end:e?e.end||"":"",note:(!base&&S.days[date]&&S.days[date].note)||"",reason:""};
+  drawModal();
+}
+function drawModal(){
+  if(!M){mroot.innerHTML="";return;}
+  const o=S.original[M.date]; const d=M.date; const hist=S.log.filter(l=>l.date===d).sort((a,b)=>a.at.localeCompare(b.at));
+  const t=M.code&&typeOf(M.code); const h=t&&t.work?diffH(M.start,M.end):0;
+  const newE={code:M.code,start:M.start,end:M.end};
+  const willChange=!M.base&&M.code&&!sameShift(newE,cur(d));
+  mroot.innerHTML=`<div class="overlay" data-close="1"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <div class="m-head"><div><div class="eyebrow">${M.base?"الجدول الأصلي":"تعديل شفت"}</div><h2 id="m-title" style="font-size:18px">${esc(fmtLong(d))}</h2></div><button class="icon-btn" data-close="1" aria-label="إغلاق">✕</button></div>
+    <div class="m-body">
+      ${!M.base?`<div class="cmp"><div class="side"><span class="t">ORIGINAL SHIFT</span><div>${o?chip(o.code):'<span class="chip ghost">—</span>'} <span class="hint mono t12">${esc(timeRange(o))}</span></div></div><span class="arrow">←</span><div class="side"><span class="t">${willChange||isChanged(d)?"CHANGED SHIFT":"CURRENT"}</span><div>${M.code?chip(M.code):'<span class="chip ghost">—</span>'} <span class="hint mono t12">${esc(timeRange(newE))}</span></div></div></div>`:""}
+      <div><span class="label">الشفت</span><div class="pick">${S.types.map(x=>`<button data-pick="${esc(x.code)}" aria-pressed="${M.code===x.code}">${chip(x.code)}<span>${esc(x.name)}</span></button>`).join("")}</div></div>
+      <div class="row2">
+        <div><label class="label" for="m-start">وقت البداية</label><input class="inp" type="time" id="m-start" value="${esc(M.start)}"></div>
+        <div><label class="label" for="m-end">وقت النهاية</label><input class="inp" type="time" id="m-end" value="${esc(M.end)}"></div>
+        <div><span class="label">الساعات</span><div class="calc" id="m-h">${fmtH(h)}</div></div>
+      </div>
+      ${!M.base?`<div><label class="label" for="m-reason">سبب التغيير</label><input class="inp" id="m-reason" placeholder="مثال: تبديل مع زميلة، طلب المشرفة، تغطية نقص…" value="${esc(M.reason)}"></div>
+      <div><label class="label" for="m-note">ملاحظة</label><textarea class="inp" id="m-note" placeholder="أي ملاحظة لهذا اليوم">${esc(M.note)}</textarea></div>`:""}
+      ${!M.base&&hist.length?`<div class="hist"><span class="label" style="margin:0">سجل هذا اليوم</span>${hist.map(l=>`<div>${chip(l.from?l.from.code:"—")}<span class="arrow">←</span>${chip(l.to.code)}<span class="mono">${esc(fmtStamp(l.at))}</span>${l.reason?`<span>· ${esc(l.reason)}</span>`:""}</div>`).join("")}</div>`:""}
+    </div>
+    <div class="m-foot">
+      <button class="btn primary" data-act="m-save" ${M.code?"":"disabled"}>حفظ</button>
+      <button class="btn" data-close="1">إلغاء</button>
+      <span class="sp"></span>
+      ${!M.base&&isChanged(d)?`<button class="btn" data-act="m-revert">استرجاع الأصلي</button>`:""}
+      ${M.base&&o?`<button class="btn ghost" data-act="m-clear">مسح اليوم</button>`:""}
+    </div>
+  </div></div>`;
+  const s=document.getElementById("m-start"), en=document.getElementById("m-end");
+  const upd=()=>{M.start=s.value;M.end=en.value;const tt=typeOf(M.code);document.getElementById("m-h").textContent=fmtH(tt&&tt.work?diffH(M.start,M.end):0);};
+  s.addEventListener("input",upd); en.addEventListener("input",upd);
+  const r=document.getElementById("m-reason"), n=document.getElementById("m-note");
+  if(r) r.addEventListener("input",()=>M.reason=r.value);
+  if(n) n.addEventListener("input",()=>M.note=n.value);
+}
+function closeModal(){M=null;drawModal();}
+function saveModal(){
+  const d=M.date; const entry={code:M.code,start:M.start,end:M.end};
+  if(M.base){ S.original[d]=entry; }
+  else{
+    const prev=cur(d);
+    if(!sameShift(entry,prev)){
+      S.log.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),date:d,orig:S.original[d]?{...S.original[d]}:null,from:prev?{code:prev.code,start:prev.start,end:prev.end}:null,to:entry,reason:M.reason.trim(),note:M.note.trim(),at:new Date().toISOString()});
+    }
+    if(sameShift(entry,S.original[d])&&!M.note.trim()) delete S.days[d];
+    else S.days[d]={...entry,note:M.note.trim()};
+  }
+  persist(); closeModal(); render();
+}
+function revertModal(){
+  const d=M.date, prev=cur(d), o=S.original[d];
+  S.log.push({id:Date.now().toString(36),date:d,orig:o?{...o}:null,from:prev?{code:prev.code,start:prev.start,end:prev.end}:null,to:o?{...o}:{code:"—"},reason:M.reason.trim()||"استرجاع الشفت الأصلي",note:"",at:new Date().toISOString(),revert:true});
+  delete S.days[d]; persist(); closeModal(); render();
+}
+
+/* ---------- events ---------- */
+let wipeArm=false;
+document.addEventListener("click",e=>{
+  const el=e.target;
+  if(scanRoot.contains(el)) return;
+  if(mroot.contains(el)){
+    if(el.dataset.close&&el.closest("[data-close]")===el){closeModal();return;}
+    const cl=el.closest("[data-close]"); if(cl&&cl.tagName==="BUTTON"){closeModal();return;}
+    const p=el.closest("[data-pick]"); if(p){ const t=typeOf(p.dataset.pick); M.code=t.code; M.start=t.start; M.end=t.end; drawModal(); return; }
+    const a=el.closest("[data-act]"); if(a){ if(a.dataset.act==="m-save") saveModal(); if(a.dataset.act==="m-revert") revertModal(); if(a.dataset.act==="m-clear"){ delete S.original[M.date]; persist(); closeModal(); render(); } }
+    return;
+  }
+  const go=el.closest("[data-go]"); if(go){tab=go.dataset.go;render();return;}
+  const ed=el.closest("[data-edit]"); if(ed){openEdit(ed.dataset.edit);return;}
+  const cell=el.closest("[data-cell]");
+  if(cell){ const d=cell.dataset.cell;
+    if(mode==="original"&&brush){ if(brush==="__clear") delete S.original[d]; else { const t=typeOf(brush); S.original[d]={code:t.code,start:t.start,end:t.end}; } persist(); render(); return; }
+    openEdit(d); return; }
+  const ly=el.closest("[data-layout]"); if(ly){ layout=ly.dataset.layout; try{localStorage.setItem(LS_KEY+":layout",layout);}catch(e){} render(); return; }
+  const md=el.closest("[data-mode]"); if(md){mode=md.dataset.mode; if(mode!=="original") brush=null; render(); return;}
+  const br=el.closest("[data-brush]"); if(br){ const v=br.dataset.brush; brush=(v===""||brush===v)?null:v; render(); return;}
+  const sh=el.closest("[data-shift]"); if(sh){ const n=+sh.dataset.shift; viewStart=n===0?S.start:addDays(viewStart,n); render(); return;}
+  const dl=el.closest("[data-dellog]"); if(dl){ if(dl.dataset.armed){ S.log=S.log.filter(x=>x.id!==dl.dataset.dellog); persist(); render(); } else { dl.dataset.armed="1"; dl.textContent="تأكيد الحذف"; dl.classList.add("danger"); } return;}
+  const dt=el.closest("[data-deltype]"); if(dt){ S.types.splice(+dt.dataset.deltype,1); persist(); render(); return;}
+  const a=el.closest("[data-act]"); if(!a) return;
+  const act=a.dataset.act;
+  if(act==="scan-open"){ openScan(); return; }
+  if(act==="sb-in"){ sbLogin(false); return; }
+  if(act==="sb-up"){ sbLogin(true); return; }
+  if(act==="sb-sync"){ sbPull(); return; }
+  if(act==="sb-out"){ SB={url:SB.url,key:SB.key,email:SB.email}; sbSave(); sbMsg=""; setSave("local","محفوظ على هذا الجهاز"); render(); return; }
+  if(act==="sb-copy"){ const t=SB_SQL; if(navigator.clipboard) navigator.clipboard.writeText(t).then(()=>{a.textContent="تم النسخ";},()=>{a.textContent="انسخي يدوياً";}); return; }
+  if(act==="start-fresh"){ S=emptyState(S.types); viewStart=S.start; mode="original"; tab="roster"; persist(); render(); }
+  else if(act==="keep-sample"){ S.sample=false; persist(); render(); }
+  else if(act==="add-type"){ let c="X",i=1; while(typeOf(c)) c="X"+(i++); S.types.push({code:c,name:"شفت جديد",start:"08:00",end:"16:00",color:"#5B7FA3",work:true}); persist(); render(); }
+  else if(act==="next-copy"||act==="next-empty"){ const ns=addDays(S.start,28); if(act==="next-copy") cycleDays(S.start).forEach((d,i)=>{ const nd=addDays(ns,i); if(!S.original[nd]&&S.original[d]) S.original[nd]={...S.original[d]}; }); S.start=ns; viewStart=ns; S.sample=false; persist(); tab="roster"; mode="original"; render(); }
+  else if(act==="wipe"){ if(!wipeArm){ wipeArm=true; a.textContent="اضغطي مرة أخرى للتأكيد"; setTimeout(()=>{wipeArm=false;},4000); return;} wipeArm=false; S=emptyState(S.types); viewStart=S.start; persist(); render(); }
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&M) closeModal();
+  if((e.key==="Enter"||e.key===" ")&&e.target.matches(".paint [data-brush]")){e.preventDefault();e.target.click();}
+});
+app.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.id==="ob-po"){ S.bal.po=+el.value||0; persist(); render(); return; }
+  if(el.id==="ob-h"){ S.bal.hrs=+el.value||0; persist(); render(); return; }
+  if(el.id==="ob-from"&&el.value){ S.bal.from=sundayOf(el.value); persist(); render(); return; }
+  if(el.dataset.adj){ const k=el.dataset.adj, f=el.dataset.f; const a=S.adj[k]||(S.adj[k]={}); a[f]=f==="note"?el.value.trim():(+el.value||0); if(!a.po&&!a.hrs&&!a.note) delete S.adj[k]; persist(); render(); return; }
+  if(el.id==="set-name"){ S.cfg.name=el.value.trim(); persist(); render(); return; }
+  if(el.id==="set-staff"){ S.cfg.staff=el.value.trim(); persist(); render(); return; }
+  if(el.id==="set-unit"){ S.cfg.unit=el.value.trim(); persist(); render(); return; }
+  if(el.id==="set-off"){ S.cfg.official=Math.max(0,+el.value||0); persist(); render(); return; }
+  if(el.id==="set-start"&&el.value){ S.start=sundayOf(el.value); viewStart=S.start; persist(); render(); return; }
+  if(el.dataset.ti!=null){
+    const t=S.types[+el.dataset.ti], f=el.dataset.f;
+    if(f==="work") t.work=el.checked;
+    else if(f==="code"){ const nc=el.value.trim().toUpperCase(); if(!nc||S.types.some(x=>x!==t&&x.code===nc)){ el.value=t.code; return; }
+      const old=t.code; [S.original,S.days].forEach(m=>Object.values(m).forEach(x=>{if(x.code===old)x.code=nc;})); S.log.forEach(l=>[l.orig,l.from,l.to].forEach(x=>{if(x&&x.code===old)x.code=nc;})); t.code=nc; }
+    else t[f]=el.value;
+    persist(); render();
+  }
+});
+
+/* ---------- Supabase sync (standalone file only) ---------- */
+const SB_LS=LS_KEY+":supabase";
+const SB_SQL=`create table if not exists public.roster (
+  user_id uuid primary key default auth.uid() references auth.users on delete cascade,
+  data jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.roster enable row level security;
+create policy "own roster" on public.roster
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);`;
+let SB=(()=>{ try{ return JSON.parse(localStorage.getItem(SB_LS)||"{}"); }catch(e){ return {}; } })();
+let sbTimer=null, sbBusy=false, sbAgain=false, sbMsg="";
+function sbSave(){ try{ localStorage.setItem(SB_LS,JSON.stringify(SB)); }catch(e){} }
+const sbOn=()=>!window.claude&&SB.url&&SB.key&&SB.access;
+function sbBase(){ return String(SB.url||"").trim().replace(/\/+$/,""); }
+async function sbAuth(path,body){
+  const r=await fetch(sbBase()+"/auth/v1/"+path,{method:"POST",headers:{"apikey":SB.key,"content-type":"application/json"},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok) throw {msg:j.error_description||j.msg||j.message||("خطأ "+r.status)};
+  return j;
+}
+function sbTakeSession(j){ SB.access=j.access_token; SB.refresh=j.refresh_token; SB.uid=j.user&&j.user.id; SB.email=j.user&&j.user.email; sbSave(); }
+async function sbRefresh(){ const j=await sbAuth("token?grant_type=refresh_token",{refresh_token:SB.refresh}); sbTakeSession(j); }
+async function sbFetch(path,opt,retry){
+  const o=Object.assign({},opt||{}); o.headers=Object.assign({"apikey":SB.key,"Authorization":"Bearer "+SB.access,"content-type":"application/json"},o.headers||{});
+  const r=await fetch(sbBase()+"/rest/v1/"+path,o);
+  if(r.status===401&&!retry&&SB.refresh){ await sbRefresh(); return sbFetch(path,opt,true); }
+  if(!r.ok){ const j=await r.json().catch(()=>({})); throw {msg:(j.message||("خطأ "+r.status))+(j.code==="42P01"||/relation .* does not exist/.test(j.message||"")?" — أنشئي جدول roster بالكود من الإعدادات":"")}; }
+  return r.status===204?null:r.json().catch(()=>null);
+}
+function localTs(){ try{ return +localStorage.getItem(LS_KEY+":ts")||0; }catch(e){ return 0; } }
+function setLocalTs(t){ try{ localStorage.setItem(LS_KEY+":ts",String(t)); }catch(e){} }
+async function sbPush(){
+  if(!sbOn()) return; if(sbBusy){ sbAgain=true; return; } sbBusy=true;
+  setSave("busy","جارٍ المزامنة…");
+  try{ const now=new Date().toISOString();
+    await sbFetch("roster?on_conflict=user_id",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({user_id:SB.uid,data:S,updated_at:now})});
+    SB.synced=now; sbSave(); setSave("","متزامن مع Supabase"); sbMsg=""; }
+  catch(e){ sbMsg=e&&e.msg||"تعذّرت المزامنة"; setSave("local","محفوظ محلياً — المزامنة متوقفة"); }
+  sbBusy=false; if(sbAgain){ sbAgain=false; sbPush(); }
+}
+function sbSchedule(){ setLocalTs(Date.now()); if(!sbOn()) return; clearTimeout(sbTimer); setSave("busy","جارٍ المزامنة…"); sbTimer=setTimeout(sbPush,800); }
+async function sbPull(){
+  if(!sbOn()) return;
+  setSave("busy","جارٍ المزامنة…");
+  try{
+    const rows=await sbFetch("roster?select=data,updated_at&user_id=eq."+encodeURIComponent(SB.uid));
+    const row=rows&&rows[0];
+    if(row&&row.data&&row.data.types){
+      const remoteT=Date.parse(row.updated_at)||0;
+      if(remoteT>=localTs()||!SB.synced){ S=row.data; norm(); try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){} setLocalTs(remoteT); viewStart=S.start; SB.synced=row.updated_at; sbSave(); render(); setSave("","متزامن مع Supabase"); }
+      else { await sbPush(); }
+    } else { await sbPush(); }
+    sbMsg="";
+  }catch(e){ sbMsg=e&&e.msg||"تعذّرت المزامنة"; setSave("local","محفوظ محلياً — المزامنة متوقفة"); }
+  if(tab==="types") render();
+}
+function sbPanel(){
+  if(window.claude) return "";
+  const on=!!SB.access;
+  return `<section class="panel settings sbp">
+    <div class="field" style="grid-column:1/-1"><span class="label">المزامنة مع Supabase</span>
+      <span class="hint">احفظي بياناتك في قاعدة Supabase حقك، وافتحي الملف من أي جهاز وتلقين نفس الروستر والرصيد والسجل.</span>
+      ${on?`<div class="sb-on"><span class="dot-ok"></span><span>متصل: <b>${esc(SB.email||"")}</b>${SB.synced?` · آخر مزامنة ${esc(fmtStamp(SB.synced))}`:""}</span><button class="btn" data-act="sb-sync">مزامنة الآن</button><button class="btn ghost" data-act="sb-out">تسجيل الخروج</button></div>`:""}
+      ${sbMsg?`<div class="sc-err" style="margin-top:6px">${esc(sbMsg)}</div>`:""}
+    </div>
+    ${on?"":`
+    <div class="field"><label class="label" for="sb-url">Project URL</label><input class="inp" id="sb-url" dir="ltr" placeholder="https://xxxx.supabase.co" value="${esc(SB.url||"")}">
+      <label class="label" for="sb-key" style="margin-top:6px">anon public key</label><input class="inp" id="sb-key" dir="ltr" placeholder="eyJhbGciOi…" value="${esc(SB.key||"")}">
+      <span class="hint">من Supabase: Project Settings ← API.</span></div>
+    <div class="field"><label class="label" for="sb-email">الإيميل</label><input class="inp" id="sb-email" dir="ltr" type="email" autocomplete="username" value="${esc(SB.email||"")}">
+      <label class="label" for="sb-pass" style="margin-top:6px">كلمة المرور</label><input class="inp" id="sb-pass" dir="ltr" type="password" autocomplete="current-password">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn primary" data-act="sb-in">تسجيل الدخول</button><button class="btn" data-act="sb-up">إنشاء حساب</button></div></div>
+    <div class="field" style="grid-column:1/-1"><details><summary class="label" style="cursor:pointer">إعداد الجدول (مرة واحدة) — انسخي هذا الكود في SQL Editor</summary>
+      <pre class="sql" dir="ltr" id="sb-sql">${esc(SB_SQL)}</pre><button class="btn" data-act="sb-copy">نسخ الكود</button></details></div>`}
+  </section>`;
+}
+async function sbLogin(signup){
+  const url=document.getElementById("sb-url").value.trim(), key=document.getElementById("sb-key").value.trim(), email=document.getElementById("sb-email").value.trim(), pass=document.getElementById("sb-pass").value;
+  if(!url||!key||!email||!pass){ sbMsg="عبّي الرابط والمفتاح والإيميل وكلمة المرور."; render(); return; }
+  SB={url,key,email}; sbSave(); sbMsg="";
+  try{
+    const j=signup?await sbAuth("signup",{email,password:pass}):await sbAuth("token?grant_type=password",{email,password:pass});
+    if(!j.access_token){ sbMsg="تم إنشاء الحساب. أكّدي إيميلك من الرسالة اللي وصلتك ثم سجّلي الدخول (أو أوقفي Confirm email من إعدادات Supabase)."; render(); return; }
+    sbTakeSession(j); render(); await sbPull();
+  }catch(e){ sbMsg=(e&&e.msg)||"تعذّر الاتصال. تأكدي من الرابط والإنترنت."; render(); }
+}
+
+/* ---------- scan roster photo ---------- */
+let sampleFn=null, sampleImgOK=false, sampleMax=0;
+const scanRoot=document.createElement("div"); document.body.appendChild(scanRoot);
+let SC=null;
+function scanAvailable(){ return true; }
+const APIKEY_LS=LS_KEY+":apikey", APIMODEL_LS=LS_KEY+":apimodel";
+function lsGet(k){ try{return localStorage.getItem(k)||"";}catch(e){return "";} }
+function lsSet(k,v){ try{ if(v) localStorage.setItem(k,v); else localStorage.removeItem(k);}catch(e){} }
+function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(lsGet(APIKEY_LS)?"api":"ocr"); }
+function scanBtn(cls){ return scanAvailable()?`<button class="${cls||"btn"}" data-act="scan-open">📷 مسح صورة الروستر</button>`:""; }
+function openScan(){ SC={step:"pick",rot:0,sel:null,img:null,err:"",staff:S.cfg.staff||"",name:S.cfg.name||""}; SC.engine=engineOf(); drawScan(); }
+function closeScan(){ if(SC&&SC.ctl) SC.ctl.abort(); SC=null; scanRoot.innerHTML=""; }
+function rotCanvas(img,rot,maxSide){
+  const w=img.naturalWidth,h=img.naturalHeight; const sc=Math.min(1,(maxSide||4200)/Math.max(w,h));
+  const rw=Math.round(w*sc), rh=Math.round(h*sc); const c=document.createElement("canvas");
+  const sw=rot%180?rh:rw, sh=rot%180?rw:rh; c.width=sw; c.height=sh; const x=c.getContext("2d");
+  x.translate(sw/2,sh/2); x.rotate(rot*Math.PI/180); x.drawImage(img,-rw/2,-rh/2,rw,rh); return c;
+}
+const toBlob=(c,q)=>new Promise(r=>c.toBlob(r,"image/jpeg",q||0.92));
+function drawScan(){
+  if(!SC){scanRoot.innerHTML="";return;}
+  let body="", foot="";
+  if(SC.step==="pick"){
+    body=`<p class="sc-p">صوّري صفحة الروستر اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم.</p>
+      <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري صورة الروستر</b><span>JPG أو PNG</span></label>
+      <input type="file" id="sc-file" accept="image/*" hidden>
+      <div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروستر</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div>
+      ${sampleFn&&sampleImgOK?"":`<div class="eng">
+        <span class="label" style="margin:0">طريقة القراءة</span>
+        ${window.claude?"":`<label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
+        ${SC.engine==="api"?`<div class="eng-k"><input class="inp" id="sc-key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(lsGet(APIKEY_LS))}"><input class="inp" id="sc-model" value="${esc(lsGet(APIMODEL_LS)||"claude-sonnet-5")}" aria-label="Model"><span class="hint">المفتاح يُحفظ على هذا الجهاز فقط ويُرسل مباشرة إلى Anthropic. تحصلين عليه من console.anthropic.com، وتكلفة المسح الواحد قليلة جداً.</span></div>`:""}`}
+        <label class="eng-o ${SC.engine==="ocr"?"on":""}"><input type="radio" name="sc-eng" value="ocr" ${SC.engine==="ocr"?"checked":""}><span><b>قراءة على الجهاز</b> — مجانية وبدون إنترنت، تأكّدين الرموز بضغطات قليلة</span></label>
+      </div>`}
+      ${SC.err?`<div class="sc-err">${esc(SC.err)}</div>`:""}`;
+  } else if(SC.step==="crop"){
+    body=`<p class="sc-p"><b>1.</b> دوّري الصورة حتى يصير الكلام مستقيم. ${SC.engine==="ocr"?`<b>2.</b> اسحبي مستطيل حول <b>خانات الأيام الـ28 فقط</b> في صفّك — من حافة أول يوم إلى حافة آخر يوم، بدون الاسم والمجاميع. كبّري الصورة قبل التصوير إن أمكن.`:`<b>2.</b> اسحبي بإصبعك مستطيل حول <b>صفّك كامل</b> (من اسمك إلى آخر يوم).`}</p>
+      <div class="sc-tools"><button class="btn" data-act="sc-rot" data-r="-90">↺ تدوير</button><button class="btn" data-act="sc-rot" data-r="90">↻ تدوير</button>${SC.sel?`<button class="btn ghost" data-act="sc-clear">مسح التحديد</button>`:""}</div>
+      <div class="sc-cv-wrap"><canvas id="sc-cv"></canvas></div>
+      <div class="hint">${SC.sel?"✓ تم تحديد الصف":(SC.engine==="ocr"?"حدّدي الخانات أولاً":"بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)")}</div>`;
+    foot=`<button class="btn primary" data-act="sc-read" ${SC.engine==="ocr"&&!SC.sel?"disabled":""}>قراءة الروستر</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
+  } else if(SC.step==="busy"){
+    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?"جارٍ تحليل الصورة…":"جارٍ قراءة الروستر…"}</b><span id="sc-prog">${SC.engine==="ocr"?"ثوانٍ قليلة":"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
+    foot=`<button class="btn" data-act="sc-stop">إيقاف</button>`;
+  } else if(SC.step==="review"){
+    const R=SC.res; const st=sundayOf(SC.start||S.start);
+    const H=poH(); let worked=0;
+    SC.codes.forEach(c=>{ const t=typeOf(c); if(t&&t.work) worked+=diffH(t.start,t.end); });
+    const unknown=[...new Set(SC.codes.filter(c=>c&&!typeOf(c)))];
+    const match=R.worked_hours!=null?Math.abs(R.worked_hours-worked)<0.01:null;
+    const cells=SC.codes.map((c,i)=>{ const d=addDays(st,i); const t=typeOf(c); const unc=(R.uncertain||[]).includes(i);
+      return `<div class="rv ${unc?"unc":""}" style="--c:${t?t.color:"var(--line-strong)"}"><span class="rv-d">${DAY_EN[dow(d)]} ${toD(d).getUTCDate()}</span>
+        <select id="rv-${i}" data-rv="${i}" aria-label="${esc(fmtLong(d))}">${[...S.types.map(x=>x.code),...unknown.filter(u=>u),""].filter((v,j,a)=>a.indexOf(v)===j).map(o=>`<option value="${esc(o)}" ${o===c?"selected":""}>${o?esc(o):"—"}</option>`).join("")}</select></div>`;}).join("");
+    body=`<div class="sc-sum">
+        <div><span class="k">الموظف</span><b>${esc(R.name||SC.name||"—")}</b> <span class="hint">${esc(R.staff||SC.staff||"")}</span></div>
+        <div><label class="k" for="sc-start">بداية الروستر (الأحد)</label><input class="inp" type="date" id="sc-start" value="${st}"></div>
+      </div>
+      <div class="rv-grid">${DAY_EN.map(x=>`<div class="rv-h">${x}</div>`).join("")}${cells}</div>
+      <div class="sc-checks">
+        <div class="ck ${match===true?"ok":match===false?"bad":""}">${match===true?"✓":match===false?"⚠":"•"} ساعات العمل المحسوبة <b>${fmtH(worked)}</b>${R.worked_hours!=null?` · في الورقة <b>${fmtH(R.worked_hours)}</b>${match?" — مطابقة":" — غير مطابقة، راجعي الخانات"}`:""}</div>
+        ${(R.uncertain||[]).length?`<div class="ck bad">⚠ ${R.uncertain.length} خانة غير واضحة (محددة بالبرتقالي) — تأكدي منها</div>`:""}
+        ${unknown.filter(u=>u).length?`<div class="ck">رموز جديدة ستُضاف لأنواع الشفتات: <b>${unknown.filter(u=>u).map(esc).join("، ")}</b> — عدّلي ساعاتها من الإعدادات</div>`:""}
+        ${R.notes?`<div class="ck">ملاحظة: ${esc(R.notes)}</div>`:""}
+        ${R.old_balance?`<label class="ck"><input type="checkbox" id="sc-bal" ${SC.useBal?"checked":""}> مطابقة الرصيد مع الورقة: الرصيد السابق <b dir="ltr">${R.old_balance.po} PO + ${R.old_balance.hrs} Hrs</b></label>`:""}
+      </div>`;
+    foot=`<button class="btn primary" data-act="sc-apply">اعتماد وإضافة للجدول الأصلي</button><button class="btn" data-act="sc-back">إعادة المسح</button>`;
+  } else if(SC.step==="groups"){
+    const G=SC.ocr.groups; const opts=c=>["",...S.types.map(t=>t.code)].map(o=>`<option value="${esc(o)}" ${o===c?"selected":""}>${o?esc(o):"فارغ"}</option>`).join("");
+    body=`<p class="sc-p">قسمتُ خانات صفّك إلى <b>${G.length}</b> مجموعات حسب شكل الرمز. اختاري الرمز الصحيح لكل مجموعة — مرة واحدة تكفي لكل الأيام اللي فيها.</p>
+      <div class="grp-list">${G.map((gr,gi)=>`<div class="grp ${gr.sure?"":"guess"}"><img src="${gr.thumb}" alt=""><div class="grp-i"><span class="grp-n">${gr.idx.length} ${gr.idx.length>2&&gr.idx.length<11?"أيام":"يوم"}</span><span class="grp-s">${gr.sure?"تعرّفتُ عليه":"تخمين — تأكدي"}</span></div>
+        <select id="grp-${gi}" data-grp="${gi}" aria-label="رمز المجموعة ${gi+1}">${opts(gr.code)}</select>
+        <div class="grp-more">${gr.idx.slice(1,8).map(i=>`<img src="${SC.ocr.thumbs[i]}" alt="">`).join("")}</div></div>`).join("")}</div>
+      <p class="hint">لو مجموعة فيها رمزين مختلفين، اختاري أي واحد وصحّحي الأيام في الخطوة التالية. الأشكال تُحفظ على جهازك، والمسح القادم يتعرّف عليها تلقائياً.</p>`;
+    foot=`<button class="btn primary" data-act="grp-ok">التالي: مراجعة الأيام</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
+  } else if(SC.step==="error"){
+    body=`<div class="sc-err">${esc(SC.err)}</div>`;
+    foot=`<button class="btn primary" data-act="sc-retry">حاولي مرة أخرى</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
+  }
+  scanRoot.innerHTML=`<div class="overlay" data-scclose="1"><div class="modal sc-modal" role="dialog" aria-modal="true" aria-labelledby="sc-title">
+    <div class="m-head"><h2 id="sc-title" style="font-size:18px">مسح صورة الروستر</h2><button class="icon-btn" data-act="sc-close" aria-label="إغلاق">✕</button></div>
+    <div class="m-body">${body}</div>${foot?`<div class="m-foot">${foot}</div>`:""}</div></div>`;
+  if(SC.step==="pick"){
+    const f=document.getElementById("sc-file");
+    f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
+      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; SC.step="crop"; drawScan(); };
+      img.onerror=()=>{ SC.err="تعذّر فتح الصورة. جرّبي صورة JPG أو PNG."; drawScan(); }; img.src=URL.createObjectURL(file); });
+  }
+  if(SC.step==="pick"){
+    document.querySelectorAll('input[name="sc-eng"]').forEach(r=>r.addEventListener("change",()=>{ SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim(); SC.engine=r.value; drawScan(); }));
+    const k=document.getElementById("sc-key"); if(k) k.addEventListener("change",()=>lsSet(APIKEY_LS,k.value.trim()));
+    const m=document.getElementById("sc-model"); if(m) m.addEventListener("change",()=>lsSet(APIMODEL_LS,m.value.trim()));
+  }
+  if(SC.step==="crop") setupCropCanvas();
+  if(SC.step==="groups") document.querySelectorAll("[data-grp]").forEach(el=>el.addEventListener("change",()=>{ const gr=SC.ocr.groups[+el.dataset.grp]; gr.code=el.value; gr.sure=true; }));
+  if(SC.step==="review"){
+    document.querySelectorAll("[data-rv]").forEach(s=>s.addEventListener("change",()=>{ SC.codes[+s.dataset.rv]=s.value; SC.res.uncertain=(SC.res.uncertain||[]).filter(i=>i!==+s.dataset.rv); drawScan(); }));
+    const si=document.getElementById("sc-start"); si.addEventListener("change",()=>{ if(si.value){ SC.start=sundayOf(si.value); drawScan(); } });
+    const cb=document.getElementById("sc-bal"); if(cb) cb.addEventListener("change",()=>{SC.useBal=cb.checked;});
+  }
+}
+function setupCropCanvas(){
+  const cv=document.getElementById("sc-cv"); const wrap=cv.parentElement;
+  const src=rotCanvas(SC.img,SC.rot,1800);
+  const maxW=wrap.clientWidth||600, maxH=Math.round(window.innerHeight*0.55);
+  const k=Math.min(maxW/src.width,maxH/src.height,1);
+  cv.width=Math.round(src.width*k); cv.height=Math.round(src.height*k);
+  const x=cv.getContext("2d");
+  const paint=()=>{ x.clearRect(0,0,cv.width,cv.height); x.drawImage(src,0,0,cv.width,cv.height);
+    if(SC.sel){ const s=SC.sel, X=s.x*cv.width, Y=s.y*cv.height, W=s.w*cv.width, H=s.h*cv.height;
+      x.fillStyle="rgba(8,20,24,.45)"; x.fillRect(0,0,cv.width,Y); x.fillRect(0,Y+H,cv.width,cv.height-Y-H); x.fillRect(0,Y,X,H); x.fillRect(X+W,Y,cv.width-X-W,H);
+      x.strokeStyle="#F0955A"; x.lineWidth=2; x.strokeRect(X,Y,W,H); } };
+  paint();
+  let start=null;
+  const pt=e=>{ const r=cv.getBoundingClientRect(); return {x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}; };
+  cv.addEventListener("pointerdown",e=>{ cv.setPointerCapture(e.pointerId); start=pt(e); SC.sel=null; e.preventDefault(); });
+  cv.addEventListener("pointermove",e=>{ if(!start) return; const p=pt(e); SC.sel={x:Math.min(start.x,p.x),y:Math.min(start.y,p.y),w:Math.abs(p.x-start.x),h:Math.abs(p.y-start.y)}; paint(); });
+  cv.addEventListener("pointerup",()=>{ start=null; if(SC.sel&&(SC.sel.w<0.02||SC.sel.h<0.005)) SC.sel=null; drawScan(); });
+}
+async function runScan(){
+  const full=rotCanvas(SC.img,SC.rot,4200);
+  const imgs=[];
+  if(SC.sel){ const s=SC.sel; const rx=s.x*full.width, ry=s.y*full.height, rw=s.w*full.width, rh=s.h*full.height;
+    const sc=Math.min(Math.max(1,2000/rw),4); const c=document.createElement("canvas"); c.width=Math.round(rw*sc); c.height=Math.round(rh*sc);
+    const x=c.getContext("2d"); x.imageSmoothingQuality="high"; x.drawImage(full,rx,ry,rw,rh,0,0,c.width,c.height); imgs.push(await toBlob(c,0.95)); }
+  if(!SC.sel||sampleMax>=2){ imgs.push(await toBlob(rotCanvas(SC.img,SC.rot,2000),0.9)); }
+  const who=`staff number "${SC.staff||"?"}"${SC.name?`, name "${SC.name}"`:""}`;
+  const known=S.types.map(t=>t.code).join(", ");
+  const prompt=`You are transcribing a hospital nursing duty rota (a 28-day "Nursing Duty Rota" table: one row per staff member, columns are 28 consecutive dates starting on a Sunday, then totals such as Worked Hrs, Due, Overtime, and Balance Old/Final in PO and Hrs).
+${SC.sel?(imgs.length>1?"Image 1 is a high-resolution close-up crop of ONE staff member's row. Image 2 is the whole page for context (dates, headers, totals).":"The image is a high-resolution close-up crop of ONE staff member's row."):"The image is the whole page. Find the row for the staff member below."}
+Staff member: ${who}.
+Read that staff member's 28 daily shift codes in date order (earliest date first). Codes are short, e.g. ${known}. Transcribe exactly what is printed in each cell; ignore highlight colours (yellow/pink fills are not codes). If a cell has handwriting over it or you are not sure, give your best reading and list its index (0-27) in "uncertain". Count carefully so there are exactly 28 codes and none are skipped or duplicated; if the crop shows the name/number columns or totals, exclude them.
+Also read, if visible: the rota start date ("From"), this staff member's Worked Hrs total, and their Balance "Old" PO and Hrs.
+Reply with only JSON of this shape:
+{"from":"2026-09-20","name":"Ahmed Ali Al Mamari","staff":"76221","shifts":["N","N","O", "... 28 codes total"],"worked_hours":135,"old_balance":{"po":77,"hrs":6},"uncertain":[11],"notes":"one short sentence or empty"}
+Use null for anything not visible. The photo may be rotated or skewed; read it upright.`;
+  SC.ctl=new AbortController(); SC.step="busy"; drawScan();
+  const eng=engineOf();
+  try{
+    let r;
+    if(eng==="claude") r=await sampleFn.json(prompt,{images:imgs,modelTier:"complex",signal:SC.ctl.signal});
+    else if(eng==="api") r=await apiVision(prompt,imgs,SC.ctl.signal);
+    else { await ocrRow(full,SC.ctl.signal); if(!SC) return; SC.step="groups"; drawScan(); return; }
+    if(!SC) return;
+    if(!r||!Array.isArray(r.shifts)) throw {code:"invalid_json"};
+    const codes=r.shifts.slice(0,28).map(c=>String(c||"").trim().toUpperCase().replace(/\s+/g,""));
+    while(codes.length<28) codes.push("");
+    const unc=(Array.isArray(r.uncertain)?r.uncertain:[]).map(Number).filter(n=>n>=0&&n<28);
+    if(r.shifts.length!==28) unc.push(...codes.map((c,i)=>i).filter(i=>!codes[i]));
+    SC.res={...r,uncertain:[...new Set(unc)],worked_hours:(typeof r.worked_hours==="number")?r.worked_hours:null,
+      old_balance:(r.old_balance&&typeof r.old_balance.po==="number")?{po:r.old_balance.po,hrs:+r.old_balance.hrs||0}:null};
+    SC.codes=codes; SC.start=(typeof r.from==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(r.from))?sundayOf(r.from):addDays(S.start,28);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(r.from||"")&&cycleDays(S.start).every(d=>!S.original[d])) SC.start=S.start;
+    SC.res.engine=eng;
+    SC.useBal=!!SC.res.old_balance; SC.step="review";
+  }catch(e){
+    if(!SC) return;
+    if(e&&e.code==="cancelled"){ SC.step="crop"; drawScan(); return; }
+    if(e&&e.msg){ SC.err=e.msg; SC.step="error"; drawScan(); return; }
+    const m={not_granted:"لم يُسمح للموقع باستخدام Claude. اسمحي له عند الطلب ثم حاولي مرة أخرى.",rate_limited:"وصلتِ للحد المسموح حالياً. حاولي بعد قليل.",image_rejected:"الصورة غير مقبولة (كبيرة جداً أو نوعها غير مدعوم). جرّبي صورة أخرى.",invalid_json:"ما قدرت أقرأ الجدول بشكل صحيح. حدّدي صفّك بدقة أكبر وحاولي مرة أخرى.",refused:"تعذّرت قراءة الصورة. جرّبي صورة أوضح.",session_expired:"انتهت الجلسة. سجّلي الدخول مرة أخرى."};
+    SC.err=m[e&&e.code]||"صار خطأ أثناء القراءة. حاولي مرة أخرى."; SC.step="error";
+  }
+  drawScan();
+}
+async function blobToB64(b){ const buf=new Uint8Array(await b.arrayBuffer()); let s=""; for(let i=0;i<buf.length;i+=0x8000) s+=String.fromCharCode.apply(null,buf.subarray(i,i+0x8000)); return btoa(s); }
+function parseLooseJSON(t){ try{return JSON.parse(t);}catch(e){} const m=t.match(/```(?:json)?\s*([\s\S]*?)```/); if(m){try{return JSON.parse(m[1]);}catch(e){}} const a=t.indexOf("{"), b=t.lastIndexOf("}"); if(a>=0&&b>a){ try{return JSON.parse(t.slice(a,b+1));}catch(e){} } return null; }
+async function apiVision(prompt,imgs,signal){
+  const key=lsGet(APIKEY_LS); if(!key) throw {msg:"أدخلي مفتاح Claude API أولاً، أو اختاري «قراءة على الجهاز»."};
+  const content=[]; for(const b of imgs) content.push({type:"image",source:{type:"base64",media_type:"image/jpeg",data:await blobToB64(b)}});
+  content.push({type:"text",text:prompt});
+  let res;
+  try{ res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal,headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:lsGet(APIMODEL_LS)||"claude-sonnet-5",max_tokens:2000,messages:[{role:"user",content}]})}); }
+  catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {msg:"تعذّر الاتصال بـ Claude API. تأكدي من الإنترنت."}; }
+  if(!res.ok){ let t=""; try{ const j=await res.json(); t=j&&j.error&&j.error.message||""; }catch(e){}
+    throw {msg:res.status===401?"مفتاح API غير صحيح.":res.status===404?"اسم الموديل غير صحيح: "+t:res.status===429?"تجاوزتِ الحد المسموح. حاولي بعد قليل.":res.status===400&&/credit/i.test(t)?"رصيد حساب API غير كافٍ.":"خطأ من Claude API ("+res.status+") "+t}; }
+  const j=await res.json(); const txt=(j.content||[]).map(c=>c.text||"").join("");
+  const r=parseLooseJSON(txt); if(!r) throw {code:"invalid_json"}; return r;
+}
+function prog(t){ const el=document.getElementById("sc-prog"); if(el) el.textContent=t; }
+/* ---- on-device reader: cell glyphs -> shape groups -> user confirms each group ---- */
+const PROTO_LS=LS_KEY+":ocr-protos"; const GW=24, GH=24;
+function grayOf(ctx,w,h){ const d=ctx.getImageData(0,0,w,h).data; const g=new Float32Array(w*h); for(let i=0,j=0;i<g.length;i++,j+=4) g[i]=0.299*d[j]+0.587*d[j+1]+0.114*d[j+2]; return g; }
+function pctl(arr,p){ const h=new Uint32Array(256); for(const v of arr) h[Math.max(0,Math.min(255,v|0))]++; let t=arr.length*p, c=0; for(let i=0;i<256;i++){ c+=h[i]; if(c>=t) return i; } return 255; }
+function otsu(vals){ const h=new Float64Array(256); for(const v of vals) h[Math.max(0,Math.min(255,v|0))]++; const tot=vals.length; let sa=0; for(let i=0;i<256;i++) sa+=i*h[i];
+  let wB=0,sB=0,best=0,t=128; for(let i=0;i<256;i++){ wB+=h[i]; if(!wB) continue; const wF=tot-wB; if(!wF) break; sB+=i*h[i]; const mB=sB/wB, mF=(sa-sB)/wF, bt=wB*wF*(mB-mF)*(mB-mF); if(bt>best){best=bt;t=i;} } return t; }
+function glyphOf(g,W,x0,x1,H){
+  const w=x1-x0; if(w<6) return null;
+  const core=[]; for(let y=Math.floor(H*0.2);y<Math.floor(H*0.8);y++) for(let x=x0+Math.floor(w*0.15);x<x0+Math.floor(w*0.85);x++) core.push(g[y*W+x]);
+  let mn=255,mx=0; for(const v of core){ if(v<mn)mn=v; if(v>mx)mx=v; } if(mx-mn<40) return null;
+  const t=otsu(core); const b=new Uint8Array(w*H); for(let y=0;y<H;y++) for(let x=0;x<w;x++) b[y*w+x]=g[y*W+x0+x]<t?1:0;
+  const lab=new Int32Array(w*H), keep=new Uint8Array(w*H); let n=0; const st=[];
+  for(let s=0;s<w*H;s++){ if(!b[s]||lab[s]) continue; n++; lab[s]=n; st.push(s); const pts=[]; let x0b=w,x1b=0,y0b=H,y1b=0;
+    while(st.length){ const p=st.pop(); pts.push(p); const py=(p/w)|0, px=p-py*w; if(px<x0b)x0b=px; if(px>x1b)x1b=px; if(py<y0b)y0b=py; if(py>y1b)y1b=py;
+      if(px>0&&b[p-1]&&!lab[p-1]){lab[p-1]=n;st.push(p-1);} if(px<w-1&&b[p+1]&&!lab[p+1]){lab[p+1]=n;st.push(p+1);}
+      if(py>0&&b[p-w]&&!lab[p-w]){lab[p-w]=n;st.push(p-w);} if(py<H-1&&b[p+w]&&!lab[p+w]){lab[p+w]=n;st.push(p+w);} }
+    const ch=y1b-y0b+1, cw=x1b-x0b+1, cy=(y0b+y1b)/2;
+    if(ch>0.85*H||cw>0.85*w) continue; if(ch<0.2*H||pts.length<8) continue;
+    if(cw<0.07*w&&(x0b<0.2*w||x1b>0.8*w)) continue; if(cy<0.2*H||cy>0.8*H) continue;
+    for(const p of pts) keep[p]=1; }
+  let bx0=w,bx1=-1,by0=H,by1=-1; for(let y=0;y<H;y++) for(let x=0;x<w;x++) if(keep[y*w+x]){ if(x<bx0)bx0=x; if(x>bx1)bx1=x; if(y<by0)by0=y; if(y>by1)by1=y; }
+  if(bx1<0) return null;
+  const gw=bx1-bx0+1, gh=by1-by0+1; const v=new Float32Array(GW*GH);
+  for(let y=0;y<GH;y++) for(let x=0;x<GW;x++){ const sx=bx0+(x+0.5)*gw/GW-0.5, sy=by0+(y+0.5)*gh/GH-0.5; const xa=Math.max(bx0,Math.floor(sx)), ya=Math.max(by0,Math.floor(sy)); const xb=Math.min(bx1,xa+1), yb=Math.min(by1,ya+1); const fx=Math.max(0,sx-xa), fy=Math.max(0,sy-ya);
+    const k=(yy,xx)=>keep[yy*w+xx]; v[y*GW+x]=k(ya,xa)*(1-fx)*(1-fy)+k(ya,xb)*fx*(1-fy)+k(yb,xa)*(1-fx)*fy+k(yb,xb)*fx*fy; }
+  return {v:Array.from(v),ar:gw/gh};
+}
+function gsim(a,b){ if(!a||!b) return (!a&&!b)?1:0; let ma=0,mb=0; const n=a.v.length; for(let i=0;i<n;i++){ma+=a.v[i];mb+=b.v[i];} ma/=n; mb/=n; let s=0,na=0,nb=0;
+  for(let i=0;i<n;i++){ const x=a.v[i]-ma, y=b.v[i]-mb; s+=x*y; na+=x*x; nb+=y*y; } return s/(Math.sqrt(na*nb)+1e-9)-0.5*Math.abs(Math.log(a.ar/b.ar)); }
+function groupGlyphs(gs,thr){ let groups=gs.map((_,i)=>[i]); const S2=gs.map((a,i)=>gs.map((b,j)=>i===j?1:gsim(a,b)));
+  for(;;){ let best=null; for(let a=0;a<groups.length;a++) for(let b=a+1;b<groups.length;b++){ let s=0; for(const i of groups[a]) for(const j of groups[b]) s+=S2[i][j]; s/=groups[a].length*groups[b].length; if(s>thr&&(!best||s>best[0])) best=[s,a,b]; }
+    if(!best) break; groups[best[1]]=groups[best[1]].concat(groups[best[2]]); groups.splice(best[2],1); }
+  return groups; }
+let fontTpl=null;
+function fontTemplates(){ if(fontTpl) return fontTpl; fontTpl=[]; const c=document.createElement("canvas"); c.width=260; c.height=110; const x=c.getContext("2d");
+  for(const t of S.types) for(const f of ['bold 64px Arial, Helvetica, sans-serif','bold 64px "Arial Narrow", "Helvetica Neue", sans-serif']){ x.fillStyle="#fff"; x.fillRect(0,0,260,110); x.fillStyle="#000"; x.font=f; x.textBaseline="middle"; x.fillText(t.code,20,55);
+    const g=grayOf(x,260,110); const gl=glyphOf(g,260,0,260,110); if(gl) fontTpl.push({code:t.code,g:gl}); }
+  return fontTpl; }
+function loadProtos(){ try{ return JSON.parse(localStorage.getItem(PROTO_LS)||"{}"); }catch(e){ return {}; } }
+function saveProtos(glyphs,codes){ const P=loadProtos(); glyphs.forEach((g,i)=>{ const c=codes[i]; if(!g||!c) return; const cur=P[c]; if(!cur){ P[c]={v:g.v.map(n=>Math.round(n*100)/100),ar:g.ar,n:1}; return; }
+    const k=Math.min(cur.n,20); cur.v=cur.v.map((a,j)=>Math.round(((a*k+g.v[j])/(k+1))*100)/100); cur.ar=(cur.ar*k+g.ar)/(k+1); cur.n=k+1; });
+  try{ localStorage.setItem(PROTO_LS,JSON.stringify(P)); }catch(e){} }
+function guessCode(g){ if(!g) return {code:"",sure:true}; const P=loadProtos(); let best=null;
+  for(const c in P){ if(!typeOf(c)) continue; const s=gsim(g,P[c]); if(!best||s>best.s) best={code:c,s}; }
+  if(best&&best.s>0.6) return {code:best.code,sure:true};
+  let fb=null; for(const t of fontTemplates()){ const s=gsim(g,t.g); if(!fb||s>fb.s) fb={code:t.code,s}; }
+  return {code:fb?fb.code:"",sure:false}; }
+async function ocrRow(full,signal){
+  if(!SC.sel) throw {msg:"حدّدي خانات الأيام الـ28 أولاً."};
+  prog("تحليل الخانات…"); await new Promise(r=>setTimeout(r,30));
+  const s=SC.sel; const rx=s.x*full.width, ry=s.y*full.height, rw=s.w*full.width, rh=s.h*full.height;
+  const k=Math.min(4,Math.max(1,2800/rw)); const y0=Math.max(0,ry-rh*0.25), y1=Math.min(full.height,ry+rh*1.25);
+  const W=Math.round(rw*k), H=Math.round((y1-y0)*k); const c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d",{willReadFrequently:true});
+  x.imageSmoothingQuality="high"; x.drawImage(full,rx,y0,rw,y1-y0,0,0,W,H);
+  const g=grayOf(x,W,H); const base=pctl(g,0.5)-45;
+  const prof=new Float32Array(W); for(let yy=0;yy<H;yy++) for(let xx=0;xx<W;xx++) if(g[yy*W+xx]<base) prof[xx]++; for(let i=0;i<W;i++) prof[i]/=H;
+  const cw=W/28; const xs=[]; { let j0=0,m=0; for(let i=0;i<cw*0.5;i++) if(prof[i]>m){m=prof[i];j0=i;} xs.push(m>0.5?j0:0); }
+  for(let i=1;i<=28;i++){ const e=xs[i-1]+cw; const lo=Math.max(0,Math.floor(e-cw*0.3)), hi=Math.min(W-1,Math.ceil(e+cw*0.3)); let j=Math.round(e), m=0; for(let q=lo;q<=hi;q++) if(prof[q]>m){m=prof[q];j=q;} xs.push(m>0.5?j:Math.min(W-1,Math.round(e))); }
+  const glyphs=[], thumbs=[];
+  for(let i=0;i<28;i++){ if(signal.aborted) throw {code:"cancelled"};
+    const a=Math.min(W-1,xs[i]+3), b=Math.max(a+1,xs[i+1]-2); glyphs.push(glyphOf(g,W,a,b,H));
+    const t=document.createElement("canvas"); t.width=56; t.height=56; const tx=t.getContext("2d"); tx.fillStyle="#fff"; tx.fillRect(0,0,56,56);
+    const sw=b-a, sh=H*0.7, sc=Math.min(56/sw,56/sh); tx.drawImage(c,a,H*0.15,sw,sh,(56-sw*sc)/2,(56-sh*sc)/2,sw*sc,sh*sc); thumbs.push(t.toDataURL("image/png")); }
+  const groups=groupGlyphs(glyphs,0.55).sort((p,q)=>p[0]-q[0]).map(idx=>{ const gu=guessCode(glyphs[idx[0]]); return {idx,code:gu.code,sure:gu.sure,thumb:thumbs[idx[0]],empty:!glyphs[idx[0]]}; });
+  SC.ocr={glyphs,thumbs,groups};
+  return null;
+}
+
+function applyScan(){
+  if(SC.ocr&&SC.res&&SC.res.engine==="ocr") saveProtos(SC.ocr.glyphs,SC.codes);
+  const st=sundayOf(SC.start); const H=poH();
+  SC.codes.forEach((c,i)=>{ const d=addDays(st,i); if(!c){ delete S.original[d]; return; }
+    let t=typeOf(c); if(!t){ t={code:c,name:c,start:"",end:"",color:"#7A8A91",work:false}; S.types.push(t); }
+    S.original[d]={code:c,start:t.start,end:t.end}; });
+  S.start=st; viewStart=st; S.sample=false;
+  if(SC.res.staff&&!S.cfg.staff) S.cfg.staff=String(SC.res.staff);
+  if(SC.res.name&&!S.cfg.name) S.cfg.name=String(SC.res.name);
+  if(SC.useBal&&SC.res.old_balance){
+    const sheetH=SC.res.old_balance.po*H+SC.res.old_balance.hrs;
+    if(st<=S.bal.from){ S.bal={from:st,po:SC.res.old_balance.po,hrs:SC.res.old_balance.hrs}; }
+    else { const row=ledger().rows.find(r=>r.start===st);
+      if(row){ const diff=Math.round((sheetH-row.old)*10)/10; if(diff){ const prev=addDays(st,-28); const a=S.adj[prev]||(S.adj[prev]={}); a.hrs=Math.round(((+a.hrs||0)+diff)*10)/10; a.note=(a.note?a.note+" · ":"")+"مطابقة مع ورقة الروستر"; } } }
+  }
+  persist(); closeScan(); tab="roster"; mode="current"; render();
+}
+scanRoot.addEventListener("click",e=>{
+  const el=e.target;
+  if(el.dataset&&el.dataset.scclose&&el===el.closest("[data-scclose]")){ if(SC&&SC.step!=="busy") closeScan(); return; }
+  const a=el.closest("[data-act]"); if(!a) return; const act=a.dataset.act;
+  if(act==="sc-close") closeScan();
+  else if(act==="sc-rot"){ SC.rot=(SC.rot+ +a.dataset.r+360)%360; SC.sel=null; drawScan(); }
+  else if(act==="sc-clear"){ SC.sel=null; drawScan(); }
+  else if(act==="sc-read"||act==="sc-retry") runScan();
+  else if(act==="sc-stop"){ if(SC.ctl) SC.ctl.abort(); }
+  else if(act==="sc-back"){ SC.step="pick"; SC.img=null; SC.sel=null; SC.err=""; drawScan(); }
+  else if(act==="sc-apply") applyScan();
+  else if(act==="grp-ok"){ const codes=new Array(28).fill(""); const unc=[]; SC.ocr.groups.forEach(gr=>gr.idx.forEach(i=>{ codes[i]=gr.code; if(!gr.sure) unc.push(i); }));
+    SC.codes=codes; SC.res={from:null,name:SC.name||null,staff:SC.staff||null,shifts:codes,worked_hours:null,old_balance:null,uncertain:unc,notes:"",engine:"ocr"};
+    SC.start=cycleDays(S.start).every(d=>!S.original[d])?S.start:addDays(S.start,28); SC.useBal=false; SC.step="review"; drawScan(); }
+});
+(async()=>{ try{ if(!window.claude||!window.claude.use) return; const s=await window.claude.use("sample"); if(!s) return; sampleFn=s;
+  const lim=await s.limits().catch(()=>null); sampleImgOK=!!(lim&&lim.images); sampleMax=sampleImgOK?(lim.images.maxCount||1):0; if(sampleImgOK) render(); }catch(e){} })();
+
+/* ---------- boot ---------- */
+loadSupabase();
+</script>
+
+</body>
+</html>
