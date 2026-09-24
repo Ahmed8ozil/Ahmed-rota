@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>روستر أحمد</title>
+<title>روته أحمد</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap">
@@ -413,6 +413,105 @@ td.tdy .rc{outline:2px solid var(--accent);outline-offset:2px}
 .sb-on{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:13.5px}
 .dot-ok{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 20%,transparent)}
 .sql{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;overflow-x:auto;white-space:pre;text-align:left}
+
+/* ---- v10 touches ---- */
+.chip.xs{height:18px;min-width:24px;font-size:10.5px;padding:0 5px;border-radius:5px}
+.cell.chgd{background:linear-gradient(135deg,var(--warn-soft) 0 14px,var(--surface) 14px)}
+.cell.wkend.chgd{background:linear-gradient(135deg,var(--warn-soft) 0 14px,var(--surface-2) 14px)}
+.c-was{display:flex;align-items:center;gap:6px;opacity:.75}
+.c-was .chip{filter:saturate(.55);text-decoration:line-through;text-decoration-thickness:1.5px}
+.c-was-l{font-size:10.5px;color:var(--muted)}
+.c-arrow{font-size:11px;line-height:1;color:var(--warn);margin:-3px 0 -2px 6px}
+@media (max-width:700px){ .c-was{justify-content:center;gap:0} .c-was-l{display:none} .c-arrow{margin:-2px auto} .cell.chgd{background:var(--warn-soft)} }
+@media (prefers-reduced-motion:no-preference){
+  .grid .cell{animation:cellIn .4s cubic-bezier(.2,.7,.3,1) both;animation-delay:calc(var(--i,0) * 14ms)}
+  @keyframes cellIn{from{transform:translateY(6px);opacity:.35}to{transform:none;opacity:1}}
+  .cell.is-today::after,td.tdy .rc::after{content:"";position:absolute;inset:-3px;border-radius:12px;border:2px solid var(--accent);opacity:0;animation:pulse 2.4s ease-out infinite;pointer-events:none}
+  @keyframes pulse{0%{opacity:.7;transform:scale(1)}70%{opacity:0;transform:scale(1.06)}100%{opacity:0}}
+}
+td.tdy .rc{position:relative}
+/* line view two rows */
+table.rl .rl-lab{font-size:10.5px;font-weight:600;color:var(--muted);text-align:right;padding-right:8px;white-space:nowrap;background:transparent;text-transform:uppercase;letter-spacing:.04em}
+table.rl tr.rl-chg td{padding-top:6px}
+table.rl tr.rl-chg .rl-lab{color:var(--warn)}
+.rc{width:30px}
+.rc.was{opacity:.45;filter:saturate(.6)}
+.rc-dot{display:inline-block;width:30px;color:var(--line-strong);font-size:16px;line-height:38px}
+/* toast */
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,24px);opacity:0;pointer-events:none;z-index:80;
+  display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--surface);padding:10px 12px 10px 16px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:13.5px;transition:transform .25s ease,opacity .25s ease;max-width:calc(100% - 32px)}
+#toast.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+.t-ic{width:20px;height:20px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;font-size:11px}
+.t-undo{background:transparent;border:1px solid color-mix(in srgb,var(--surface) 35%,transparent);color:var(--surface);border-radius:999px;padding:4px 12px;font-weight:600;font-size:12.5px}
+/* theme button */
+.theme-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:15px;display:grid;place-items:center;color:var(--ink)}
+.theme-btn:hover{background:var(--surface-2)}
+@media (max-width:760px){ .theme-btn{margin-inline-start:auto} .save{margin-inline-start:0} }
+
+/* ---- stats ---- */
+.st-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:860px){.st-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.st-kpis .big{font-size:32px}
+.st-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.st-grid{align-items:start}
+.st-grid .st-wide{grid-column:1/-1}
+@media (max-width:860px){.st-grid{grid-template-columns:1fr}.st-grid .st-chart{grid-row:auto}}
+.st-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.st-h h2{font-size:15px}
+.lg{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.lg-b{width:10px;height:10px;border-radius:3px;background:var(--accent);display:inline-block}
+.lg-r{width:14px;border-top:2px dashed var(--ink);display:inline-block;margin-inline-start:8px}
+svg.chart{width:100%;max-width:100%;height:auto;display:block;direction:ltr}
+.st-grid>*,.st-kpis>*{min-width:0}
+svg.chart .gl{stroke:var(--line);stroke-width:1}
+svg.chart .base{stroke:var(--line-strong);stroke-width:1}
+svg.chart .ax{fill:var(--muted);font-size:11px;font-family:var(--sans)}
+svg.chart .ax2{fill:var(--muted);font-size:10px;opacity:.8;font-family:var(--sans)}
+svg.chart .vl{fill:var(--ink);font-size:12px;font-weight:600;font-family:var(--sans)}
+svg.chart .bm{fill:var(--accent)}
+svg.chart .bm.over{fill:color-mix(in srgb,var(--accent) 70%,var(--ok))}
+svg.chart .ref{stroke:var(--ink);stroke-width:2;stroke-dasharray:4 3;opacity:.7}
+svg.chart .bar:hover .bm{filter:brightness(1.12)}
+.mix{display:flex;flex-direction:column;gap:9px}
+.mix-r{display:grid;grid-template-columns:auto 96px 1fr auto;gap:10px;align-items:center;font-size:13px}
+.mix-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;unicode-bidi:plaintext;text-align:right}
+.mix-bar{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.mix-bar i{display:block;height:100%;border-radius:999px;background:var(--c)}
+.mix-v{font-size:12.5px;color:var(--muted);white-space:nowrap} .mix-v b{color:var(--ink)}
+@media (max-width:500px){.mix-r{grid-template-columns:auto 1fr auto}.mix-n{display:none}}
+.facts{display:flex;flex-direction:column}
+.facts>div{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.facts>div:last-child{border-bottom:0}
+.facts span{color:var(--muted)} .facts b{font-weight:600}
+.pairs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pair{display:inline-flex;align-items:center;gap:5px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px}
+.pair b{margin-inline-start:4px}
+
+/* ---- live clock ---- */
+.d-top p b{color:var(--ink);font-weight:600}
+.lclock{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:end}
+.lc-t{display:flex;align-items:baseline;gap:2px;font-variant-numeric:tabular-nums;line-height:1}
+.lc-t [data-clk="hm"]{font-size:40px;font-weight:600;letter-spacing:-.02em}
+.lc-s{font-size:18px;font-weight:500;color:var(--muted);min-width:2.2ch}
+.lc-ap{font-size:13px;font-weight:600;color:var(--accent);margin-left:6px}
+.lc-d{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;font-size:13px;color:var(--muted)}
+.lc-h{padding-inline-start:8px;border-inline-start:1px solid var(--line-strong)}
+@media (max-width:600px){ .d-top{flex-direction:column-reverse;align-items:stretch} .lclock{align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px} .lc-d{justify-content:flex-start} .lc-t [data-clk="hm"]{font-size:32px} }
+.hclock{font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:4px}
+.hclock [data-clk="hm2"]{color:var(--ink);font-weight:600;font-size:14px}
+.hc-d{margin-left:8px;padding-left:8px;border-left:1px solid var(--line);direction:rtl}
+@media (max-width:1000px){ .hclock{display:none} }
+body[data-page="dash"] .hclock{display:none}
+
+.lang-btn{font-size:12.5px;font-weight:700}
+html[dir="ltr"] .lc-ap{margin-left:6px}
+html[dir="ltr"] table.rl .rl-lab{text-align:left}
+html[dir="ltr"] .hc-d{direction:ltr}
+
+.stats.bal3{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+@media (max-width:700px){.stats.bal3{grid-template-columns:1fr!important}}
+@media (max-width:1280px){ .hclock{display:none} }
+html[dir="ltr"] .mix-n{text-align:left}
 </style>
 </head>
 <body>
@@ -423,11 +522,15 @@ td.tdy .rc{outline:2px solid var(--accent);outline-offset:2px}
     <div class="brand"><span class="brand-mark">DR</span><span>جدول دوامي<small>DUTY ROSTER</small></span></div>
     <nav class="tabs" role="tablist" id="tabs">
       <button role="tab" data-tab="dash" aria-selected="true">الرئيسية</button>
-      <button role="tab" data-tab="roster" aria-selected="false">الروستر</button>
+      <button role="tab" data-tab="roster" aria-selected="false">الروته</button>
       <button role="tab" data-tab="bal" aria-selected="false">الرصيد</button>
+      <button role="tab" data-tab="stats" aria-selected="false">الإحصائيات</button>
       <button role="tab" data-tab="log" aria-selected="false">سجل التغييرات</button>
       <button role="tab" data-tab="types" aria-selected="false">الشفتات والإعدادات</button>
     </nav>
+    <div class="hclock" dir="ltr"><span data-clk="hm2">--:--</span> <span data-clk="ap2"></span><span class="hc-d" data-clk="short"></span></div>
+    <button class="theme-btn lang-btn" id="lang-btn" aria-label="Language" title="English / العربية">EN</button>
+    <button class="theme-btn" id="theme-btn" aria-label="تبديل الوضع الليلي" title="الوضع الليلي">☾</button>
     <div class="save local" id="save"><i></i><span>محفوظ على هذا الجهاز</span></div>
   </div>
 </header>
@@ -439,8 +542,11 @@ td.tdy .rc{outline:2px solid var(--accent);outline-offset:2px}
 <script>
 (function(){
 "use strict";
-const DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
-const MONTHS=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+let LANG="ar"; try{ LANG=localStorage.getItem("duty-roster-v2:lang")||"ar"; }catch(e){}
+const EN=LANG==="en";
+if(EN){ document.documentElement.lang="en"; document.documentElement.dir="ltr"; }
+const DAYS=EN?["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]:["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const MONTHS=EN?["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]:["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 const LS_KEY="duty-roster-v2";
 const DOC_PATH="roster/main";
 
@@ -608,8 +714,8 @@ function render(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===tab)));
   if(!viewStart) viewStart=S.start;
   let h="";
-  if(S.sample) h+=`<div class="banner"><div class="sp"><b>هذه بيانات مثال</b> لتري كيف يعمل الموقع. ابدئي جدولك الحقيقي، ثم أدخلي الروستر الأصلي من صفحة «الروستر» بوضع <b>الجدول الأصلي</b>.</div><button class="btn primary" data-act="start-fresh">ابدئي جدولي</button><button class="btn ghost" data-act="keep-sample">إخفاء</button></div>`;
-  h+= tab==="dash"?viewDash(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): viewTypes();
+  if(S.sample) h+=`<div class="banner"><div class="sp"><b>هذه بيانات مثال</b> لتري كيف يعمل الموقع. ابدئي جدولك الحقيقي، ثم أدخلي الروته الأصلية من صفحة «الروته» بوضع <b>الجدول الأصلي</b>.</div><button class="btn primary" data-act="start-fresh">ابدئي جدولي</button><button class="btn ghost" data-act="keep-sample">إخفاء</button></div>`;
+  h+= tab==="dash"?viewDash(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): viewTypes();
   app.innerHTML=h;
 }
 
@@ -665,20 +771,20 @@ function viewDash(){
   const week=`<section class="d-sec">
     <div class="d-head"><h2>هذا الأسبوع</h2><span>${fmtShort(wk[0])} – ${fmtShort(wk[6])} · <b>${fmtH(wkH)}</b> ساعة</span></div>
     <div class="wkrow">${wk.map(d=>{const x=cur(d);const ty=x&&typeOf(x.code);const past=d<today;return `<button class="wday ${d===today?"is-today":""} ${past?"past":""} ${isChanged(d)?"chg":""}" data-edit="${d}" style="--c:${ty?ty.color:"var(--line-strong)"};--ct:${textOn(ty?ty.color:"#cccccc")}">
-      <span class="wd-n">${DAYS[dow(d)]}</span><span class="wd-d">${toD(d).getUTCDate()}</span>
+      <span class="wd-n">${EN?DAYS[dow(d)].slice(0,3):DAYS[dow(d)]}</span><span class="wd-d">${toD(d).getUTCDate()}</span>
       <span class="wd-code">${x?esc(x.code):"+"}</span>
       <span class="wd-h">${x&&x.start?fmt12(x.start).replace(":00",""):(x?shiftLabel(x):"")}</span></button>`;}).join("")}</div>
   </section>`;
 
   const cards=`<div class="cards">
     <section class="card">
-      <div class="card-l">ساعات الروستر</div>
+      <div class="card-l">ساعات الروته</div>
       <div class="big">${fmtH(cycH)}<span> / ${fmtH(due)}</span></div>
       <div class="meter"><i style="width:${pct}%"></i></div>
       <div class="card-f"><span>Worked / Due</span><b class="${cycH-due>0?"pos":cycH-due<0?"neg":""}">${cycH-due>0?"زيادة "+fmtH(cycH-due)+" س":cycH-due<0?"نقص "+fmtH(due-cycH)+" س":"مطابق"}</b></div>
     </section>
     <section class="card">
-      <div class="card-l">أيام الروستر</div>
+      <div class="card-l">أيام الروته</div>
       <div class="big">${work}<span> يوم عمل</span></div>
       <div class="split"><i class="w" style="flex:${work}"></i><i class="o" style="flex:${off}"></i>${leave?`<i class="l" style="flex:${leave}"></i>`:""}</div>
       <div class="card-f"><span><i class="sw w"></i>عمل ${work}</span><span><i class="sw o"></i>راحة ${off}</span>${leave?`<span><i class="sw l"></i>إجازة ${leave}</span>`:""}</div>
@@ -686,11 +792,12 @@ function viewDash(){
     <button class="card bal" data-go="bal">
       <div class="card-l">الرصيد الحالي</div>
       <div class="big sm">${fmtBal(balNow)}</div>
-      <div class="card-f col"><span>السابق: ${fmtBal(rNow?rNow.old:L.open)}</span><span class="${change>0?"pos":change<0?"neg":""}">هذا الروستر: ${fmtSigned(change)}</span></div>
+      <div class="card-f col"><span>السابق: ${fmtBal(rNow?rNow.old:L.open)}</span><span class="${change>0?"pos":change<0?"neg":""}">هذه الروته: ${fmtSigned(change)}</span></div>
     </button>
   </div>`;
 
-  return `<div class="d-top"><div><h1>أهلاً ${esc((S.cfg.name||"").split(" ")[0]||"")}</h1><p>${esc(S.cfg.unit||"")}</p></div><div class="d-cyc">${inCycle?`الروستر <b>${fmtShort(S.start)} – ${fmtShort(addDays(S.start,27))}</b>`:`اليوم خارج الروستر الحالي`}</div></div>
+  return `<div class="d-top"><div><h1>${greet()} ${esc((S.cfg.name||"").split(" ")[0]||"")}</h1><p>${esc(S.cfg.unit||"")} · ${inCycle?`الروته <b>${fmtShort(S.start)} – ${fmtShort(addDays(S.start,27))}</b>`:`اليوم خارج الروته الحالية`}</p></div>
+    <div class="lclock" aria-live="off"><div class="lc-t" dir="ltr"><span data-clk="hm">--:--</span><span class="lc-s" data-clk="s">:--</span><span class="lc-ap" data-clk="ap"></span></div><div class="lc-d"><span data-clk="date"></span><span class="lc-h" data-clk="hijri"></span></div></div></div>
   ${hero}${week}${cards}`;
 }
 function viewBal(){
@@ -699,7 +806,7 @@ function viewBal(){
   const rows=L.rows.map(r=>{ const a=S.adj[r.start]||{};
     const t=r.ot+r.man;
     return `<tr class="${r.status==="now"?"now":""}">
-      <td><div style="font-weight:600;white-space:nowrap">${fmtShort(r.start)} – ${fmtShort(r.end)}</div><div class="hint">${r.status==="done"?"منتهي":r.status==="now"?"الروستر الحالي":"قادم"}${r.has?"":" · بدون جدول"}</div></td>
+      <td><div style="font-weight:600;white-space:nowrap">${fmtShort(r.start)} – ${fmtShort(r.end)}</div><div class="hint">${r.status==="done"?"منتهي":r.status==="now"?"الروته الحالية":"قادم"}${r.has?"":" · بدون جدول"}</div></td>
       <td class="num">${fmtH(r.worked)}</td><td class="num">${fmtH(r.due)}</td>
       <td class="num" style="color:${r.ot>0?"var(--ok)":r.ot<0?"var(--danger)":"inherit"}">${r.ot>0?"+":""}${fmtH(r.ot)}</td>
       <td><div class="adj"><input type="number" step="1" id="aj-po-${r.start}" data-adj="${r.start}" data-f="po" value="${a.po||""}" placeholder="0" aria-label="PO"><span>PO</span><input type="number" step="0.5" id="aj-h-${r.start}" data-adj="${r.start}" data-f="hrs" value="${a.hrs||""}" placeholder="0" aria-label="ساعات"><span>س</span></div><input class="adj-note" id="aj-n-${r.start}" data-adj="${r.start}" data-f="note" value="${esc(a.note||"")}" placeholder="سبب الإضافة / الخصم"></td>
@@ -708,16 +815,121 @@ function viewBal(){
     </tr>`;}).join("");
   const last=L.rows.find(r=>r.start===S.start)||L.rows[L.rows.length-1];
   return `<div class="page-head"><div><h1>الرصيد</h1><p>الرصيد السابق ± Overtime ± الإضافة أو الخصم اليدوي · اليوم (PO) = ${fmtH(H)} ساعات</p></div></div>
-  <div class="stats" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+  <div class="stats bal3">
     <div class="stat"><span class="v bv">${fmtBal(L.open)}</span><span class="l">الرصيد السابق (قبل ${fmtShort(S.bal.from)}) · ${ob.po} PO + ${fmtH(ob.hrs)} Hrs</span></div>
-    <div class="stat"><span class="v bv" style="color:${last&&last.ot+last.man>0?"var(--ok)":last&&last.ot+last.man<0?"var(--danger)":"inherit"}">${last?fmtSigned(last.ot+last.man):"—"}</span><span class="l">تغيّر الروستر الحالي</span></div>
-    <div class="stat"><span class="v bv">${fmtBal(last?last.fin:L.open)}</span><span class="l">الرصيد الحالي (حسب الروستر) · ${(()=>{const b=fmtBalShort(last?last.fin:L.open);return b.sign+b.po+" PO + "+fmtH(b.hrs)+" Hrs";})()}</span></div>
+    <div class="stat"><span class="v bv" style="color:${last&&last.ot+last.man>0?"var(--ok)":last&&last.ot+last.man<0?"var(--danger)":"inherit"}">${last?fmtSigned(last.ot+last.man):"—"}</span><span class="l">تغيّر الروته الحالية</span></div>
+    <div class="stat"><span class="v bv">${fmtBal(last?last.fin:L.open)}</span><span class="l">الرصيد الحالي (حسب الروته) · ${(()=>{const b=fmtBalShort(last?last.fin:L.open);return b.sign+b.po+" PO + "+fmtH(b.hrs)+" Hrs";})()}</span></div>
   </div>
-  <section class="panel" style="margin-top:16px"><div class="tbl-wrap"><table class="ledger"><thead><tr><th>الروستر</th><th>Worked</th><th>Due</th><th>Overtime</th><th>إضافة / خصم يدوي</th><th>Old</th><th>Final</th></tr></thead><tbody>${rows}</tbody></table></div></section>
+  <section class="panel" style="margin-top:16px"><div class="tbl-wrap"><table class="ledger"><thead><tr><th>الروته</th><th>Worked</th><th>Due</th><th>Overtime</th><th>إضافة / خصم يدوي</th><th>Old</th><th>Final</th></tr></thead><tbody>${rows}</tbody></table></div></section>
   <section class="panel settings">
-    <div class="field"><span class="label">الرصيد الافتتاحي</span><div class="adj"><input type="number" step="1" id="ob-po" value="${esc(S.bal.po)}" aria-label="PO"><span>PO (يوم)</span><input type="number" step="0.5" id="ob-h" value="${esc(S.bal.hrs)}" aria-label="ساعات"><span>ساعة</span></div><span class="hint">من عمود Balance → Old في الروستر.</span></div>
-    <div class="field"><label class="label" for="ob-from">يبدأ من روستر</label><input class="inp" type="date" id="ob-from" value="${S.bal.from}"><span class="hint">تاريخ بداية أول روستر يُحسب عليه الرصيد (يُضبط على الأحد).</span></div>
+    <div class="field"><span class="label">الرصيد الافتتاحي</span><div class="adj"><input type="number" step="1" id="ob-po" value="${esc(S.bal.po)}" aria-label="PO"><span>PO (يوم)</span><input type="number" step="0.5" id="ob-h" value="${esc(S.bal.hrs)}" aria-label="ساعات"><span>ساعة</span></div><span class="hint">من عمود Balance → Old في الروته.</span></div>
+    <div class="field"><label class="label" for="ob-from">يبدأ من روته</label><input class="inp" type="date" id="ob-from" value="${S.bal.from}"><span class="hint">تاريخ بداية أول روته تُحسب عليه الرصيد (يُضبط على الأحد).</span></div>
   </section>`;
+}
+
+/* ---------- statistics ---------- */
+let statScope="cycle";
+function statDates(){
+  if(statScope==="cycle") return cycleDays(S.start);
+  const keys=[...Object.keys(S.original),...Object.keys(S.days)].sort();
+  if(!keys.length) return cycleDays(S.start);
+  const out=[]; for(let d=keys[0]; d<=keys[keys.length-1]; d=addDays(d,1)) out.push(d); return out;
+}
+function barsSVG(items,maxV,refs){
+  // items: [{label,sub,value,ref?}] vertical bars; one axis (hours); dashed tick for ref
+  const W=560,H=190,pl=34,pr=8,pt=14,pb=38; const n=items.length; const iw=(W-pl-pr)/n; const bw=Math.min(46,iw*0.55);
+  const top=Math.max(maxV,1); const nice=Math.ceil(top/10)*10; const y=v=>pt+(H-pt-pb)*(1-v/nice);
+  let g=""; for(let k=0;k<=4;k++){ const v=nice*k/4; g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" class="gl"/><text x="${pl-6}" y="${y(v)+4}" class="ax" text-anchor="end">${fmtH(v)}</text>`; }
+  items.forEach((it,i)=>{ const cx=pl+iw*i+iw/2, x=cx-bw/2, yy=y(it.value), h=Math.max(0,H-pb-yy);
+    const r=Math.min(4,h/2);
+    g+=`<g class="bar"><title>${esc(it.label)}: ${fmtH(it.value)} ساعة${it.ref!=null?" · Due "+fmtH(it.ref):""}</title>
+      <rect x="${cx-iw/2}" y="${pt}" width="${iw}" height="${H-pt-pb}" fill="transparent"/>
+      ${h>0?`<path d="M${x},${H-pb} V${yy+r} Q${x},${yy} ${x+r},${yy} H${x+bw-r} Q${x+bw},${yy} ${x+bw},${yy+r} V${H-pb} Z" class="bm ${it.over?"over":""}"/>`:""}
+      ${it.ref!=null?`<line x1="${x-5}" x2="${x+bw+5}" y1="${y(it.ref)}" y2="${y(it.ref)}" class="ref"/>`:""}
+      <text x="${cx}" y="${yy-5}" class="vl" text-anchor="middle">${fmtH(it.value)}</text>
+      <text x="${cx}" y="${H-pb+16}" class="ax" text-anchor="middle">${esc(it.label)}</text>
+      ${it.sub?`<text x="${cx}" y="${H-pb+30}" class="ax2" text-anchor="middle">${esc(it.sub)}</text>`:""}</g>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(refs||"")}">${g}<line x1="${pl}" x2="${W-pr}" y1="${H-pb}" y2="${H-pb}" class="base"/></svg>`;
+}
+function viewStats(){
+  const D=statDates(); const today=todayIso();
+  const W=S.cfg.weekend||[5,6];
+  const byT={}; let hours=0, nights=0, weekendWork=0, workDays=0, offDays=0, leaveDays=0;
+  D.forEach(d=>{ const e=cur(d); if(!e) return; const t=typeOf(e.code); const h=hoursOf(e);
+    (byT[e.code]=byT[e.code]||{n:0,h:0}); byT[e.code].n++; byT[e.code].h+=h; hours+=h;
+    if(t&&t.work){ workDays++; if(W.includes(dow(d))) weekendWork++; } else if(e.code==="O") offDays++; else leaveDays++;
+    if(e.code==="N") nights++; });
+  const due=dueOf(D);
+  // streaks
+  let wS=0,wMax=0,oS=0,oMax=0,nS=0,nMax=0,mAfterN=0,prev=null;
+  D.forEach(d=>{ const e=cur(d); const t=e&&typeOf(e.code); const work=!!(t&&t.work);
+    wS=work?wS+1:0; wMax=Math.max(wMax,wS); oS=(e&&!work)?oS+1:0; oMax=Math.max(oMax,oS);
+    nS=(e&&e.code==="N")?nS+1:0; nMax=Math.max(nMax,nS);
+    if(prev&&prev.code==="N"&&e&&t&&t.work&&e.code!=="N"&&e.start&&e.start<"12:00") mAfterN++;
+    prev=e; });
+  // mix
+  const mix=S.types.filter(t=>byT[t.code]).map(t=>({t,n:byT[t.code].n,h:byT[t.code].h})).sort((a,b)=>b.n-a.n);
+  const maxN=Math.max(1,...mix.map(m=>m.n));
+  // chart items
+  let items, chartTitle;
+  if(statScope==="cycle"){
+    chartTitle="الساعات لكل أسبوع";
+    items=[0,1,2,3].map(w=>{ const ds=D.slice(w*7,w*7+7); const v=ds.reduce((a,d)=>a+hoursOf(cur(d)),0), r=dueOf(ds); return {label:"الأسبوع "+(w+1),sub:fmtShort(ds[0]),value:v,ref:r,over:v>r}; });
+  } else {
+    chartTitle="الساعات لكل روته";
+    items=ledger().rows.filter(r=>r.has).map(r=>({label:fmtShort(r.start),sub:"",value:r.worked,ref:r.due,over:r.worked>r.due}));
+  }
+  const maxV=Math.max(...items.map(i=>Math.max(i.value,i.ref||0)),10);
+  // changes
+  const inD=new Set(D); const logs=S.log.filter(l=>inD.has(l.date)&&!l.revert);
+  const reasons={}; logs.forEach(l=>{ const r=(l.reason||"بدون سبب").trim(); reasons[r]=(reasons[r]||0)+1; });
+  const topR=Object.entries(reasons).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const pairs={}; logs.forEach(l=>{ const k=(l.orig?l.orig.code:"—")+"→"+l.to.code; pairs[k]=(pairs[k]||0)+1; });
+  const topP=Object.entries(pairs).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  // balance
+  const L=ledger(); const balRows=L.rows.filter(r=>r.has);
+  const tot=Math.max(1,workDays+offDays+leaveDays);
+  return `<div class="page-head"><div><h1>الإحصائيات</h1><p>${statScope==="cycle"?`الروته ${fmtShort(S.start)} – ${fmtShort(addDays(S.start,27))}`:`من ${fmtShort(D[0])} ${toD(D[0]).getUTCFullYear()} إلى ${fmtShort(D[D.length-1])}`}</p></div>
+    <div class="mode" role="group" aria-label="الفترة"><button data-scope="cycle" aria-pressed="${statScope==="cycle"}">هذه الروته</button><button data-scope="all" aria-pressed="${statScope==="all"}">كل الفترة</button></div></div>
+
+  <div class="st-kpis">
+    <div class="card"><div class="card-l">ساعات العمل</div><div class="big">${fmtH(hours)}<span> / ${fmtH(due)}</span></div><div class="card-f"><span>Due</span><b class="${hours-due>0?"pos":hours-due<0?"neg":""}">${hours-due>0?"زيادة "+fmtH(hours-due):hours-due<0?"نقص "+fmtH(due-hours):"مطابق"} س</b></div></div>
+    <div class="card"><div class="card-l">شفتات Night</div><div class="big">${nights}</div><div class="card-f"><span>أطول تتابع</span><b>${nMax} ليالي</b></div></div>
+    <div class="card"><div class="card-l">دوام في الويكند</div><div class="big">${weekendWork}</div><div class="card-f"><span>من أصل ${workDays} يوم عمل</span></div></div>
+    <div class="card"><div class="card-l">التغييرات</div><div class="big">${logs.length}</div><div class="card-f"><span>${topP[0]?"الأكثر: "+esc(topP[0][0]):"لا توجد تغييرات"}</span></div></div>
+  </div>
+
+  <div class="st-grid">
+    <section class="card st-chart"><div class="st-h"><h2>${chartTitle}</h2><span class="lg"><i class="lg-b"></i>Worked <i class="lg-r"></i>Due</span></div>
+      ${items.length?barsSVG(items,maxV,chartTitle):'<div class="empty-state">لا توجد بيانات</div>'}</section>
+
+    <section class="card"><div class="st-h"><h2>توزيع الشفتات</h2><span class="hint">${D.filter(d=>cur(d)).length} يوم</span></div>
+      <div class="mix">${mix.map(m=>`<div class="mix-r" title="${esc(m.t.name)}: ${m.n} يوم · ${fmtH(m.h)} س">
+        ${chip(m.t.code)}<span class="mix-n">${esc(m.t.name)}</span>
+        <span class="mix-bar"><i style="width:${m.n/maxN*100}%;--c:${m.t.color}"></i></span>
+        <span class="mix-v"><b>${m.n}</b>${m.h?` · ${fmtH(m.h)}س`:""}</span></div>`).join("")||'<div class="empty-state">لا توجد بيانات</div>'}</div>
+      <div class="split" style="margin-top:14px"><i class="w" style="flex:${workDays}"></i><i class="o" style="flex:${offDays}"></i>${leaveDays?`<i class="l" style="flex:${leaveDays}"></i>`:""}</div>
+      <div class="card-f"><span><i class="sw w"></i>عمل ${Math.round(workDays/tot*100)}%</span><span><i class="sw o"></i>راحة ${Math.round(offDays/tot*100)}%</span>${leaveDays?`<span><i class="sw l"></i>إجازة ${Math.round(leaveDays/tot*100)}%</span>`:""}</div>
+    </section>
+
+    <section class="card"><div class="st-h"><h2>الإيقاع والإرهاق</h2></div>
+      <div class="facts">
+        <div><span>أطول فترة دوام متواصل</span><b>${wMax} أيام</b></div>
+        <div><span>أطول راحة متواصلة</span><b>${oMax} أيام</b></div>
+        <div><span>أطول تتابع ليالي</span><b class="${nMax>=3?"neg":""}">${nMax}${nMax>=3?" ⚠":""}</b></div>
+        <div><span>شفت صباحي بعد ليلي مباشرة</span><b class="${mAfterN?"neg":""}">${mAfterN}${mAfterN?" ⚠":""}</b></div>
+      </div></section>
+
+    <section class="card"><div class="st-h"><h2>أسباب التغيير</h2></div>
+      ${topR.length?`<div class="facts">${topR.map(([r,n])=>`<div><span>${esc(r)}</span><b>${n}</b></div>`).join("")}</div>
+      <div class="pairs">${topP.map(([p,n])=>{ const [a,b]=p.split("→"); return `<span class="pair">${chip(a,"xs")}<span class="arrow">←</span>${chip(b,"xs")}<b>×${n}</b></span>`; }).join("")}</div>`:'<div class="empty-state" style="padding:20px 0">لا توجد تغييرات في هذه الفترة</div>'}
+    </section>
+
+    <section class="card st-wide"><div class="st-h"><h2>الرصيد عبر الروتات</h2><button class="linkish" data-go="bal">صفحة الرصيد</button></div>
+      <div class="tbl-wrap"><table><thead><tr><th>الروته</th><th>السابق</th><th>التغيّر</th><th>النهائي</th></tr></thead><tbody>
+      ${balRows.map(r=>{ const c=r.ot+r.man; return `<tr><td class="nowrap">${fmtShort(r.start)} – ${fmtShort(r.end)}</td><td class="nowrap">${fmtBal(r.old)}</td><td class="nowrap ${c>0?"pos":c<0?"neg":""}">${fmtSigned(c)}</td><td class="nowrap"><b>${fmtBal(r.fin)}</b></td></tr>`; }).join("")}
+      </tbody></table></div></section>
+  </div>`;
 }
 
 /* ---------- roster ---------- */
@@ -735,21 +947,26 @@ function viewRoster(){
     g+=`<div class="wk"><span>${fmtShort(ds[0])} – ${fmtShort(ds[6])}</span><span>${fmtH(hh)} ساعة</span></div>`;
     ds.forEach(d=>{
       const e=get(d); const t=e&&typeOf(e.code); const ch=!isBase&&isChanged(d);
-      g+=`<button class="cell ${e?"":"empty"} ${d===today?"is-today":""} ${officialOf(d)?"":"wkend"}" style="${t?`--c:${t.color}`:""}" data-cell="${d}" aria-label="${esc(fmtLong(d))}">
-        <div class="c-top"><span class="dnum">${toD(d).getUTCDate()}</span>${ch?'<span class="flag" title="الأصلي: '+esc(S.original[d]?S.original[d].code:"—")+'">معدَّل</span>':""}</div>
+      const o=S.original[d];
+      g+=`<button class="cell ${e?"":"empty"} ${ch?"chgd":""} ${d===today?"is-today":""} ${officialOf(d)?"":"wkend"}" style="--i:${days.indexOf(d)};${t?`--c:${t.color}`:""}" data-cell="${d}" aria-label="${esc(fmtLong(d))}">
+        <div class="c-top"><span class="dnum">${toD(d).getUTCDate()}</span>${ch?'<span class="flag">معدَّل</span>':""}</div>
+        ${ch?`<div class="c-was">${o?chip(o.code,"xs"):'<span class="chip xs ghost">—</span>'}<span class="c-was-l">الأصلي</span></div><div class="c-arrow" aria-hidden="true">↓</div>`:""}
         ${e?`<div class="c-shift">${chip(e.code)}<span class="nm">${esc(shiftLabel(e))}</span></div>${e.start?`<div class="tm t12">${fmt12(e.start)} – ${fmt12(e.end)}</div>`:""}`:'<div class="c-empty">+</div>'}
       </button>`;
     });
   }
   const line=`<div class="panel rota"><div class="tbl-wrap" dir="ltr"><table class="rl">
-    <thead><tr>${days.map((d,i)=>`<th class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}"><span class="wd">${DAY_EN[dow(d)]}</span><span class="dn">${toD(d).getUTCDate()}</span></th>`).join("")}</tr></thead>
-    <tbody><tr>${days.map((d,i)=>{const e=get(d);const t=e&&typeOf(e.code);const ch=!isBase&&isChanged(d);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}"><button class="rc ${e?"":"none"} ${ch?"chg":""}" data-cell="${d}" title="${esc(fmtLong(d))}${ch&&S.original[d]?" · الأصلي "+esc(S.original[d].code):""}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${e?esc(e.code):"+"}</button></td>`;}).join("")}</tr></tbody>
+    <thead><tr><th class="rl-lab"></th>${days.map((d,i)=>`<th class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}"><span class="wd">${DAY_EN[dow(d)]}</span><span class="dn">${toD(d).getUTCDate()}</span></th>`).join("")}</tr></thead>
+    <tbody>
+    <tr><th class="rl-lab">${isBase?"Roster":"Original"}</th>${days.map((d,i)=>{const e=isBase?get(d):S.original[d];const t=e&&typeOf(e.code);const ch=!isBase&&isChanged(d);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}"><button class="rc ${e?"":"none"} ${ch?"was":""}" data-cell="${d}" title="${esc(fmtLong(d))}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${e?esc(e.code):"+"}</button></td>`;}).join("")}</tr>
+    ${isBase?"":`<tr class="rl-chg"><th class="rl-lab">Changed</th>${days.map((d,i)=>{const ch=isChanged(d);const e=cur(d);const t=e&&typeOf(e.code);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}">${ch?`<button class="rc chg" data-cell="${d}" title="${esc(fmtLong(d))} · الأصلي ${esc(S.original[d]?S.original[d].code:"—")}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${esc(e.code)}</button>`:'<span class="rc-dot">·</span>'}</td>`;}).join("")}</tr>`}
+    </tbody>
   </table></div></div>`;
   const paint=isBase?`<div class="paint base-bar"><div class="bb-t"><b>تعديل الجدول الأصلي</b><span>التعديل هنا لا يُسجَّل كتغيير. اختاري شفتاً ثم اضغطي على الأيام، أو اضغطي على يوم لتعديله.</span></div><div style="display:flex;gap:8px;flex-wrap:wrap">${scanBtn("btn")}<button class="btn primary" data-mode="current">تم</button></div></div><div class="paint">
     ${S.types.map(t=>`<span class="chip" role="button" tabindex="0" data-brush="${esc(t.code)}" aria-pressed="${brush===t.code}" style="--c:${t.color};--ct:${textOn(t.color)}">${esc(t.code)}</span>`).join("")}
     <span class="chip ghost" role="button" tabindex="0" data-brush="__clear" aria-pressed="${brush==="__clear"}">مسح</span></div>`:"";
-  return `<div class="page-head"><div><h1>${isBase?"الجدول الأصلي":"الروستر"}</h1>
-      <div class="cycle-nav"><button class="icon-btn" data-shift="-28" aria-label="الروستر السابق">›</button><span class="lbl">${fmtShort(days[0])} – ${fmtShort(days[27])}</span><button class="icon-btn" data-shift="28" aria-label="الروستر التالي">‹</button>${viewStart!==S.start?`<button class="btn ghost" data-shift="0">الحالي</button>`:""}</div></div>
+  return `<div class="page-head"><div><h1>${isBase?"الجدول الأصلي":"الروته"}</h1>
+      <div class="cycle-nav"><button class="icon-btn" data-shift="-28" aria-label="الروته السابقة">${EN?"‹":"›"}</button><span class="lbl">${fmtShort(days[0])} – ${fmtShort(days[27])}</span><button class="icon-btn" data-shift="28" aria-label="الروته التالية">${EN?"›":"‹"}</button>${viewStart!==S.start?`<button class="btn ghost" data-shift="0">الحالي</button>`:""}</div></div>
     <div class="toolbar">
       <div class="mode" role="group" aria-label="طريقة العرض"><button data-layout="grid" aria-pressed="${layout==="grid"}">مربعات</button><button data-layout="line" aria-pressed="${layout==="line"}">سطر</button></div>
     </div></div>
@@ -770,7 +987,7 @@ function viewLog(){
       <td>${r.reason?esc(r.reason):'<span class="hint">—</span>'}${r.note?`<div class="hint">📝 ${esc(r.note)}</div>`:""}</td>
       <td><button class="btn ghost" data-dellog="${esc(r.id)}">حذف</button></td>
     </tr>`).join("")}</tbody></table></div>`
-    :`<div class="empty-state">لا توجد تغييرات مسجّلة بعد.<br>أي تعديل على شفت من صفحة الروستر يظهر هنا مع الشفت الأصلي والسبب.</div>`;
+    :`<div class="empty-state">لا توجد تغييرات مسجّلة بعد.<br>أي تعديل على شفت من صفحة الروته يظهر هنا مع الشفت الأصلي والسبب.</div>`;
   return `<div class="page-head"><div><h1>سجل التغييرات</h1><p>${rows.length} تعديل</p></div></div><section class="panel">${body}</section>`;
 }
 
@@ -790,10 +1007,10 @@ function viewTypes(){
     <td>${used.has(t.code)?'<span class="hint">مستخدم</span>':`<button class="btn ghost" data-deltype="${i}">حذف</button>`}</td>
   </tr>`).join("")}</tbody></table></div></section>
   <section class="panel settings">
-    <div class="field"><label class="label" for="set-start">بداية الروستر (الأحد)</label><input class="inp" type="date" id="set-start" value="${S.start}"><span class="hint">أي تاريخ تختارينه يُضبط تلقائياً على الأحد في نفس الأسبوع. الروستر: ${fmtShort(S.start)} – ${fmtShort(addDays(S.start,27))}</span></div>
+    <div class="field"><label class="label" for="set-start">بداية الروته (الأحد)</label><input class="inp" type="date" id="set-start" value="${S.start}"><span class="hint">أي تاريخ تختارينه يُضبط تلقائياً على الأحد في نفس الأسبوع. الروته: ${fmtShort(S.start)} – ${fmtShort(addDays(S.start,27))}</span></div>
     <div class="field"><label class="label" for="set-name">الاسم</label><input class="inp" id="set-name" value="${esc(S.cfg.name||"")}"><label class="label" for="set-staff" style="margin-top:6px">St.No</label><input class="inp" id="set-staff" value="${esc(S.cfg.staff||"")}"><label class="label" for="set-unit" style="margin-top:6px">المستشفى / القسم</label><input class="inp" id="set-unit" value="${esc(S.cfg.unit)}"><label class="label" for="set-off" style="margin-top:6px">Official hours لكل يوم دوام رسمي</label><input class="inp" type="number" min="0" step="0.5" id="set-off" value="${esc(S.cfg.official)}"><span class="hint">تُحسب Due = الساعات الرسمية × أيام الدوام الرسمي (بدون الجمعة والسبت وأيام الإجازة). Overtime = Worked − Due.</span></div>
-    <div class="field"><span class="label">روستر جديد (28 يوم تالية)</span><div style="display:flex;gap:8px;flex-wrap:wrap">${scanBtn("btn primary")}<button class="btn" data-act="next-copy">بدء روستر جديد بنفس النمط</button><button class="btn" data-act="next-empty">بدء روستر فارغ</button></div><span class="hint">الروستر السابق وسجله يبقيان محفوظين ويمكن الرجوع لهما بالأسهم في صفحة الروستر.</span></div>
-    <div class="field"><span class="label">إعادة ضبط</span><div><button class="btn danger" data-act="wipe" id="wipe-btn">مسح كل البيانات</button></div><span class="hint">يحذف الروستر والسجل ويُبقي أنواع الشفتات.</span></div>
+    <div class="field"><span class="label">روته جديدة (28 يوم تالية)</span><div style="display:flex;gap:8px;flex-wrap:wrap">${scanBtn("btn primary")}<button class="btn" data-act="next-copy">بدء روته جديدة بنفس النمط</button><button class="btn" data-act="next-empty">بدء روته فارغة</button></div><span class="hint">الروته السابقة وسجله يبقيان محفوظين ويمكن الرجوع لهما بالأسهم في صفحة الروته.</span></div>
+    <div class="field"><span class="label">إعادة ضبط</span><div><button class="btn danger" data-act="wipe" id="wipe-btn">مسح كل البيانات</button></div><span class="hint">يحذف الروته والسجل ويُبقي أنواع الشفتات.</span></div>
   </section>${sbPanel()}`;
 }
 
@@ -842,7 +1059,17 @@ function drawModal(){
   if(n) n.addEventListener("input",()=>M.note=n.value);
 }
 function closeModal(){M=null;drawModal();}
+let toastTimer=null, undoFn=null;
+function toast(msg,undo){
+  let el=document.getElementById("toast"); if(!el){ el=document.createElement("div"); el.id="toast"; el.setAttribute("role","status"); document.body.appendChild(el);
+    el.addEventListener("click",e=>{ if(e.target.closest("[data-undo]")&&undoFn){ const f=undoFn; undoFn=null; f(); el.classList.remove("show"); toast("تم التراجع"); } }); }
+  undoFn=undo||null;
+  el.innerHTML=`<span class="t-ic">✓</span><span>${esc(msg)}</span>${undo?'<button class="t-undo" data-undo="1">تراجع</button>':""}`;
+  el.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ el.classList.remove("show"); undoFn=null; },5000);
+}
+function snapUndo(){ const snap=JSON.stringify(S); return ()=>{ S=JSON.parse(snap); norm(); persist(); render(); }; }
 function saveModal(){
+  const undo=snapUndo(); const wasBase=M.base; const dd=M.date;
   const d=M.date; const entry={code:M.code,start:M.start,end:M.end};
   if(M.base){ S.original[d]=entry; }
   else{
@@ -854,8 +1081,11 @@ function saveModal(){
     else S.days[d]={...entry,note:M.note.trim()};
   }
   persist(); closeModal(); render();
+  toast(wasBase?"تم تحديث الجدول الأصلي":("تم حفظ "+DAYS[dow(dd)]+" "+fmtShort(dd)), undo);
 }
 function revertModal(){
+  const undo=snapUndo();
+  setTimeout(()=>toast("رجع الشفت الأصلي",undo),0);
   const d=M.date, prev=cur(d), o=S.original[d];
   S.log.push({id:Date.now().toString(36),date:d,orig:o?{...o}:null,from:prev?{code:prev.code,start:prev.start,end:prev.end}:null,to:o?{...o}:{code:"—"},reason:M.reason.trim()||"استرجاع الشفت الأصلي",note:"",at:new Date().toISOString(),revert:true});
   delete S.days[d]; persist(); closeModal(); render();
@@ -879,6 +1109,7 @@ document.addEventListener("click",e=>{
   if(cell){ const d=cell.dataset.cell;
     if(mode==="original"&&brush){ if(brush==="__clear") delete S.original[d]; else { const t=typeOf(brush); S.original[d]={code:t.code,start:t.start,end:t.end}; } persist(); render(); return; }
     openEdit(d); return; }
+  const sc=el.closest("[data-scope]"); if(sc){ statScope=sc.dataset.scope; render(); return; }
   const ly=el.closest("[data-layout]"); if(ly){ layout=ly.dataset.layout; try{localStorage.setItem(LS_KEY+":layout",layout);}catch(e){} render(); return; }
   const md=el.closest("[data-mode]"); if(md){mode=md.dataset.mode; if(mode!=="original") brush=null; render(); return;}
   const br=el.closest("[data-brush]"); if(br){ const v=br.dataset.brush; brush=(v===""||brush===v)?null:v; render(); return;}
@@ -986,7 +1217,7 @@ function sbPanel(){
   const on=!!SB.access;
   return `<section class="panel settings sbp">
     <div class="field" style="grid-column:1/-1"><span class="label">المزامنة مع Supabase</span>
-      <span class="hint">احفظي بياناتك في قاعدة Supabase حقك، وافتحي الملف من أي جهاز وتلقين نفس الروستر والرصيد والسجل.</span>
+      <span class="hint">احفظي بياناتك في قاعدة Supabase حقك، وافتحي الملف من أي جهاز وتلقين نفس الروته والرصيد والسجل.</span>
       ${on?`<div class="sb-on"><span class="dot-ok"></span><span>متصل: <b>${esc(SB.email||"")}</b>${SB.synced?` · آخر مزامنة ${esc(fmtStamp(SB.synced))}`:""}</span><button class="btn" data-act="sb-sync">مزامنة الآن</button><button class="btn ghost" data-act="sb-out">تسجيل الخروج</button></div>`:""}
       ${sbMsg?`<div class="sc-err" style="margin-top:6px">${esc(sbMsg)}</div>`:""}
     </div>
@@ -1021,7 +1252,7 @@ const APIKEY_LS=LS_KEY+":apikey", APIMODEL_LS=LS_KEY+":apimodel";
 function lsGet(k){ try{return localStorage.getItem(k)||"";}catch(e){return "";} }
 function lsSet(k,v){ try{ if(v) localStorage.setItem(k,v); else localStorage.removeItem(k);}catch(e){} }
 function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(lsGet(APIKEY_LS)?"api":"ocr"); }
-function scanBtn(cls){ return scanAvailable()?`<button class="${cls||"btn"}" data-act="scan-open">📷 مسح صورة الروستر</button>`:""; }
+function scanBtn(cls){ return scanAvailable()?`<button class="${cls||"btn"}" data-act="scan-open">📷 مسح صورة الروته</button>`:""; }
 function openScan(){ SC={step:"pick",rot:0,sel:null,img:null,err:"",staff:S.cfg.staff||"",name:S.cfg.name||""}; SC.engine=engineOf(); drawScan(); }
 function closeScan(){ if(SC&&SC.ctl) SC.ctl.abort(); SC=null; scanRoot.innerHTML=""; }
 function rotCanvas(img,rot,maxSide){
@@ -1035,10 +1266,10 @@ function drawScan(){
   if(!SC){scanRoot.innerHTML="";return;}
   let body="", foot="";
   if(SC.step==="pick"){
-    body=`<p class="sc-p">صوّري صفحة الروستر اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم.</p>
-      <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري صورة الروستر</b><span>JPG أو PNG</span></label>
+    body=`<p class="sc-p">صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم.</p>
+      <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري صورة الروته</b><span>JPG أو PNG</span></label>
       <input type="file" id="sc-file" accept="image/*" hidden>
-      <div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروستر</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div>
+      <div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div>
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
         ${window.claude?"":`<label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
@@ -1051,9 +1282,9 @@ function drawScan(){
       <div class="sc-tools"><button class="btn" data-act="sc-rot" data-r="-90">↺ تدوير</button><button class="btn" data-act="sc-rot" data-r="90">↻ تدوير</button>${SC.sel?`<button class="btn ghost" data-act="sc-clear">مسح التحديد</button>`:""}</div>
       <div class="sc-cv-wrap"><canvas id="sc-cv"></canvas></div>
       <div class="hint">${SC.sel?"✓ تم تحديد الصف":(SC.engine==="ocr"?"حدّدي الخانات أولاً":"بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)")}</div>`;
-    foot=`<button class="btn primary" data-act="sc-read" ${SC.engine==="ocr"&&!SC.sel?"disabled":""}>قراءة الروستر</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
+    foot=`<button class="btn primary" data-act="sc-read" ${SC.engine==="ocr"&&!SC.sel?"disabled":""}>قراءة الروته</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
   } else if(SC.step==="busy"){
-    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?"جارٍ تحليل الصورة…":"جارٍ قراءة الروستر…"}</b><span id="sc-prog">${SC.engine==="ocr"?"ثوانٍ قليلة":"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
+    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?"جارٍ تحليل الصورة…":"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.engine==="ocr"?"ثوانٍ قليلة":"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
     foot=`<button class="btn" data-act="sc-stop">إيقاف</button>`;
   } else if(SC.step==="review"){
     const R=SC.res; const st=sundayOf(SC.start||S.start);
@@ -1066,7 +1297,7 @@ function drawScan(){
         <select id="rv-${i}" data-rv="${i}" aria-label="${esc(fmtLong(d))}">${[...S.types.map(x=>x.code),...unknown.filter(u=>u),""].filter((v,j,a)=>a.indexOf(v)===j).map(o=>`<option value="${esc(o)}" ${o===c?"selected":""}>${o?esc(o):"—"}</option>`).join("")}</select></div>`;}).join("");
     body=`<div class="sc-sum">
         <div><span class="k">الموظف</span><b>${esc(R.name||SC.name||"—")}</b> <span class="hint">${esc(R.staff||SC.staff||"")}</span></div>
-        <div><label class="k" for="sc-start">بداية الروستر (الأحد)</label><input class="inp" type="date" id="sc-start" value="${st}"></div>
+        <div><label class="k" for="sc-start">بداية الروته (الأحد)</label><input class="inp" type="date" id="sc-start" value="${st}"></div>
       </div>
       <div class="rv-grid">${DAY_EN.map(x=>`<div class="rv-h">${x}</div>`).join("")}${cells}</div>
       <div class="sc-checks">
@@ -1090,7 +1321,7 @@ function drawScan(){
     foot=`<button class="btn primary" data-act="sc-retry">حاولي مرة أخرى</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
   }
   scanRoot.innerHTML=`<div class="overlay" data-scclose="1"><div class="modal sc-modal" role="dialog" aria-modal="true" aria-labelledby="sc-title">
-    <div class="m-head"><h2 id="sc-title" style="font-size:18px">مسح صورة الروستر</h2><button class="icon-btn" data-act="sc-close" aria-label="إغلاق">✕</button></div>
+    <div class="m-head"><h2 id="sc-title" style="font-size:18px">مسح صورة الروته</h2><button class="icon-btn" data-act="sc-close" aria-label="إغلاق">✕</button></div>
     <div class="m-body">${body}</div>${foot?`<div class="m-foot">${foot}</div>`:""}</div></div>`;
   if(SC.step==="pick"){
     const f=document.getElementById("sc-file");
@@ -1271,7 +1502,7 @@ function applyScan(){
     const sheetH=SC.res.old_balance.po*H+SC.res.old_balance.hrs;
     if(st<=S.bal.from){ S.bal={from:st,po:SC.res.old_balance.po,hrs:SC.res.old_balance.hrs}; }
     else { const row=ledger().rows.find(r=>r.start===st);
-      if(row){ const diff=Math.round((sheetH-row.old)*10)/10; if(diff){ const prev=addDays(st,-28); const a=S.adj[prev]||(S.adj[prev]={}); a.hrs=Math.round(((+a.hrs||0)+diff)*10)/10; a.note=(a.note?a.note+" · ":"")+"مطابقة مع ورقة الروستر"; } } }
+      if(row){ const diff=Math.round((sheetH-row.old)*10)/10; if(diff){ const prev=addDays(st,-28); const a=S.adj[prev]||(S.adj[prev]={}); a.hrs=Math.round(((+a.hrs||0)+diff)*10)/10; a.note=(a.note?a.note+" · ":"")+"مطابقة مع ورقة الروته"; } } }
   }
   persist(); closeScan(); tab="roster"; mode="current"; render();
 }
@@ -1293,6 +1524,57 @@ scanRoot.addEventListener("click",e=>{
 (async()=>{ try{ if(!window.claude||!window.claude.use) return; const s=await window.claude.use("sample"); if(!s) return; sampleFn=s;
   const lim=await s.limits().catch(()=>null); sampleImgOK=!!(lim&&lim.images); sampleMax=sampleImgOK?(lim.images.maxCount||1):0; if(sampleImgOK) render(); }catch(e){} })();
 
+/* ---------- live clock ---------- */
+function greet(){ const h=new Date().getHours(); return h<12?"صباح الخير":h<18?"مساء الخير":"مساء النور"; }
+let hijriFmt=null; try{ hijriFmt=new Intl.DateTimeFormat(EN?"en-u-ca-islamic-umalqura":"ar-SA-u-ca-islamic-umalqura-nu-latn",{day:"numeric",month:"long",year:"numeric"}); }catch(e){}
+function tickClock(){
+  const n=new Date(); let h=n.getHours(); const m=String(n.getMinutes()).padStart(2,"0"), sec=String(n.getSeconds()).padStart(2,"0");
+  const ap=h>=12?"PM":"AM"; const h12=(h%12)||12;
+  const set=(k,v)=>document.querySelectorAll('[data-clk="'+k+'"]').forEach(el=>{ if(el.textContent!==v) el.textContent=v; });
+  set("hm",h12+":"+m); set("s",":"+sec); set("ap",ap); set("hm2",h12+":"+m); set("ap2",ap);
+  set("date",DAYS[n.getDay()]+" "+n.getDate()+" "+MONTHS[n.getMonth()]+" "+n.getFullYear());
+  set("short",DAYS[n.getDay()]+" "+n.getDate()+" "+MONTHS[n.getMonth()]);
+  if(hijriFmt){ let hj=""; try{ hj=hijriFmt.format(n); }catch(e){} set("hijri",hj?(EN?hj:hj.replace(/\s*هـ$/,"")+" هـ"):""); }
+  if(n.getSeconds()===0&&tab==="dash"&&!M&&!SC&&!document.activeElement.matches("input,select,textarea")) render();
+}
+const _render=render; render=function(){ document.body.setAttribute("data-page",tab); _render(); tickClock(); };
+setInterval(tickClock,1000);
+/* ---------- language ---------- */
+const EN_DICT={"لو مجموعة فيها رمزين مختلفين، اختاري أي واحد وصحّحي الأيام في الخطوة التالية. الأشكال تُحفظ على جهازك، والمسح القادم يتعرّف عليها تلقائياً": "If a group mixes two codes, pick one and fix those days in the next step. Shapes are saved on your device so the next scan recognises them automatically", "في صفّك — من حافة أول يوم إلى حافة آخر يوم، بدون الاسم والمجاميع. كبّري الصورة قبل التصوير إن أمكن": "in your row — from the edge of the first day to the edge of the last, without the name or totals. Zoom in before taking the photo if you can", "مجموعات حسب شكل الرمز. اختاري الرمز الصحيح لكل مجموعة — مرة واحدة تكفي لكل الأيام اللي فيها": "groups by code shape. Pick the correct code for each group — once covers every day in it", "التعديل هنا لا يُسجَّل كتغيير. اختاري شفتاً ثم اضغطي على الأيام، أو اضغطي على يوم لتعديله": "Edits here are not logged as changes. Pick a shift then tap days, or tap a day to edit it", "لتري كيف يعمل الموقع. ابدئي جدولك الحقيقي، ثم أدخلي الروته الأصلية من صفحة «الروته» بوضع": "so you can see how it works. Start your real schedule, then enter the original rota from the “Rota” page in", "صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم": "Photograph the rota page with your name clearly and in good light, or pick the photo from your gallery", "تم إنشاء الحساب. أكّدي إيميلك من الرسالة اللي وصلتك ثم سجّلي الدخول (أو أوقفي": "Account created. Confirm your email from the message you received, then sign in (or turn off", "الروته السابقة وسجله يبقيان محفوظين ويمكن الرجوع لهما بالأسهم في صفحة الروته": "The previous rota and its log stay saved; go back to them with the arrows on the Rota page", "ما قدرت أقرأ الجدول بشكل صحيح. حدّدي صفّك بدقة أكبر وحاولي مرة أخرى": "Couldn't read the table correctly. Select your row more precisely and try again", "الصورة غير مقبولة (كبيرة جداً أو نوعها غير مدعوم). جرّبي صورة أخرى": "Image not accepted (too large or unsupported type). Try another image", "أي تاريخ تختارينه يُضبط تلقائياً على الأحد في نفس الأسبوع. الروته": "Any date you pick snaps to the Sunday of that week. Rota", "أي تعديل على شفت من صفحة الروته يظهر هنا مع الشفت الأصلي والسبب": "Any shift change from the Rota page appears here with the original shift and the reason", "حقك، وافتحي الملف من أي جهاز وتلقين نفس الروته والرصيد والسجل": "database, then open the file on any device and get the same rota, balance and log", "تاريخ بداية أول روته تُحسب عليه الرصيد (يُضبط على الأحد)": "Start date of the first rota the balance is counted from (snaps to Sunday)", "أيام الدوام الرسمي (بدون الجمعة والسبت وأيام الإجازة)": "official working days (excluding Friday, Saturday and leave days)", "بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)": "No selection: it will search the whole page for your name (less accurate)", "المفتاح يُحفظ على هذا الجهاز فقط ويُرسل مباشرة إلى": "The key is stored on this device only and sent directly to", "مجانية وبدون إنترنت، تأكّدين الرموز بضغطات قليلة": "free and offline; you confirm the codes with a few taps", "خانة غير واضحة (محددة بالبرتقالي) — تأكدي منها": "unclear cells (marked in orange) — please check them", "إعداد الجدول (مرة واحدة) — انسخي هذا الكود في": "Table setup (once) — copy this code into", "مثال: تبديل مع زميلة، طلب المشرفة، تغطية نقص": "e.g. swap with a colleague, supervisor request, covering a gap", "عبّي الرابط والمفتاح والإيميل وكلمة المرور": "Fill in the URL, key, email and password.", "وصلتِ للحد المسموح حالياً. حاولي بعد قليل": "You've hit the current limit. Try again shortly", "تعذّر الاتصال. تأكدي من الرابط والإنترنت": "Couldn't connect. Check the URL and your internet", "يحذف الروته والسجل ويُبقي أنواع الشفتات": "Deletes the rota and log, keeps the shift types", "مطابقة الرصيد مع الورقة: الرصيد السابق": "Match balance with the sheet: previous balance", "صار خطأ أثناء القراءة. حاولي مرة أخرى": "Something went wrong while reading. Try again", "اسمحي له عند الطلب ثم حاولي مرة أخرى": "Allow it when asked, then try again", "تجاوزتِ الحد المسموح. حاولي بعد قليل": "Rate limit reached. Try again shortly", "تعذّرت قراءة الصورة. جرّبي صورة أوضح": "Couldn't read the image. Try a clearer photo", "أولاً، أو اختاري «قراءة على الجهاز»": "first, or choose “On-device reading”", "انتهت الجلسة. سجّلي الدخول مرة أخرى": "Session expired. Sign in again", "دوّري الصورة حتى يصير الكلام مستقيم": "Rotate the photo until the text is upright", "، وتكلفة المسح الواحد قليلة جداً": "; each scan costs very little", "رموز جديدة ستُضاف لأنواع الشفتات": "New codes will be added to shift types", "لا يوجد اتصال — محفوظ على الجهاز": "Offline — saved on this device", "محفوظ محلياً — المزامنة متوقفة": "Saved locally — sync paused", "لا توجد تغييرات في هذه الفترة": "No changes in this period", "تعذّر فتح الصورة. جرّبي صورة": "Couldn't open the image. Try a", "اعتماد وإضافة للجدول الأصلي": "Confirm and add to original rota", "الرصيد الحالي (حسب الروته)": "Current balance (per rota)", "تعديل الجدول الأصلي يدوياً": "Edit original rota manually", "تعذّر الحفظ — محفوظ محلياً": "Couldn't save — saved locally", "عدّلي ساعاتها من الإعدادات": "set their hours in Settings", "لا توجد تغييرات مسجّلة بعد": "No changes logged yet", "اليوم خارج الروته الحالية": "Today is outside the current rota", "بدء روته جديدة بنفس النمط": "Start new rota with same pattern", "شفت صباحي بعد ليلي مباشرة": "Morning right after a night", "غير مطابقة، راجعي الخانات": "doesn't match, check the cells", "لم يُحدَّد شفت لهذا اليوم": "No shift set for this day", "لم يُسمح للموقع باستخدام": "The site isn't allowed to use", "محفوظ على هذا الجهاز فقط": "Saved on this device only", "اسحبي بإصبعك مستطيل حول": "Drag a rectangle around", "الإضافة أو الخصم اليدوي": "manual add or deduct", "رفض الحفظ — فعّلي سياسة": "rejected the save — enable the policy", "احفظي بياناتك في قاعدة": "Save your data in your own", "اضغطي مرة أخرى للتأكيد": "Tap again to confirm", "تم تحديث الجدول الأصلي": "Original rota updated", "حدّدي خانات الأيام الـ": "Select the", "أطول فترة دوام متواصل": "Longest work streak", "التالي: مراجعة الأيام": "Next: review days", "مطابقة مع ورقة الروته": "matched to rota sheet", "أي ملاحظة لهذا اليوم": "Any note for this day", "استرجاع الشفت الأصلي": "Restore original shift", "اسم الموديل غير صحيح": "Invalid model name", "بداية الروته (الأحد)": "Rota start (Sunday)", "تغيّر الروته الحالية": "Change this rota", "ساعات العمل المحسوبة": "Calculated work hours", "قسمتُ خانات صفّك إلى": "I split your row's cells into", "محفوظ على هذا الجهاز": "Saved on this device", "من اسمك إلى آخر يوم)": "from your name to the last day)", "الاسم كما في الروته": "Name as on the rota", "بالكود من الإعدادات": "with the code in Settings", "تعديل الجدول الأصلي": "Edit original rota", "حدّدي الخانات أولاً": "Select the cells first", "سبب الإضافة / الخصم": "Reason for add / deduct", "اختاري صورة الروته": "Choose rota photo", "الرصيد السابق (قبل": "Previous balance (before", "الرصيد عبر الروتات": "Balance across rotas", "الشفتات والإعدادات": "Shifts & Settings", "تبديل الوضع الليلي": "Toggle dark mode", "أطول راحة متواصلة": "Longest rest streak", "الساعات لكل أسبوع": "Hours per week", "تأكدي من الإنترنت": "Check your internet", "تعذّر تحميل مكتبة": "Couldn't load library", "جارٍ تحليل الصورة": "Analysing image…", "جارٍ قراءة الروته": "Reading rota…", "دقيق، يحتاج مفتاح": "accurate, needs an", "لكل يوم دوام رسمي": "per official work day", "أطول تتابع ليالي": "Longest night streak", "إضافة / خصم يدوي": "Manual add / deduct", "اسحبي مستطيل حول": "Drag a rectangle around", "الإيقاع والإرهاق": "Rhythm & fatigue", "الرصيد الافتتاحي": "Opening balance", "الساعات لكل روته": "Hours per rota", "المستشفى / القسم": "Hospital / Department", "تعذّر الاتصال بـ": "Couldn't connect to", "خانات الأيام الـ": "day cells", "رجع الشفت الأصلي": "Original shift restored", "قراءة على الجهاز": "On-device reading", "محفوظ على الجهاز": "saved on device", "الساعات الرسمية": "official hours", "تعديل شفت اليوم": "Edit today's shift", "تعذّرت المزامنة": "Sync failed", "ثانية إلى دقيقة": "seconds to a minute", "جارٍ التحميل من": "Loading from", "دوام في الويكند": "Weekend shifts", "لا توجد تغييرات": "No changes", "مسح صورة الروته": "Scan rota photo", "مسح كل البيانات": "Delete all data", "هذه بيانات مثال": "This is sample data", "استرجاع الأصلي": "Restore original", "استرجاع للأصلي": "Restored to original", "الروته التالية": "Next rota", "الروته الحالية": "Current rota", "الروته السابقة": "Previous rota", "امتلأت المساحة": "Storage full", "بدء روته فارغة": "Start empty rota", "تحصلين عليه من": "Get it from", "تعذّر الحفظ في": "Couldn't save to", "حاولي مرة أخرى": "Try again", "لا توجد بيانات": "No data", "أسباب التغيير": "Change reasons", "الجدول الأصلي": "Original rota", "الرصيد الحالي": "Current balance", "الرصيد السابق": "Previous balance", "تاريخ التعديل": "Changed on", "تحليل الخانات": "Analysing cells", "تخمين — تأكدي": "Guess — please check", "تم تحديد الصف": "Row selected", "توزيع الشفتات": "Shift mix", "جارٍ المزامنة": "Syncing…", "سجل التغييرات": "Change log", "سجل هذا اليوم": "This day's history", "طريقة القراءة": "Reading method", "يوم بدون دوام": "Day off", "الشفت القادم": "Next shift", "الوضع الليلي": "Dark mode", "انسخي يدوياً": "Copy manually", "تسجيل الخروج": "Sign out", "تسجيل الدخول": "Sign in", "تعرّفتُ عليه": "Recognised", "رمز المجموعة": "Group code", "ساعات الروته": "Rota hours", "غير موجود في": "not found in", "قراءة الروته": "Read rota", "يبدأ من روته": "Starts from rota", "أدخلي مفتاح": "Enter your", "أيام الروته": "Rota days", "إعادة المسح": "Scan again", "ابدئي جدولي": "Start my rota", "المزامنة مع": "Sync with", "تأكيد الحذف": "Confirm delete", "ثوانٍ قليلة": "A few seconds", "ساعات العمل": "Work hours", "سبب التعديل": "Reason", "سبب التغيير": "Reason for change", "صفحة الرصيد": "Balance page", "طريقة العرض": "View", "قبل التعديل": "Before change", "كلمة المرور": "Password", "مزامنة الآن": "Sync now", "مسح التحديد": "Clear selection", "هذا الأسبوع": "This week", "وقت البداية": "Start time", "وقت النهاية": "End time", "آخر مزامنة": "last sync", "أطول تتابع": "Longest streak", "أنشئي جدول": "Create the table", "إنشاء حساب": "Create account", "الإحصائيات": "Statistics", "الشفت جارٍ": "Shift in progress", "بدون تغيير": "No change", "تم التراجع": "Undone", "جارٍ الحفظ": "Saving…", "جاهز للحفظ": "Ready to save", "جدول دوامي": "My Rota", "روته جديدة": "New rota", "صباح الخير": "Good morning", "قد يأخذ من": "May take", "مساء الخير": "Good evening", "مساء النور": "Good evening", "من إعدادات": "in settings", "هذه الروته": "This rota", "يوم تالية)": "next days)", "يُحسب دوام": "Counts as work", "إعادة ضبط": "Reset", "التغييرات": "Changes", "بدون جدول": "no rota", "تعديل شفت": "Edit shift", "رصيد حساب": "account balance", "روته أحمد": "Ahmed's Rota", "صفّك كامل": "your whole row", "صورة أخرى": "Another photo", "في الروته": "in rota", "في الورقة": "on sheet", "كل الفترة": "All time", "متزامن مع": "Synced with", "مسح اليوم": "Clear day", "نسخ الكود": "Copy code", "الأربعاء": "Wednesday", "الثلاثاء": "Tuesday", "الرئيسية": "Home", "بدون سبب": "No reason", "تم النسخ": "Copied", "شفت جديد": "New shift", "غير صحيح": "invalid", "غير كافٍ": "insufficient", "غير محدد": "Not set", "محفوظ في": "Saved to", "يبدأ بعد": "Starts in", "الأسبوع": "Week", "الإيميل": "Email", "الاثنين": "Monday", "البداية": "Start", "التغيّر": "Change", "الساعات": "Hours", "النهائي": "Final", "النهاية": "End", "من عمود": "from column", "يوم عمل": "work days", "أكتوبر": "October", "ديسمبر": "December", "سبتمبر": "September", "فبراير": "February", "نوفمبر": "November", "الأصلي": "Original", "الأكثر": "Most", "الجمعة": "Friday", "الحالي": "Current", "الخميس": "Thursday", "الرصيد": "Balance", "الروته": "Rota", "السابق": "Previous", "الفترة": "Period", "الموظف": "Employee", "تم حفظ": "Saved", "خطأ من": "Error from", "للجدول": "to the rota", "مربعات": "Grid", "مستخدم": "In use", "مطابقة": "match", "معدَّل": "Changed", "ملاحظة": "Note", "من أصل": "out of", "أبريل": "April", "أغسطس": "August", "يناير": "January", "يوليو": "July", "يونيو": "June", "مارس": "March", "مايو": "May", "أولاً": "first", "إجازة": "Leave", "إخفاء": "Hide", "إغلاق": "Close", "إلغاء": "Cancel", "إيقاف": "Stop", "الأحد": "Sunday", "الاسم": "Name", "الرمز": "Code", "السبت": "Saturday", "الشفت": "Shift", "اللون": "Color", "اليوم": "Today", "تدوير": "Rotate", "تراجع": "Undo", "تعديل": "Edit", "تُحسب": "counted", "زيادة": "Over", "ساعات": "hours", "شفتات": "shifts", "ليالي": "nights", "محفوظ": "Saved", "مطابق": "Matches", "مفتاح": "key", "منتهي": "Finished", "أيام": "days", "باقي": "remaining", "جارٍ": "in progress", "جدول": "table", "راحة": "Rest", "ساعة": "hours", "سالب": "minus", "غداً": "Tomorrow", "فارغ": "Empty", "قادم": "Upcoming", "متصل": "Connected", "يوم)": "days)", "إلى": "to", "حذف": "Delete", "حفظ": "Save", "خطأ": "Error", "سطر": "Line", "شفت": "Shift", "عمل": "Work", "فقط": "only", "لون": "Color", "مسح": "Clear", "نقص": "Short", "يوم": "days", "أو": "or", "تم": "Done", "هـ": "AH", "س": "h", "د": "m", "من": "from", "،": ",", "أحد": "Sun", "اثنين": "Mon", "ثلاثاء": "Tue", "أربعاء": "Wed", "خميس": "Thu", "جمعة": "Fri", "سبت": "Sat", "و": "&", "اليوم (PO)": "One day (PO)", "تُحسب Due": "Due is calculated as", "روته جديدة (28 يوم تالية)": "New rota (next 28 days)", "شفتات Night": "Night shifts"};
+(function(){
+  const btn=document.getElementById("lang-btn"); btn.textContent=EN?"ع":"EN"; btn.title=EN?"العربية":"English";
+  btn.addEventListener("click",()=>{ try{ localStorage.setItem("duty-roster-v2:lang",EN?"ar":"en"); }catch(e){} location.reload(); });
+  if(!EN) return;
+  const KEYS=Object.keys(EN_DICT).sort((a,b)=>b.length-a.length);
+  const AR=/[\u0600-\u06FF]/; const isAr=c=>!!c&&AR.test(c);
+  function tr(t){ if(!t||!AR.test(t)) return t;
+    for(const k of KEYS){ if(t.indexOf(k)<0) continue; let i=0,out="",idx;
+      while((idx=t.indexOf(k,i))>=0){ const pv=t[idx-1], nx=t[idx+k.length];
+        out+=t.slice(i,idx)+((!isAr(pv)&&!isAr(nx))?EN_DICT[k]:k); i=idx+k.length; }
+      t=out+t.slice(i); if(!AR.test(t)) break; }
+    return t; }
+  const ATTRS=["placeholder","title","aria-label"];
+  function trNode(root){
+    if(root.nodeType===3){ const v=tr(root.nodeValue); if(v!==root.nodeValue) root.nodeValue=v; return; }
+    if(root.nodeType!==1||root.closest&&root.closest("script,style,textarea,[data-nt]")) return;
+    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); let n;
+    while((n=w.nextNode())){ const pe=n.parentElement; if(pe&&pe.closest("script,style,textarea,[data-nt]")) continue; const v=tr(n.nodeValue); if(v!==n.nodeValue) n.nodeValue=v; }
+    const els=[root,...root.querySelectorAll("[placeholder],[title],[aria-label]")];
+    for(const el of els) for(const a of ATTRS){ const v=el.getAttribute&&el.getAttribute(a); if(v&&AR.test(v)) el.setAttribute(a,tr(v)); }
+  }
+  document.title=tr(document.title);
+  trNode(document.body);
+  new MutationObserver(ms=>{ for(const m of ms){ if(m.type==="childList") m.addedNodes.forEach(trNode); else if(m.type==="attributes") trNode(m.target); } })
+    .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:ATTRS});
+})();
+/* ---------- theme ---------- */
+(function(){ const root=document.documentElement; const btn=document.getElementById("theme-btn");
+  const apply=t=>{ if(t) root.setAttribute("data-theme",t); else root.removeAttribute("data-theme");
+    const dark=t?t==="dark":window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches; btn.textContent=dark?"☀":"☾"; };
+  let t=""; try{ t=localStorage.getItem(LS_KEY+":theme")||""; }catch(e){} apply(t);
+  btn.addEventListener("click",()=>{ const dark=root.getAttribute("data-theme")?root.getAttribute("data-theme")==="dark":(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);
+    const n=dark?"light":"dark"; try{ localStorage.setItem(LS_KEY+":theme",n); }catch(e){} apply(n); });
+})();
 /* ---------- boot ---------- */
 render();
 loadSupabase();
