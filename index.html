@@ -580,23 +580,6 @@ html[dir="ltr"] .mix-n{text-align:left}
 .pin-f{display:flex;gap:8px;margin-top:4px}
 .pin-modal.shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-4px)}}
-
-/* ---- v15 visual experience pack ---- */
-.visual-pack{margin-top:20px;display:grid;grid-template-columns:1fr;gap:14px}
-.v-timeline{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px}
-.v-timeline h3{margin:0 0 14px;font-size:16px}
-.v-track{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
-.v-day{min-width:78px;border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;background:var(--surface-2);position:relative}
-.v-day .vd{font-weight:700;font-size:18px}.v-day .vc{margin:8px auto;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;background:var(--accent)}
-.v-day.today{box-shadow:0 0 0 2px var(--accent)}
-.v-mascot{position:fixed;left:22px;bottom:22px;z-index:70;width:62px;height:62px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:28px;box-shadow:var(--shadow);cursor:pointer;animation:floaty 3s ease-in-out infinite}
-.v-tip{position:fixed;left:22px;bottom:92px;z-index:70;background:var(--surface);border:1px solid var(--line);padding:10px 14px;border-radius:12px;max-width:260px;font-size:13px;display:none;box-shadow:var(--shadow)}
-.v-tip.show{display:block}
-.v-pulse{animation:vPulse .5s ease}
-@keyframes floaty{50%{transform:translateY(-5px)}}
-@keyframes vPulse{50%{transform:scale(1.03)}}
-@media(max-width:600px){.v-mascot{left:14px;bottom:14px}.v-tip{left:14px;bottom:82px}}
-
 </style>
 </head>
 <body>
@@ -1751,46 +1734,6 @@ updLockBtn();
 render();
 loadSupabase();
 })();
-
-/* ---- visual experience pack JS ---- */
-(function(){
- function shiftColor(code){
-   const colors=['#0B6E78','#3B4FA6','#DD6A34','#E9A91E','#6FA86A','#B42842'];
-   let n=0; for(let i=0;i<code.length;i++) n+=code.charCodeAt(i); return colors[n%colors.length];
- }
- function enhanceCells(){
-   document.querySelectorAll('.cell .chip,.rc').forEach(el=>{
-     const c=(el.textContent||'').trim(); if(c) el.style.setProperty('--c',shiftColor(c));
-   });
- }
- function addVisuals(){
-   if(document.getElementById('v-mascot')) return;
-   const box=document.createElement('div'); box.className='visual-pack'; box.id='visual-pack';
-   const host=document.querySelector('.wrap');
-   if(host){
-     const t=document.createElement('div'); t.className='v-timeline';
-     t.innerHTML='<h3>الخط الزمني السريع</h3><div class="v-track" id="v-track"></div>';
-     host.appendChild(t);
-   }
-   const m=document.createElement('button'); m.id='v-mascot'; m.className='v-mascot'; m.type='button'; m.textContent='👋';
-   const tip=document.createElement('div'); tip.className='v-tip'; tip.id='v-tip'; tip.textContent='جاهز لمساعدتك في متابعة الروته والمناوبات.';
-   document.body.append(m,tip);
-   m.onclick=()=>tip.classList.toggle('show');
-   const track=document.getElementById('v-track');
-   if(track){
-    for(let i=0;i<7;i++){
-      const d=new Date(); d.setDate(d.getDate()+i);
-      const el=document.createElement('div'); el.className='v-day'+(i===0?' today':'');
-      el.innerHTML='<div>'+d.toLocaleDateString('ar',{weekday:'short'})+'</div><div class="vd">'+d.getDate()+'</div><div class="vc">+</div>';
-      track.appendChild(el);
-    }
-   }
- }
- const old=window.render;
- window.render=function(){ if(old) old(); setTimeout(()=>{enhanceCells();addVisuals()},20); };
- setTimeout(()=>{enhanceCells();addVisuals()},500);
-})();
-
 </script>
 
 </body>
