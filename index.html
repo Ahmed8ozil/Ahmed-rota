@@ -581,9 +581,9 @@ html[dir="ltr"] .mix-n{text-align:left}
 .pin-modal.shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-4px)}}
 
-.lg{position:fixed;inset:0;z-index:200;background:var(--ground);display:grid;place-items:center;padding:16px}
-.lg-card{width:min(360px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;gap:8px}
-.lg-card .btn{margin-top:8px;justify-content:center}
+.loginov{position:fixed;inset:0;z-index:200;background:var(--ground);display:grid;place-items:center;padding:16px}
+.loginov-card{width:min(360px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;gap:8px}
+.loginov-card .btn{margin-top:8px;justify-content:center}
 .usr-r{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .usr-r b{flex:1}
 .usr-f{display:grid;gap:8px;margin-top:8px;max-width:420px}
@@ -1760,7 +1760,7 @@ const STAFF_DOMAIN="@roster.app";
 const staffEmail=n=>String(n||"").trim().toLowerCase()+STAFF_DOMAIN;
 const staffOf=e=>String(e||"").split("@")[0];
 const loginRoot=document.createElement("div"); document.body.appendChild(loginRoot);
-loginRoot.innerHTML='<div class="lg"></div>';
+loginRoot.innerHTML='<div class="loginov"></div>';
 function freshState(name,staff){
   const st={v:1,sample:false,cfg:{official:7,weekend:[5,6],unit:"",name:name||"",staff:staff||""},start:sundayOf(todayIso()),types:JSON.parse(JSON.stringify(DEFAULT_TYPES)),original:{},days:{},log:[],adj:{}};
   st.bal={from:st.start,po:0,hrs:0}; return st;
@@ -1771,7 +1771,7 @@ function setIdentity(name){
   const m=document.querySelector('meta[name="apple-mobile-web-app-title"]'); if(m) m.setAttribute("content",f);
 }
 function showLogin(msg){
-  loginRoot.innerHTML=`<div class="lg"><form class="lg-card" id="lg-f">
+  loginRoot.innerHTML=`<div class="loginov"><form class="loginov-card" id="lg-f">
     <h1>تسجيل الدخول</h1>
     <label class="label" for="lg-e">الرقم الوظيفي</label><input class="inp" id="lg-e" type="text" inputmode="numeric" dir="ltr" autocomplete="username" required>
     <label class="label" for="lg-p">كلمة المرور</label><input class="inp" id="lg-p" type="password" dir="ltr" autocomplete="current-password" required>
