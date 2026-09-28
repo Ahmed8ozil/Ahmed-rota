@@ -1378,13 +1378,13 @@ function drawScan(){
       </div>`}
       ${SC.err?`<div class="sc-err">${esc(SC.err)}</div>`:""}`;
   } else if(SC.step==="crop"){
-    body=`<p class="sc-p"><b>1.</b> دوّري الصورة حتى يصير الكلام مستقيم. ${SC.engine==="ocr"?`<b>2.</b> اسحبي مستطيل حول <b>خانات الأيام الـ28 فقط</b> في صفّك — من حافة أول يوم إلى حافة آخر يوم، بدون الاسم والمجاميع. كبّري الصورة قبل التصوير إن أمكن.`:`<b>2.</b> اسحبي بإصبعك مستطيل حول <b>صفّك كامل</b> (من اسمك إلى آخر يوم).`}</p>
+    body=`<p class="sc-p">${SC.guide?`لوّنت شريطًا حول صفّك تقريبًا (${SC.foundStaff?"وجدته برقمك الوظيفي":"وجدته باسمك"}) — تأكدي أنه صفّك الصحيح، ثم `:""}<b>1.</b> دوّري الصورة حتى يصير الكلام مستقيم إذا لزم. ${SC.engine==="ocr"?`<b>2.</b> اسحبي مستطيل حول <b>خانات الأيام الـ28 فقط</b> في صفّك — من حافة أول يوم إلى حافة آخر يوم، بدون الاسم والمجاميع. كبّري الصورة قبل التصوير إن أمكن.`:`<b>2.</b> اسحبي بإصبعك مستطيل حول <b>صفّك كامل</b> (من اسمك إلى آخر يوم).`}</p>
       <div class="sc-tools"><button class="btn" data-act="sc-rot" data-r="-90">↺ تدوير</button><button class="btn" data-act="sc-rot" data-r="90">↻ تدوير</button>${SC.sel?`<button class="btn ghost" data-act="sc-clear">مسح التحديد</button>`:""}</div>
       <div class="sc-cv-wrap"><canvas id="sc-cv"></canvas></div>
       <div class="hint">${SC.sel?"✓ تم تحديد الصف":(SC.engine==="ocr"?"حدّدي الخانات أولاً":SC.forceManual?"اسحبي مستطيلاً حول خانات الأيام الـ28 في صفّك — سأقرأها بالاعتماد على تاريخ الصفحة":"بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)")}</div>`;
     foot=`<button class="btn primary" data-act="sc-read" ${(SC.engine==="ocr"||SC.forceManual)&&!SC.sel?"disabled":""}>قراءة الروته</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
   } else if(SC.step==="busy"){
-    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?(SC.forceManual?"جارٍ تحليل الصورة…":"جارٍ البحث عن صفّك وقراءة الشفتات…"):"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.engine==="ocr"?(SC.forceManual?"ثوانٍ قليلة":"قد يأخذ حتى دقيقة"):"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
+    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?(SC.forceManual?"جارٍ تحليل الصورة…":"جارٍ البحث عن صفّك…"):"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.engine==="ocr"?(SC.forceManual?"ثوانٍ قليلة":"قد يأخذ نصف دقيقة تقريبًا"):"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
     foot=`<button class="btn" data-act="sc-stop">إيقاف</button>`;
   } else if(SC.step==="review"){
     const R=SC.res; const st=sundayOf(SC.start||S.start);
@@ -1454,7 +1454,10 @@ function setupCropCanvas(){
   const paint=()=>{ x.clearRect(0,0,cv.width,cv.height); x.drawImage(src,0,0,cv.width,cv.height);
     if(SC.sel){ const s=SC.sel, X=s.x*cv.width, Y=s.y*cv.height, W=s.w*cv.width, H=s.h*cv.height;
       x.fillStyle="rgba(8,20,24,.45)"; x.fillRect(0,0,cv.width,Y); x.fillRect(0,Y+H,cv.width,cv.height-Y-H); x.fillRect(0,Y,X,H); x.fillRect(X+W,Y,cv.width-X-W,H);
-      x.strokeStyle="#F0955A"; x.lineWidth=2; x.strokeRect(X,Y,W,H); } };
+      x.strokeStyle="#F0955A"; x.lineWidth=2; x.strokeRect(X,Y,W,H); }
+    else if(SC.guide){ const Y=SC.guide.y*cv.height, H=Math.max(3,SC.guide.h*cv.height);
+      x.fillStyle="rgba(240,149,90,.22)"; x.fillRect(0,Y,cv.width,H);
+      x.strokeStyle="#F0955A"; x.lineWidth=2; x.setLineDash([6,5]); x.strokeRect(1,Y,cv.width-2,H); x.setLineDash([]); } };
   paint();
   let start=null;
   const pt=e=>{ const r=cv.getBoundingClientRect(); return {x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}; };
@@ -1490,10 +1493,9 @@ async function autoLocateOCR(){
     const nameTokens=String(SC.name||"").trim().split(/\s+/).map(normWord).filter(t=>t.length>2);
     const rots=[0,90,180,270];
 
-    // Pass 1: digits-only, sparse-text mode — fast and much more accurate for finding a staff number in a dense table.
+    // Pass 1: digits-only, sparse-text mode — much more accurate for finding a staff number in a dense table.
     let found=null;
     if(staffN.length>=3){
-      prog("جارٍ البحث عن رقمك الوظيفي…");
       await worker.setParameters({tessedit_char_whitelist:"0123456789",tessedit_pageseg_mode:"11"});
       for(let i=0;i<rots.length&&!found;i++){
         if(sig.aborted) throw {code:"cancelled"};
@@ -1503,12 +1505,11 @@ async function autoLocateOCR(){
         if(sig.aborted) throw {code:"cancelled"};
         const words=((out&&out.data&&out.data.words)||[]).filter(w=>w.text&&w.text.trim()&&w.bbox);
         const hit=words.find(w=>normDigits(w.text)===staffN);
-        if(hit) found={rot:rots[i],hit,W:cv.width,H:cv.height};
+        if(hit) found={rot:rots[i],hit,words,W:cv.width,H:cv.height};
       }
     }
-    // Pass 2: full charset, sparse-text mode — fallback to name matching.
+    // Pass 2: full charset — fallback to name matching.
     if(!found&&nameTokens.length){
-      prog("ما لقيت الرقم — أبحث بالاسم…");
       await worker.setParameters({tessedit_char_whitelist:"",tessedit_pageseg_mode:"11"});
       for(let i=0;i<rots.length&&!found;i++){
         if(sig.aborted) throw {code:"cancelled"};
@@ -1518,44 +1519,21 @@ async function autoLocateOCR(){
         if(sig.aborted) throw {code:"cancelled"};
         const words=((out&&out.data&&out.data.words)||[]).filter(w=>w.text&&w.text.trim()&&w.bbox);
         const hit=words.find(w=>nameTokens.includes(normWord(w.text)));
-        if(hit) found={rot:rots[i],hit,W:cv.width,H:cv.height};
+        if(hit) found={rot:rots[i],hit,words,W:cv.width,H:cv.height};
       }
     }
     if(!found) throw {msg:"ما لقيت رقمك الوظيفي ولا اسمك تلقائيًا في هذه الصورة. جرّبي صورة أوضح وأقرب، أو اضغطي «حدّدي صفّك بنفسك» فوق."};
-    prog("وجدت صفّك — جارٍ تكبير الصف وقراءته…");
+
+    // Found the row: set rotation + a highlighted guide band around it. The precise 28-day
+    // rectangle is still drawn by the user (auto text-reading of tiny table cells is unreliable),
+    // but they no longer need to figure out the rotation or hunt for their row in a busy photo.
     SC.rot=found.rot;
-
-    // Re-crop just this employee's row at high resolution from the original photo, then re-OCR it cleanly.
-    const rh=(found.hit.bbox.y1-found.hit.bbox.y0)/found.H, ry=found.hit.bbox.y0/found.H;
-    const pad=rh*1.1;
-    const fy0=Math.max(0,ry-pad), fy1=Math.min(1,ry+rh+pad);
-    const full=rotCanvas(SC.img,SC.rot,3400);
-    const ry0=Math.round(fy0*full.height), ry1=Math.round(fy1*full.height);
-    const rowH=Math.max(1,ry1-ry0);
-    const zoom=Math.min(4,Math.max(1,90/rowH));
-    const rc=document.createElement("canvas"); rc.width=Math.round(full.width*zoom); rc.height=Math.round(rowH*zoom);
-    const rx=rc.getContext("2d"); rx.imageSmoothingQuality="high"; rx.drawImage(full,0,ry0,full.width,rowH,0,0,rc.width,rc.height);
-    await worker.setParameters({tessedit_char_whitelist:"",tessedit_pageseg_mode:"6"});
-    const rowOut=await worker.recognize(rc);
-    if(sig.aborted) throw {code:"cancelled"};
-    const rowWords=((rowOut&&rowOut.data&&rowOut.data.words)||[]).filter(w=>w.text&&w.text.trim()&&w.bbox).sort((a,b)=>a.bbox.x0-b.bbox.x0);
-
-    const known=new Set(S.types.map(t=>t.code.toUpperCase()));
-    let anchorPos=-1;
-    if(staffN.length>=3) anchorPos=rowWords.findIndex(w=>normDigits(w.text)===staffN);
-    if(anchorPos<0&&nameTokens.length) anchorPos=rowWords.findIndex(w=>nameTokens.includes(normWord(w.text)));
-    const codes=[]; let started=anchorPos<0;
-    for(let i=Math.max(0,anchorPos+1);i<rowWords.length&&codes.length<28;i++){
-      const raw=normWord(rowWords[i].text); if(!raw) continue;
-      if(!started){ if(known.has(raw)||raw.length<=3) started=true; else continue; }
-      codes.push(raw);
-    }
-    while(codes.length<28) codes.push("");
-    const unc=codes.map((c,i)=>i).filter(i=>codes[i]&&!known.has(codes[i]));
-    SC.codes=codes.slice(0,28);
-    SC.start=cycleDays(S.start).every(d=>!S.original[d])?S.start:addDays(S.start,28);
-    SC.res={from:null,name:SC.name||null,staff:SC.staff||null,shifts:SC.codes,worked_hours:null,old_balance:null,uncertain:unc,notes:"قراءة تلقائية تجريبية — راجعي كل خانة قبل الاعتماد",engine:"ocr-auto"};
-    SC.useBal=false; SC.step="review";
+    const hitCy=(found.hit.bbox.y0+found.hit.bbox.y1)/2/found.H;
+    const hitH=Math.max(1,found.hit.bbox.y1-found.hit.bbox.y0)/found.H;
+    const pad=hitH*0.9;
+    const y=Math.max(0,hitCy-hitH/2-pad), h=Math.min(1-y,hitH+pad*2);
+    SC.sel=null; SC.guide={y,h};
+    SC.step="crop"; SC.foundStaff=!!(staffN.length>=3&&normDigits(found.hit.text)===staffN);
   }catch(e){
     if(!SC) return;
     if(e&&e.code==="cancelled"){ SC.step="pick"; drawScan(); return; }
@@ -1747,12 +1725,12 @@ scanRoot.addEventListener("click",e=>{
   if(el.dataset&&el.dataset.scclose&&el===el.closest("[data-scclose]")){ if(SC&&SC.step!=="busy") closeScan(); return; }
   const a=el.closest("[data-act]"); if(!a) return; const act=a.dataset.act;
   if(act==="sc-close") closeScan();
-  else if(act==="sc-rot"){ SC.rot=(SC.rot+ +a.dataset.r+360)%360; SC.sel=null; drawScan(); }
+  else if(act==="sc-rot"){ SC.rot=(SC.rot+ +a.dataset.r+360)%360; SC.sel=null; SC.guide=null; drawScan(); }
   else if(act==="sc-clear"){ SC.sel=null; drawScan(); }
   else if(act==="sc-read"||act==="sc-retry") runScan();
   else if(act==="sc-stop"){ if(SC.ctl) SC.ctl.abort(); }
   else if(act==="sc-manual"){ SC.forceManual=true; document.getElementById("sc-file").click(); }
-  else if(act==="sc-back"){ SC.step="pick"; SC.img=null; SC.sel=null; SC.err=""; drawScan(); }
+  else if(act==="sc-back"){ SC.step="pick"; SC.img=null; SC.sel=null; SC.guide=null; SC.err=""; drawScan(); }
   else if(act==="sc-apply") applyScan();
   else if(act==="grp-ok"){ const codes=new Array(28).fill(""); const unc=[]; SC.ocr.groups.forEach(gr=>gr.idx.forEach(i=>{ codes[i]=gr.code; if(!gr.sure) unc.push(i); }));
     SC.codes=codes; SC.res={from:null,name:SC.name||null,staff:SC.staff||null,shifts:codes,worked_hours:null,old_balance:null,uncertain:unc,notes:"",engine:"ocr"};
