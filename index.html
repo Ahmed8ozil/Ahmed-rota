@@ -587,6 +587,7 @@ html[dir="ltr"] .mix-n{text-align:left}
 .usr-r{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .usr-r b{flex:1}
 .usr-f{display:grid;gap:8px;margin-top:8px;max-width:420px}
+.linklike{background:none;border:0;padding:0;color:var(--accent,#2563eb);text-decoration:underline;cursor:pointer;font:inherit}
 </style>
 </head>
 <body>
@@ -1367,7 +1368,7 @@ function drawScan(){
     body=`<p class="sc-p">${(SC.engine==="api"||SC.engine==="gemini")?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم."}</p>
       <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري صورة الروته</b><span>JPG أو PNG</span></label>
       <input type="file" id="sc-file" accept="image/*" hidden>
-      <div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
+      <div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b> — أو <button type="button" class="linklike" data-act="sc-manual">حدّدي صفّك بنفسك من الصورة</button></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
         ${window.claude?"":`<label class="eng-o ${SC.engine==="gemini"?"on":""}"><input type="radio" name="sc-eng" value="gemini" ${SC.engine==="gemini"?"checked":""}><span><b>Gemini (مجاني)</b> — تلقائي وسهل، مفتاح مجاني من Google بدون بطاقة</span></label>
@@ -1381,8 +1382,8 @@ function drawScan(){
     body=`<p class="sc-p"><b>1.</b> دوّري الصورة حتى يصير الكلام مستقيم. ${SC.engine==="ocr"?`<b>2.</b> اسحبي مستطيل حول <b>خانات الأيام الـ28 فقط</b> في صفّك — من حافة أول يوم إلى حافة آخر يوم، بدون الاسم والمجاميع. كبّري الصورة قبل التصوير إن أمكن.`:`<b>2.</b> اسحبي بإصبعك مستطيل حول <b>صفّك كامل</b> (من اسمك إلى آخر يوم).`}</p>
       <div class="sc-tools"><button class="btn" data-act="sc-rot" data-r="-90">↺ تدوير</button><button class="btn" data-act="sc-rot" data-r="90">↻ تدوير</button>${SC.sel?`<button class="btn ghost" data-act="sc-clear">مسح التحديد</button>`:""}</div>
       <div class="sc-cv-wrap"><canvas id="sc-cv"></canvas></div>
-      <div class="hint">${SC.sel?"✓ تم تحديد الصف":(SC.engine==="ocr"?"حدّدي الخانات أولاً":"بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)")}</div>`;
-    foot=`<button class="btn primary" data-act="sc-read" ${SC.engine==="ocr"&&!SC.sel?"disabled":""}>قراءة الروته</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
+      <div class="hint">${SC.sel?"✓ تم تحديد الصف":(SC.engine==="ocr"?"حدّدي الخانات أولاً":SC.forceManual?"اسحبي مستطيلاً حول خانات الأيام الـ28 في صفّك — سأقرأها بالاعتماد على تاريخ الصفحة":"بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)")}</div>`;
+    foot=`<button class="btn primary" data-act="sc-read" ${(SC.engine==="ocr"||SC.forceManual)&&!SC.sel?"disabled":""}>قراءة الروته</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
   } else if(SC.step==="busy"){
     body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?"جارٍ تحليل الصورة…":"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.engine==="ocr"?"ثوانٍ قليلة":"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
     foot=`<button class="btn" data-act="sc-stop">إيقاف</button>`;
@@ -1404,7 +1405,7 @@ function drawScan(){
         <div class="ck ${match===true?"ok":match===false?"bad":""}">${match===true?"✓":match===false?"⚠":"•"} ساعات العمل المحسوبة <b>${fmtH(worked)}</b>${R.worked_hours!=null?` · في الورقة <b>${fmtH(R.worked_hours)}</b>${match?" — مطابقة":" — غير مطابقة، راجعي الخانات"}`:""}</div>
         ${(R.uncertain||[]).length?`<div class="ck bad">⚠ ${R.uncertain.length} خانة غير واضحة (محددة بالبرتقالي) — تأكدي منها</div>`:""}
         ${unknown.filter(u=>u).length?`<div class="ck">رموز جديدة ستُضاف لأنواع الشفتات: <b>${unknown.filter(u=>u).map(esc).join("، ")}</b> — عدّلي ساعاتها من الإعدادات</div>`:""}
-        ${(R.staff&&SC.staff&&String(R.staff).replace(/\D/g,"")!==String(SC.staff).replace(/\D/g,""))?`<div class="ck bad">⚠ الرقم الوظيفي المقروء (${esc(R.staff)}) يختلف عن رقمك (${esc(SC.staff)}) — تأكد أنه صفّك</div>`:""}
+        ${(!SC.forceManual&&R.staff&&SC.staff&&String(R.staff).replace(/\D/g,"")!==String(SC.staff).replace(/\D/g,""))?`<div class="ck bad">⚠ الرقم الوظيفي المقروء (${esc(R.staff)}) يختلف عن رقمك (${esc(SC.staff)}) — تأكد أنه صفّك</div>`:""}
         ${R.notes?`<div class="ck">ملاحظة: ${esc(R.notes)}</div>`:""}
         ${R.old_balance?`<label class="ck"><input type="checkbox" id="sc-bal" ${SC.useBal?"checked":""}> مطابقة الرصيد مع الورقة: الرصيد السابق <b dir="ltr">${R.old_balance.po} PO + ${R.old_balance.hrs} Hrs</b></label>`:""}
       </div>`;
@@ -1427,7 +1428,7 @@ function drawScan(){
   if(SC.step==="pick"){
     const f=document.getElementById("sc-file");
     f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); const gk=document.getElementById("sc-gkey"); if(gk) lsSet(GKEY_LS,gk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
-      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if((SC.engine==="api"&&lsGet(APIKEY_LS))||(SC.engine==="gemini"&&gkey())){ autoScan(); } else { SC.step="crop"; drawScan(); } };
+      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if(!SC.forceManual&&((SC.engine==="api"&&lsGet(APIKEY_LS))||(SC.engine==="gemini"&&gkey()))){ autoScan(); } else { SC.step="crop"; drawScan(); } };
       img.onerror=()=>{ SC.err="تعذّر فتح الصورة. جرّبي صورة JPG أو PNG."; drawScan(); }; img.src=URL.createObjectURL(file); });
   }
   if(SC.step==="pick"){
@@ -1503,7 +1504,7 @@ async function runScan(){
     const sc=Math.min(Math.max(1,2000/rw),4); const c=document.createElement("canvas"); c.width=Math.round(rw*sc); c.height=Math.round(rh*sc);
     const x=c.getContext("2d"); x.imageSmoothingQuality="high"; x.drawImage(full,rx,ry,rw,rh,0,0,c.width,c.height); imgs.push(await toBlob(c,0.95)); }
   if(!SC.sel||sampleMax>=2){ imgs.push(await toBlob(rotCanvas(SC.img,SC.rot,2000),0.9)); }
-  const who=`staff number "${SC.staff||"?"}"${SC.name?`, name "${SC.name}"`:""}`;
+  const who=SC.forceManual?"the person in the image (already cropped to their row)":`staff number "${SC.staff||"?"}"${SC.name?`, name "${SC.name}"`:""}`;
   const known=S.types.map(t=>t.code).join(", ");
   const prompt=`You are transcribing a hospital nursing duty rota (a 28-day "Nursing Duty Rota" table: one row per staff member, columns are 28 consecutive dates starting on a Sunday, then totals such as Worked Hrs, Due, Overtime, and Balance Old/Final in PO and Hrs).
 ${SC.sel?(imgs.length>1?"Image 1 is a high-resolution close-up crop of ONE staff member's row. Image 2 is the whole page for context (dates, headers, totals).":"The image is a high-resolution close-up crop of ONE staff member's row."):"The image is the whole page. Find the row for the staff member below."}
@@ -1686,6 +1687,7 @@ scanRoot.addEventListener("click",e=>{
   else if(act==="sc-clear"){ SC.sel=null; drawScan(); }
   else if(act==="sc-read"||act==="sc-retry") runScan();
   else if(act==="sc-stop"){ if(SC.ctl) SC.ctl.abort(); }
+  else if(act==="sc-manual"){ SC.forceManual=true; document.getElementById("sc-file").click(); }
   else if(act==="sc-back"){ SC.step="pick"; SC.img=null; SC.sel=null; SC.err=""; drawScan(); }
   else if(act==="sc-apply") applyScan();
   else if(act==="grp-ok"){ const codes=new Array(28).fill(""); const unc=[]; SC.ocr.groups.forEach(gr=>gr.idx.forEach(i=>{ codes[i]=gr.code; if(!gr.sure) unc.push(i); }));
