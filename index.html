@@ -1345,12 +1345,10 @@ let sampleFn=null, sampleImgOK=false, sampleMax=0;
 const scanRoot=document.createElement("div"); document.body.appendChild(scanRoot);
 let SC=null;
 function scanAvailable(){ return true; }
-const APIKEY_LS=LS_KEY+":apikey", APIMODEL_LS=LS_KEY+":apimodel", GKEY_LS=LS_KEY+":gkey", GMODEL_LS=LS_KEY+":gmodel";
-const DEFAULT_GKEY="AQ.Ab8RN6JwP3i1ot6hfoM1ik8dXxN-KPv_QYfS8HjpuYB5Nqt3HA";
-const gkey=()=>lsGet(GKEY_LS)||DEFAULT_GKEY;
+const APIKEY_LS=LS_KEY+":apikey", APIMODEL_LS=LS_KEY+":apimodel";
 function lsGet(k){ try{return localStorage.getItem(k)||"";}catch(e){return "";} }
 function lsSet(k,v){ try{ if(v) localStorage.setItem(k,v); else localStorage.removeItem(k);}catch(e){} }
-function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(gkey()?"gemini":lsGet(APIKEY_LS)?"api":"gemini"); }
+function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(lsGet(APIKEY_LS)?"api":"ocr"); }
 function scanBtn(cls){ return scanAvailable()?`<button class="${cls||"btn"}" data-act="scan-open">📷 مسح صورة الروته</button>`:""; }
 function openScan(){ SC={step:"pick",rot:0,sel:null,img:null,err:"",staff:S.cfg.staff||"",name:S.cfg.name||""}; SC.engine=engineOf(); drawScan(); }
 function closeScan(){ if(SC&&SC.ctl) SC.ctl.abort(); SC=null; scanRoot.innerHTML=""; }
@@ -1365,17 +1363,15 @@ function drawScan(){
   if(!SC){scanRoot.innerHTML="";return;}
   let body="", foot="";
   if(SC.step==="pick"){
-    body=`<p class="sc-p">${(SC.engine==="api"||SC.engine==="gemini")?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم."}</p>
+    body=`<p class="sc-p">${SC.engine==="api"?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"اختاري صورة الروته، وسأبحث تلقائيًا عن اسمك ورقمك الوظيفي وأكتب شفتاتك — بالكامل على جهازك، بدون إنترنت وبدون أي طرف خارجي. صوّري بوضوح وإضاءة جيدة لأفضل نتيجة."}</p>
       <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري صورة الروته</b><span>JPG أو PNG</span></label>
       <input type="file" id="sc-file" accept="image/*" hidden>
       <div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b> — أو <button type="button" class="linklike" data-act="sc-manual">حدّدي صفّك بنفسك من الصورة</button></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
-        ${window.claude?"":`<label class="eng-o ${SC.engine==="gemini"?"on":""}"><input type="radio" name="sc-eng" value="gemini" ${SC.engine==="gemini"?"checked":""}><span><b>Gemini (مجاني)</b> — تلقائي وسهل، مفتاح مجاني من Google بدون بطاقة</span></label>
-        ${SC.engine==="gemini"?`<div class="eng-k"><input class="inp" id="sc-gkey" type="password" dir="ltr" autocomplete="off" placeholder="AIza…" value="${esc(lsGet(GKEY_LS))}"><input class="inp" id="sc-gmodel" dir="ltr" value="${esc(lsGet(GMODEL_LS)||"gemini-flash-latest")}" aria-label="Model"><span class="hint">${DEFAULT_GKEY?"مفتاح مشترك مفعّل تلقائيًا — ما تحتاج تحط شي (الحقل اختياري لو عندك مفتاحك).":""} المفتاح المجاني: افتح aistudio.google.com/apikey ← Create API key، والصقه هنا مرة وحدة. يُحفظ على هذا الجهاز فقط.</span></div>`:""}
-        <label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
+        ${window.claude?"":`<label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
         ${SC.engine==="api"?`<div class="eng-k"><input class="inp" id="sc-key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(lsGet(APIKEY_LS))}"><input class="inp" id="sc-model" value="${esc(lsGet(APIMODEL_LS)||"claude-sonnet-5")}" aria-label="Model"><span class="hint">المفتاح يُحفظ على هذا الجهاز فقط ويُرسل مباشرة إلى Anthropic. تحصلين عليه من console.anthropic.com، وتكلفة المسح الواحد قليلة جداً.</span></div>`:""}`}
-        <label class="eng-o ${SC.engine==="ocr"?"on":""}"><input type="radio" name="sc-eng" value="ocr" ${SC.engine==="ocr"?"checked":""}><span><b>قراءة على الجهاز</b> — مجانية وبدون إنترنت، تأكّدين الرموز بضغطات قليلة</span></label>
+        <label class="eng-o ${SC.engine==="ocr"?"on":""}"><input type="radio" name="sc-eng" value="ocr" ${SC.engine==="ocr"?"checked":""}><span><b>قراءة على الجهاز (مجانية)</b> — تشتغل بالكامل على جهازك، بدون إنترنت ولا أي طرف خارجي؛ تأكّدين الرموز بضغطات قليلة</span></label>
       </div>`}
       ${SC.err?`<div class="sc-err">${esc(SC.err)}</div>`:""}`;
   } else if(SC.step==="crop"){
@@ -1385,7 +1381,7 @@ function drawScan(){
       <div class="hint">${SC.sel?"✓ تم تحديد الصف":(SC.engine==="ocr"?"حدّدي الخانات أولاً":SC.forceManual?"اسحبي مستطيلاً حول خانات الأيام الـ28 في صفّك — سأقرأها بالاعتماد على تاريخ الصفحة":"بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)")}</div>`;
     foot=`<button class="btn primary" data-act="sc-read" ${(SC.engine==="ocr"||SC.forceManual)&&!SC.sel?"disabled":""}>قراءة الروته</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
   } else if(SC.step==="busy"){
-    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?"جارٍ تحليل الصورة…":"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.engine==="ocr"?"ثوانٍ قليلة":"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
+    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?(SC.forceManual?"جارٍ تحليل الصورة…":"جارٍ البحث عن صفّك وقراءة الشفتات…"):"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.engine==="ocr"?(SC.forceManual?"ثوانٍ قليلة":"قد يأخذ حتى نصف دقيقة"):"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
     foot=`<button class="btn" data-act="sc-stop">إيقاف</button>`;
   } else if(SC.step==="review"){
     const R=SC.res; const st=sundayOf(SC.start||S.start);
@@ -1427,16 +1423,15 @@ function drawScan(){
     <div class="m-body">${body}</div>${foot?`<div class="m-foot">${foot}</div>`:""}</div></div>`;
   if(SC.step==="pick"){
     const f=document.getElementById("sc-file");
-    f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); const gk=document.getElementById("sc-gkey"); if(gk) lsSet(GKEY_LS,gk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
-      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if(!SC.forceManual&&((SC.engine==="api"&&lsGet(APIKEY_LS))||(SC.engine==="gemini"&&gkey()))){ autoScan(); } else { SC.step="crop"; drawScan(); } };
+    f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
+      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if(!SC.forceManual&&SC.engine==="api"&&lsGet(APIKEY_LS)){ autoScan(); } else if(!SC.forceManual&&SC.engine==="ocr"){ autoLocateOCR(); } else { SC.step="crop"; drawScan(); } };
       img.onerror=()=>{ SC.err="تعذّر فتح الصورة. جرّبي صورة JPG أو PNG."; drawScan(); }; img.src=URL.createObjectURL(file); });
   }
   if(SC.step==="pick"){
     document.querySelectorAll('input[name="sc-eng"]').forEach(r=>r.addEventListener("change",()=>{ SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim(); SC.engine=r.value; drawScan(); }));
     const k=document.getElementById("sc-key"); if(k) k.addEventListener("change",()=>lsSet(APIKEY_LS,k.value.trim()));
     const m=document.getElementById("sc-model"); if(m) m.addEventListener("change",()=>lsSet(APIMODEL_LS,m.value.trim()));
-    const gk=document.getElementById("sc-gkey"); if(gk) gk.addEventListener("change",()=>lsSet(GKEY_LS,gk.value.trim()));
-    const gm=document.getElementById("sc-gmodel"); if(gm) gm.addEventListener("change",()=>lsSet(GMODEL_LS,gm.value.trim()));
+    
   }
   if(SC.step==="crop") setupCropCanvas();
   if(SC.step==="groups") document.querySelectorAll("[data-grp]").forEach(el=>el.addEventListener("change",()=>{ const gr=SC.ocr.groups[+el.dataset.grp]; gr.code=el.value; gr.sure=true; }));
@@ -1465,6 +1460,70 @@ function setupCropCanvas(){
   cv.addEventListener("pointerup",()=>{ start=null; if(SC.sel&&(SC.sel.w<0.02||SC.sel.h<0.005)) SC.sel=null; drawScan(); });
 }
 
+
+/* ---------- on-device auto row-finder (Tesseract.js OCR, 100% local, free) ---------- */
+let tessWorker=null, tessLoading=null;
+function loadTesseract(){
+  if(window.Tesseract) return Promise.resolve();
+  if(tessLoading) return tessLoading;
+  tessLoading=new Promise((resolve,reject)=>{
+    const el=document.createElement("script");
+    el.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+    el.onload=()=>resolve(); el.onerror=()=>reject(new Error("tesseract-load-failed"));
+    document.head.appendChild(el);
+  });
+  return tessLoading;
+}
+async function getTessWorker(){ await loadTesseract(); if(!tessWorker) tessWorker=await Tesseract.createWorker("eng"); return tessWorker; }
+const normDigits=s=>String(s||"").replace(/\D/g,"");
+const normWord=s=>String(s||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+async function autoLocateOCR(){
+  SC.ctl=new AbortController(); SC.step="busy"; drawScan(); prog("جارٍ تحميل أداة القراءة (مرة واحدة فقط)…");
+  try{
+    const worker=await getTessWorker();
+    if(!SC) return;
+    const staffN=normDigits(SC.staff);
+    const nameTokens=String(SC.name||"").trim().split(/\s+/).map(normWord).filter(t=>t.length>2);
+    const rots=[0,90,180,270];
+    let found=null;
+    for(let i=0;i<rots.length;i++){
+      if(SC.ctl.signal.aborted) throw {code:"cancelled"};
+      prog("جارٍ البحث عن اسمك… ("+(i+1)+"/4)");
+      const cv=rotCanvas(SC.img,rots[i],1500);
+      const out=await worker.recognize(cv);
+      if(SC.ctl.signal.aborted) throw {code:"cancelled"};
+      const words=((out&&out.data&&out.data.words)||[]).filter(w=>w.text&&w.text.trim()&&w.bbox);
+      let hit=null;
+      if(staffN.length>=3) hit=words.find(w=>normDigits(w.text)===staffN);
+      if(!hit&&nameTokens.length) hit=words.find(w=>nameTokens.includes(normWord(w.text)));
+      if(hit){ found={rot:rots[i],words,hit,W:cv.width,H:cv.height}; break; }
+    }
+    if(!found) throw {msg:"ما لقيت اسمك أو رقمك الوظيفي تلقائيًا في هذه الصورة. جرّبي صورة أوضح، أو اضغطي «حدّدي صفّك بنفسك» فوق."};
+    prog("وجدت صفّك — جارٍ قراءة الخانات…");
+    SC.rot=found.rot;
+    const hy0=found.hit.bbox.y0, hy1=found.hit.bbox.y1, hitCy=(hy0+hy1)/2, hitH=Math.max(1,hy1-hy0);
+    const band=found.words.filter(w=>Math.abs(((w.bbox.y0+w.bbox.y1)/2)-hitCy)<hitH*0.9).sort((a,b)=>a.bbox.x0-b.bbox.x0);
+    const known=new Set(S.types.map(t=>t.code.toUpperCase()));
+    const hitPos=band.indexOf(found.hit);
+    const codes=[]; let started=false;
+    for(let i=hitPos+1;i<band.length&&codes.length<28;i++){
+      const raw=normWord(band[i].text); if(!raw) continue;
+      if(!started){ if(known.has(raw)||raw.length<=3||/^\d{1,2}$/.test(raw)) started=true; else continue; }
+      codes.push(raw);
+    }
+    while(codes.length<28) codes.push("");
+    const unc=codes.map((c,i)=>i).filter(i=>codes[i]&&!known.has(codes[i]));
+    SC.codes=codes.slice(0,28);
+    SC.start=cycleDays(S.start).every(d=>!S.original[d])?S.start:addDays(S.start,28);
+    SC.res={from:null,name:SC.name||null,staff:SC.staff||null,shifts:SC.codes,worked_hours:null,old_balance:null,uncertain:unc,notes:"قراءة تلقائية تجريبية — راجعي كل خانة قبل الاعتماد",engine:"ocr-auto"};
+    SC.useBal=false; SC.step="review";
+  }catch(e){
+    if(!SC) return;
+    if(e&&e.code==="cancelled"){ SC.step="pick"; drawScan(); return; }
+    SC.err=(e&&e.msg)||"تعذّر تحميل أداة القراءة — تأكدي من الإنترنت (تحميلها أول مرة فقط)، أو حدّدي صفّك بنفسك."; SC.step="error"; drawScan(); return;
+  }
+  drawScan();
+}
 async function autoScan(){
   SC.ctl=new AbortController(); SC.step="busy"; drawScan(); prog("جارٍ البحث عن صفّك في الصفحة…");
   try{
@@ -1475,7 +1534,7 @@ Return only JSON: {"found":true,"rotation":0,"box":{"x":0.1,"y":0.2,"w":0.05,"h"
 - "rotation": clockwise degrees (0, 90, 180 or 270) that make the printed text upright.
 - "box": tight bounding box of that person's ENTIRE strip (their name/number header, all 28 daily cells, and the totals cells that follow), as fractions 0-1 of the ORIGINAL image width and height (x,y = top-left corner).
 If that person is not on this page, return {"found":false}.`;
-    const r=await visionCall(prompt,[await toBlob(rotCanvas(SC.img,0,2000),0.9)],SC.ctl.signal);
+    const r=await apiVision(prompt,[await toBlob(rotCanvas(SC.img,0,2000),0.9)],SC.ctl.signal);
     if(!SC) return;
     const b=r&&r.box;
     if(!r||!r.found||!b||!(+b.w>0)||!(+b.h>0)) throw {msg:"ما لقيت "+(SC.staff?"الرقم "+SC.staff:"اسمك")+" في هذه الصورة. جرّب صورة أوضح أو صفحة ثانية."};
@@ -1519,7 +1578,7 @@ Use null for anything not visible. The photo may be rotated or skewed; read it u
   try{
     let r;
     if(eng==="claude") r=await sampleFn.json(prompt,{images:imgs,modelTier:"complex",signal:SC.ctl.signal});
-    else if(eng==="api"||eng==="gemini") r=await visionCall(prompt,imgs,SC.ctl.signal);
+    else if(eng==="api") r=await apiVision(prompt,imgs,SC.ctl.signal);
     else { await ocrRow(full,SC.ctl.signal); if(!SC) return; SC.step="groups"; drawScan(); return; }
     if(!SC) return;
     if(!r||!Array.isArray(r.shifts)) throw {code:"invalid_json"};
@@ -1558,40 +1617,6 @@ async function apiVision(prompt,imgs,signal){
   const r=parseLooseJSON(txt); if(!r) throw {code:"invalid_json"}; return r;
 }
 
-const visionCall=(pr,im,sg)=>engineOf()==="gemini"?geminiVision(pr,im,sg):apiVision(pr,im,sg);
-async function geminiVision(prompt,imgs,signal){
-  const key=gkey(); if(!key) throw {msg:"الصق مفتاح Gemini المجاني أولاً، أو اختر «قراءة على الجهاز»."};
-  const parts=[]; for(const b of imgs) parts.push({inline_data:{mime_type:"image/jpeg",data:await blobToB64(b)}});
-  parts.push({text:prompt});
-  const body=JSON.stringify({contents:[{parts}],generationConfig:{responseMimeType:"application/json",temperature:0}});
-  const first=lsGet(GMODEL_LS)||"gemini-flash-latest";
-  const models=[first,...["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-flash-latest"].filter(m=>m!==first)];
-  const sleep=ms=>new Promise((ok,no)=>{ const t=setTimeout(ok,ms); if(signal) signal.addEventListener("abort",()=>{clearTimeout(t);no({code:"cancelled"});}); });
-  let lastMsg="";
-  for(let mi=0;mi<models.length;mi++){
-    for(let attempt=0;attempt<2;attempt++){
-      let res;
-      try{ res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(models[mi])+":generateContent",{method:"POST",signal,headers:{"content-type":"application/json","x-goog-api-key":key},body}); }
-      catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {msg:"تعذّر الاتصال بـ Gemini. تأكد من الإنترنت."}; }
-      if(res.ok){
-        const j=await res.json(); const c=j.candidates&&j.candidates[0];
-        const txt=((c&&c.content&&c.content.parts)||[]).map(x=>x.text||"").join("");
-        const r=parseLooseJSON(txt); if(!r) throw {code:"invalid_json"}; return r;
-      }
-      let t=""; try{ const j=await res.json(); t=(j&&j.error&&j.error.message)||""; }catch(e){}
-      if(res.status===403||(res.status===400&&/api key/i.test(t))) throw {msg:"مفتاح Gemini غير صحيح أو غير مفعّل."};
-      if(res.status===404){ lastMsg="اسم الموديل غير صحيح: "+t; break; }
-      if(res.status===503||res.status===500||res.status===429){
-        lastMsg=res.status===429?"وصلت للحد المجاني حاليًا. جرّب بعد دقيقة.":"Gemini مزدحم الآن. جرّب بعد قليل.";
-        if(res.status===503&&attempt===0){ prog("الخدمة مزدحمة — إعادة المحاولة…"); await sleep(2500); continue; }
-        break;
-      }
-      throw {msg:"خطأ من Gemini ("+res.status+") "+t};
-    }
-    if(mi<models.length-1) prog("تجربة موديل آخر…");
-  }
-  throw {msg:lastMsg||"تعذّر الاتصال بـ Gemini."};
-}
 function prog(t){ const el=document.getElementById("sc-prog"); if(el) el.textContent=t; }
 /* ---- on-device reader: cell glyphs -> shape groups -> user confirms each group ---- */
 const PROTO_LS=LS_KEY+":ocr-protos"; const GW=24, GH=24;
