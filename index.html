@@ -607,6 +607,7 @@ html[dir="ltr"] .mix-n{text-align:left}
     <button class="theme-btn" id="lock-btn" aria-label="القفل"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></button>
     <button class="theme-btn lang-btn" id="lang-btn" aria-label="Language" title="English / العربية"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg><span class="lb-t">EN</span></button>
     <button class="theme-btn" id="theme-btn" aria-label="تبديل الوضع الليلي" title="الوضع الليلي"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <button class="theme-btn" id="out-btn" data-u="out" hidden aria-label="تسجيل الخروج" title="تسجيل الخروج"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
     <div class="save local" id="save"><i></i><span>محفوظ على هذا الجهاز</span></div>
   </div>
 </header>
@@ -1344,9 +1345,11 @@ const scanRoot=document.createElement("div"); document.body.appendChild(scanRoot
 let SC=null;
 function scanAvailable(){ return true; }
 const APIKEY_LS=LS_KEY+":apikey", APIMODEL_LS=LS_KEY+":apimodel", GKEY_LS=LS_KEY+":gkey", GMODEL_LS=LS_KEY+":gmodel";
+const DEFAULT_GKEY="AQ.Ab8RN6JwP3i1ot6hfoM1ik8dXxN-KPv_QYfS8HjpuYB5Nqt3HA";
+const gkey=()=>lsGet(GKEY_LS)||DEFAULT_GKEY;
 function lsGet(k){ try{return localStorage.getItem(k)||"";}catch(e){return "";} }
 function lsSet(k,v){ try{ if(v) localStorage.setItem(k,v); else localStorage.removeItem(k);}catch(e){} }
-function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(lsGet(GKEY_LS)?"gemini":lsGet(APIKEY_LS)?"api":"gemini"); }
+function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(gkey()?"gemini":lsGet(APIKEY_LS)?"api":"gemini"); }
 function scanBtn(cls){ return scanAvailable()?`<button class="${cls||"btn"}" data-act="scan-open">📷 مسح صورة الروته</button>`:""; }
 function openScan(){ SC={step:"pick",rot:0,sel:null,img:null,err:"",staff:S.cfg.staff||"",name:S.cfg.name||""}; SC.engine=engineOf(); drawScan(); }
 function closeScan(){ if(SC&&SC.ctl) SC.ctl.abort(); SC=null; scanRoot.innerHTML=""; }
@@ -1368,7 +1371,7 @@ function drawScan(){
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
         ${window.claude?"":`<label class="eng-o ${SC.engine==="gemini"?"on":""}"><input type="radio" name="sc-eng" value="gemini" ${SC.engine==="gemini"?"checked":""}><span><b>Gemini (مجاني)</b> — تلقائي وسهل، مفتاح مجاني من Google بدون بطاقة</span></label>
-        ${SC.engine==="gemini"?`<div class="eng-k"><input class="inp" id="sc-gkey" type="password" dir="ltr" autocomplete="off" placeholder="AIza…" value="${esc(lsGet(GKEY_LS))}"><input class="inp" id="sc-gmodel" dir="ltr" value="${esc(lsGet(GMODEL_LS)||"gemini-flash-latest")}" aria-label="Model"><span class="hint">المفتاح المجاني: افتح aistudio.google.com/apikey ← Create API key، والصقه هنا مرة وحدة. يُحفظ على هذا الجهاز فقط.</span></div>`:""}
+        ${SC.engine==="gemini"?`<div class="eng-k"><input class="inp" id="sc-gkey" type="password" dir="ltr" autocomplete="off" placeholder="AIza…" value="${esc(lsGet(GKEY_LS))}"><input class="inp" id="sc-gmodel" dir="ltr" value="${esc(lsGet(GMODEL_LS)||"gemini-flash-latest")}" aria-label="Model"><span class="hint">${DEFAULT_GKEY?"مفتاح مشترك مفعّل تلقائيًا — ما تحتاج تحط شي (الحقل اختياري لو عندك مفتاحك).":""} المفتاح المجاني: افتح aistudio.google.com/apikey ← Create API key، والصقه هنا مرة وحدة. يُحفظ على هذا الجهاز فقط.</span></div>`:""}
         <label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
         ${SC.engine==="api"?`<div class="eng-k"><input class="inp" id="sc-key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(lsGet(APIKEY_LS))}"><input class="inp" id="sc-model" value="${esc(lsGet(APIMODEL_LS)||"claude-sonnet-5")}" aria-label="Model"><span class="hint">المفتاح يُحفظ على هذا الجهاز فقط ويُرسل مباشرة إلى Anthropic. تحصلين عليه من console.anthropic.com، وتكلفة المسح الواحد قليلة جداً.</span></div>`:""}`}
         <label class="eng-o ${SC.engine==="ocr"?"on":""}"><input type="radio" name="sc-eng" value="ocr" ${SC.engine==="ocr"?"checked":""}><span><b>قراءة على الجهاز</b> — مجانية وبدون إنترنت، تأكّدين الرموز بضغطات قليلة</span></label>
@@ -1424,7 +1427,7 @@ function drawScan(){
   if(SC.step==="pick"){
     const f=document.getElementById("sc-file");
     f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); const gk=document.getElementById("sc-gkey"); if(gk) lsSet(GKEY_LS,gk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
-      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if((SC.engine==="api"&&lsGet(APIKEY_LS))||(SC.engine==="gemini"&&lsGet(GKEY_LS))){ autoScan(); } else { SC.step="crop"; drawScan(); } };
+      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if((SC.engine==="api"&&lsGet(APIKEY_LS))||(SC.engine==="gemini"&&gkey())){ autoScan(); } else { SC.step="crop"; drawScan(); } };
       img.onerror=()=>{ SC.err="تعذّر فتح الصورة. جرّبي صورة JPG أو PNG."; drawScan(); }; img.src=URL.createObjectURL(file); });
   }
   if(SC.step==="pick"){
@@ -1556,23 +1559,37 @@ async function apiVision(prompt,imgs,signal){
 
 const visionCall=(pr,im,sg)=>engineOf()==="gemini"?geminiVision(pr,im,sg):apiVision(pr,im,sg);
 async function geminiVision(prompt,imgs,signal){
-  const key=lsGet(GKEY_LS); if(!key) throw {msg:"الصق مفتاح Gemini المجاني أولاً، أو اختر «قراءة على الجهاز»."};
+  const key=gkey(); if(!key) throw {msg:"الصق مفتاح Gemini المجاني أولاً، أو اختر «قراءة على الجهاز»."};
   const parts=[]; for(const b of imgs) parts.push({inline_data:{mime_type:"image/jpeg",data:await blobToB64(b)}});
   parts.push({text:prompt});
-  const model=lsGet(GMODEL_LS)||"gemini-flash-latest";
-  let res;
-  try{ res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",signal,headers:{"content-type":"application/json","x-goog-api-key":key},body:JSON.stringify({contents:[{parts}],generationConfig:{responseMimeType:"application/json",temperature:0}})}); }
-  catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {msg:"تعذّر الاتصال بـ Gemini. تأكد من الإنترنت."}; }
-  if(!res.ok){ let t=""; try{ const j=await res.json(); t=(j&&j.error&&j.error.message)||""; }catch(e){}
-    let m;
-    if(res.status===429) m="وصلت للحد المجاني حاليًا. جرّب بعد دقيقة.";
-    else if(res.status===403||(res.status===400&&/api key/i.test(t))) m="مفتاح Gemini غير صحيح أو غير مفعّل.";
-    else if(res.status===404) m="اسم الموديل غير صحيح: "+t;
-    else m="خطأ من Gemini ("+res.status+") "+t;
-    throw {msg:m}; }
-  const j=await res.json(); const c=j.candidates&&j.candidates[0];
-  const txt=((c&&c.content&&c.content.parts)||[]).map(x=>x.text||"").join("");
-  const r=parseLooseJSON(txt); if(!r) throw {code:"invalid_json"}; return r;
+  const body=JSON.stringify({contents:[{parts}],generationConfig:{responseMimeType:"application/json",temperature:0}});
+  const first=lsGet(GMODEL_LS)||"gemini-flash-latest";
+  const models=[first,...["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-flash-latest"].filter(m=>m!==first)];
+  const sleep=ms=>new Promise((ok,no)=>{ const t=setTimeout(ok,ms); if(signal) signal.addEventListener("abort",()=>{clearTimeout(t);no({code:"cancelled"});}); });
+  let lastMsg="";
+  for(let mi=0;mi<models.length;mi++){
+    for(let attempt=0;attempt<2;attempt++){
+      let res;
+      try{ res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(models[mi])+":generateContent",{method:"POST",signal,headers:{"content-type":"application/json","x-goog-api-key":key},body}); }
+      catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {msg:"تعذّر الاتصال بـ Gemini. تأكد من الإنترنت."}; }
+      if(res.ok){
+        const j=await res.json(); const c=j.candidates&&j.candidates[0];
+        const txt=((c&&c.content&&c.content.parts)||[]).map(x=>x.text||"").join("");
+        const r=parseLooseJSON(txt); if(!r) throw {code:"invalid_json"}; return r;
+      }
+      let t=""; try{ const j=await res.json(); t=(j&&j.error&&j.error.message)||""; }catch(e){}
+      if(res.status===403||(res.status===400&&/api key/i.test(t))) throw {msg:"مفتاح Gemini غير صحيح أو غير مفعّل."};
+      if(res.status===404){ lastMsg="اسم الموديل غير صحيح: "+t; break; }
+      if(res.status===503||res.status===500||res.status===429){
+        lastMsg=res.status===429?"وصلت للحد المجاني حاليًا. جرّب بعد دقيقة.":"Gemini مزدحم الآن. جرّب بعد قليل.";
+        if(res.status===503&&attempt===0){ prog("الخدمة مزدحمة — إعادة المحاولة…"); await sleep(2500); continue; }
+        break;
+      }
+      throw {msg:"خطأ من Gemini ("+res.status+") "+t};
+    }
+    if(mi<models.length-1) prog("تجربة موديل آخر…");
+  }
+  throw {msg:lastMsg||"تعذّر الاتصال بـ Gemini."};
 }
 function prog(t){ const el=document.getElementById("sc-prog"); if(el) el.textContent=t; }
 /* ---- on-device reader: cell glyphs -> shape groups -> user confirms each group ---- */
@@ -1782,7 +1799,7 @@ updLockBtn();
 /* ---------- boot ---------- */
 /* ---------- accounts: login, per-user roster, admin ---------- */
 const STAFF_DOMAIN="@roster.app";
-const staffEmail=n=>String(n||"").trim().toLowerCase()+STAFF_DOMAIN;
+const staffEmail=n=>{ const v=String(n||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/\s+/g,"").toLowerCase(); return v.includes("@")?v:v+STAFF_DOMAIN; };
 const staffOf=e=>String(e||"").split("@")[0];
 const loginRoot=document.createElement("div"); document.body.appendChild(loginRoot);
 loginRoot.innerHTML='<div class="loginov"></div>';
@@ -1805,7 +1822,7 @@ function showLogin(msg){
   document.getElementById("lg-f").addEventListener("submit",async ev=>{
     ev.preventDefault(); const m=document.getElementById("lg-m"); m.textContent="";
     const {data,error}=await supabaseClient.auth.signInWithPassword({email:staffEmail(document.getElementById("lg-e").value),password:document.getElementById("lg-p").value});
-    if(error||!data||!data.user){ m.textContent="الرقم الوظيفي أو كلمة المرور غير صحيحة"; return; }
+    if(error||!data||!data.user){ const em=(error&&error.message)||""; m.textContent=/not confirmed/i.test(em)?"الحساب غير مفعّل — فعّله من Supabase (Auto Confirm User)":/invalid login/i.test(em)||!em?"الرقم الوظيفي أو كلمة المرور غير صحيحة":em; return; }
     await enter(data.user);
   });
 }
@@ -1817,7 +1834,7 @@ async function enter(user){
   TARGET=ME.id; TNAME=name; setIdentity(name);
   if(ME.admin&&!document.querySelector('#tabs [data-tab="users"]')) document.getElementById("tabs").insertAdjacentHTML("beforeend",'<button role="tab" data-tab="users" aria-selected="false">المستخدمون</button>');
   if(tab==="users"&&!ME.admin) tab="dash";
-  loginRoot.innerHTML="";
+  loginRoot.innerHTML=""; document.getElementById("out-btn").hidden=false;
   await loadRoster(ME.id,name,false);
   if(ME.admin) loadUsers();
 }
@@ -1882,10 +1899,10 @@ async function addUser(){
   if(!name||!/^[A-Za-z0-9]+$/.test(staff)||pw.length<6){ m.textContent="عبّ الاسم والرقم الوظيفي (أرقام/حروف بدون مسافات) وكلمة مرور من ٦ أحرف على الأقل"; return; }
   m.textContent="جارٍ الإضافة…";
   const tmp=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
-  const {error}=await tmp.auth.signUp({email:staffEmail(staff),password:pw,options:{data:{name,staff}}});
+  const {data:sd,error}=await tmp.auth.signUp({email:staffEmail(staff),password:pw,options:{data:{name,staff}}});
   if(error){ m.textContent=error.message; return; }
   await loadUsers();
-  const m2=document.getElementById("nu-msg"); if(m2) m2.textContent="تمت إضافة "+name;
+  const m2=document.getElementById("nu-msg"); if(m2) m2.textContent=(sd&&sd.user&&!sd.session)?"أُنشئ الحساب لكنه غير مفعّل — عطّل Confirm email في Supabase ثم فعّل الحساب من Authentication ← Users":"تمت إضافة "+name;
 }
 async function signOutNow(){
   try{ if(dirty&&TARGET) await flush(); }catch(e){}
@@ -1895,7 +1912,7 @@ async function signOutNow(){
 }
 document.addEventListener("click",async e=>{
   const el=e.target.closest("[data-u]"); if(!el||!ME) return; const a=el.dataset.u;
-  if(a==="out") await signOutNow();
+  if(a==="out"){ if(confirm("تسجيل الخروج؟")) await signOutNow(); }
   else if(a==="open") await switchTo(el.dataset.id,el.dataset.name);
   else if(a==="back") await switchTo(ME.id,ME.name);
   else if(a==="add") await addUser();
