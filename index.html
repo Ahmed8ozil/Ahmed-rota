@@ -1361,10 +1361,10 @@ function drawScan(){
   if(!SC){scanRoot.innerHTML="";return;}
   let body="", foot="";
   if(SC.step==="pick"){
-    body=`<p class="sc-p">صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم.</p>
+    body=`<p class="sc-p">${SC.engine==="api"?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم."}</p>
       <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري صورة الروته</b><span>JPG أو PNG</span></label>
       <input type="file" id="sc-file" accept="image/*" hidden>
-      <div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div>
+      <div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
         ${window.claude?"":`<label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
@@ -1399,6 +1399,7 @@ function drawScan(){
         <div class="ck ${match===true?"ok":match===false?"bad":""}">${match===true?"✓":match===false?"⚠":"•"} ساعات العمل المحسوبة <b>${fmtH(worked)}</b>${R.worked_hours!=null?` · في الورقة <b>${fmtH(R.worked_hours)}</b>${match?" — مطابقة":" — غير مطابقة، راجعي الخانات"}`:""}</div>
         ${(R.uncertain||[]).length?`<div class="ck bad">⚠ ${R.uncertain.length} خانة غير واضحة (محددة بالبرتقالي) — تأكدي منها</div>`:""}
         ${unknown.filter(u=>u).length?`<div class="ck">رموز جديدة ستُضاف لأنواع الشفتات: <b>${unknown.filter(u=>u).map(esc).join("، ")}</b> — عدّلي ساعاتها من الإعدادات</div>`:""}
+        ${(R.staff&&SC.staff&&String(R.staff).replace(/\D/g,"")!==String(SC.staff).replace(/\D/g,""))?`<div class="ck bad">⚠ الرقم الوظيفي المقروء (${esc(R.staff)}) يختلف عن رقمك (${esc(SC.staff)}) — تأكد أنه صفّك</div>`:""}
         ${R.notes?`<div class="ck">ملاحظة: ${esc(R.notes)}</div>`:""}
         ${R.old_balance?`<label class="ck"><input type="checkbox" id="sc-bal" ${SC.useBal?"checked":""}> مطابقة الرصيد مع الورقة: الرصيد السابق <b dir="ltr">${R.old_balance.po} PO + ${R.old_balance.hrs} Hrs</b></label>`:""}
       </div>`;
@@ -1420,8 +1421,8 @@ function drawScan(){
     <div class="m-body">${body}</div>${foot?`<div class="m-foot">${foot}</div>`:""}</div></div>`;
   if(SC.step==="pick"){
     const f=document.getElementById("sc-file");
-    f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
-      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; SC.step="crop"; drawScan(); };
+    f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
+      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if(SC.engine==="api"&&lsGet(APIKEY_LS)){ autoScan(); } else { SC.step="crop"; drawScan(); } };
       img.onerror=()=>{ SC.err="تعذّر فتح الصورة. جرّبي صورة JPG أو PNG."; drawScan(); }; img.src=URL.createObjectURL(file); });
   }
   if(SC.step==="pick"){
@@ -1455,6 +1456,39 @@ function setupCropCanvas(){
   cv.addEventListener("pointermove",e=>{ if(!start) return; const p=pt(e); SC.sel={x:Math.min(start.x,p.x),y:Math.min(start.y,p.y),w:Math.abs(p.x-start.x),h:Math.abs(p.y-start.y)}; paint(); });
   cv.addEventListener("pointerup",()=>{ start=null; if(SC.sel&&(SC.sel.w<0.02||SC.sel.h<0.005)) SC.sel=null; drawScan(); });
 }
+
+async function autoScan(){
+  SC.ctl=new AbortController(); SC.step="busy"; drawScan(); prog("جارٍ البحث عن صفّك في الصفحة…");
+  try{
+    const who=`staff number "${SC.staff||"?"}"${SC.name?`, name "${SC.name}"`:""}`;
+    const prompt=`This is a photo/screenshot of a hospital nursing duty rota page with MANY staff members. It may be rotated or transposed: staff can be columns (name written vertically, "SN"/staff number above it, dates running downward) or rows.
+Find this staff member: ${who}. Match by staff number first, then by name.
+Return only JSON: {"found":true,"rotation":0,"box":{"x":0.1,"y":0.2,"w":0.05,"h":0.6},"staff":"the number you matched","name":"the name you matched"}
+- "rotation": clockwise degrees (0, 90, 180 or 270) that make the printed text upright.
+- "box": tight bounding box of that person's ENTIRE strip (their name/number header, all 28 daily cells, and the totals cells that follow), as fractions 0-1 of the ORIGINAL image width and height (x,y = top-left corner).
+If that person is not on this page, return {"found":false}.`;
+    const r=await apiVision(prompt,[await toBlob(rotCanvas(SC.img,0,2000),0.9)],SC.ctl.signal);
+    if(!SC) return;
+    const b=r&&r.box;
+    if(!r||!r.found||!b||!(+b.w>0)||!(+b.h>0)) throw {msg:"ما لقيت "+(SC.staff?"الرقم "+SC.staff:"اسمك")+" في هذه الصورة. جرّب صورة أوضح أو صفحة ثانية."};
+    const rot=[0,90,180,270].includes(+r.rotation)?+r.rotation:0;
+    let x=+b.x,y=+b.y,w=+b.w,h=+b.h;
+    const m=0.015; x-=m; y-=m; w+=2*m; h+=2*m;
+    x=Math.max(0,x); y=Math.max(0,y); w=Math.min(1-x,w); h=Math.min(1-y,h);
+    let bx,by,bw,bh;
+    if(rot===0){ bx=x;by=y;bw=w;bh=h; }
+    else if(rot===90){ bx=1-(y+h);by=x;bw=h;bh=w; }
+    else if(rot===180){ bx=1-(x+w);by=1-(y+h);bw=w;bh=h; }
+    else { bx=y;by=1-(x+w);bw=h;bh=w; }
+    SC.rot=rot; SC.sel={x:Math.max(0,bx),y:Math.max(0,by),w:Math.min(1,bw),h:Math.min(1,bh)};
+  }catch(e){
+    if(!SC) return;
+    if(e&&e.code==="cancelled"){ SC.step="pick"; drawScan(); return; }
+    SC.err=(e&&e.msg)||"تعذّر تحديد صفّك تلقائيًا."; SC.step="error"; drawScan(); return;
+  }
+  prog("وجدت صفّك — جارٍ قراءة الشفتات…");
+  return runScan();
+}
 async function runScan(){
   const full=rotCanvas(SC.img,SC.rot,4200);
   const imgs=[];
@@ -1471,7 +1505,7 @@ Read that staff member's 28 daily shift codes in date order (earliest date first
 Also read, if visible: the rota start date ("From"), this staff member's Worked Hrs total, and their Balance "Old" PO and Hrs.
 Reply with only JSON of this shape:
 {"from":"2026-09-20","name":"Ahmed Ali Al Mamari","staff":"76221","shifts":["N","N","O", "... 28 codes total"],"worked_hours":135,"old_balance":{"po":77,"hrs":6},"uncertain":[11],"notes":"one short sentence or empty"}
-Use null for anything not visible. The photo may be rotated or skewed; read it upright.`;
+Use null for anything not visible. The photo may be rotated or skewed; read it upright. The strip may still run vertically (dates going downward): in that case read the dates from earliest to latest. Also report the staff number printed in that strip as \"staff\".`;
   SC.ctl=new AbortController(); SC.step="busy"; drawScan();
   const eng=engineOf();
   try{
