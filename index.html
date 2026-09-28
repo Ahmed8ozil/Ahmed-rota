@@ -580,6 +580,13 @@ html[dir="ltr"] .mix-n{text-align:left}
 .pin-f{display:flex;gap:8px;margin-top:4px}
 .pin-modal.shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-4px)}}
+
+.lg{position:fixed;inset:0;z-index:200;background:var(--ground);display:grid;place-items:center;padding:16px}
+.lg-card{width:min(360px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;gap:8px}
+.lg-card .btn{margin-top:8px;justify-content:center}
+.usr-r{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.usr-r b{flex:1}
+.usr-f{display:grid;gap:8px;margin-top:8px;max-width:420px}
 </style>
 </head>
 <body>
@@ -669,7 +676,7 @@ norm();
 const SUPABASE_URL = "https://uprtxqnjajtmvhxwicaq.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwcnR4cW5qYWp0bXZoeHdpY2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxODE0NzYsImV4cCI6MjEwNTc1NzQ3Nn0.DAWlaysrAViFIZS6ss3bWWRWf0lf555KZA_oNiPZjo4";
 const SUPABASE_TABLE = "roster_data";
-const SUPABASE_USER = "ahmed";
+let ME=null, TARGET=null, TNAME="", USERS=[];
 const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 let db=null, docRef=null, saveTimer=null, saving=false, pendingSave=false, dirty=false, gotRemote=false;
@@ -678,23 +685,27 @@ function setSave(kind,txt){saveEl.className="save "+kind;saveEl.querySelector("s
 
 function persist(){
   dirty=true;
-  try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
-  try{localStorage.setItem(LS_KEY+":ts",String(Date.now()));}catch(e){}
+  if(!ME||TARGET===ME.id){
+    try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
+    try{localStorage.setItem(LS_KEY+":ts",String(Date.now()));}catch(e){}
+    try{localStorage.setItem(LS_KEY+":owner",ME?ME.id:"");}catch(e){}
+  }
   if(!docRef&&!supabaseClient){ setSave("local","محفوظ على هذا الجهاز فقط"); return; }
   setSave("busy","جارٍ الحفظ…");
   clearTimeout(saveTimer); saveTimer=setTimeout(flush,500);
 }
 async function flush(){
   if(!docRef&&!supabaseClient) return;
+  if(!TARGET) return;
   if(saving){pendingSave=true;return;}
   saving=true;
   try{
     if(docRef){ await docRef.set(JSON.parse(JSON.stringify(S))); }
     else {
       const now=new Date().toISOString();
-      const {error}=await supabaseClient.from(SUPABASE_TABLE).upsert({user_id:SUPABASE_USER,data:S,updated_at:now},{onConflict:"user_id"});
+      const {error}=await supabaseClient.from(SUPABASE_TABLE).upsert({user_id:TARGET,data:S,updated_at:now},{onConflict:"user_id"});
       if(error) throw error;
-      try{localStorage.setItem(LS_KEY+":synced",now);}catch(e){}
+      if(ME&&TARGET===ME.id){ try{localStorage.setItem(LS_KEY+":synced",now);}catch(e){} }
     }
     dirty=false; setSave("","محفوظ في Supabase"); }
   catch(e){ console.error("Supabase save:",e); setSave("local", sbErrText(e)); }
@@ -755,36 +766,14 @@ function sbErrText(e){
   if(/Failed to fetch|NetworkError|network/i.test(m)) return "لا يوجد اتصال — محفوظ على الجهاز";
   return "تعذّر الحفظ في Supabase — محفوظ على الجهاز";
 }
-async function loadSupabase(){
-  if(!supabaseClient){ setSave("local","تعذّر تحميل مكتبة Supabase — محفوظ على الجهاز"); return; }
-  setSave("busy","جارٍ التحميل من Supabase…");
-  try{
-    const {data,error}=await supabaseClient.from(SUPABASE_TABLE).select("data,updated_at").eq("user_id",SUPABASE_USER).maybeSingle();
-    if(error) throw error;
-    let localTs=0, synced=""; try{ localTs=+localStorage.getItem(LS_KEY+":ts")||0; synced=localStorage.getItem(LS_KEY+":synced")||""; }catch(e){}
-    if(data && data.data && data.data.types){
-      const remoteTs=Date.parse(data.updated_at)||0;
-      const localUnsynced = localTs && (!synced || localTs > Date.parse(synced)+2000);
-      if(localUnsynced && localTs>remoteTs){ await flush(); }
-      else {
-        S=data.data; norm(); viewStart=S.start;
-        try{ localStorage.setItem(LS_KEY,JSON.stringify(S)); localStorage.setItem(LS_KEY+":synced",data.updated_at); localStorage.setItem(LS_KEY+":ts",String(remoteTs)); }catch(e){}
-        render(); setSave("","محفوظ في Supabase");
-      }
-    } else {
-      await flush();   // first time: upload this device's data
-    }
-  }catch(e){
-    console.error("Supabase load:",e); setSave("local", sbErrText(e));
-  }
-}
+/* loadSupabase replaced by accounts block below */
 
 function render(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===tab)));
   if(!viewStart) viewStart=S.start;
-  let h="";
+  let h=viewBanner();
   if(S.sample) h+=`<div class="banner"><div class="sp"><b>هذه بيانات مثال</b> لتري كيف يعمل الموقع. ابدئي جدولك الحقيقي، ثم أدخلي الروته الأصلية من صفحة «الروته» بوضع <b>الجدول الأصلي</b>.</div><button class="btn primary" data-act="start-fresh">ابدئي جدولي</button><button class="btn ghost" data-act="keep-sample">إخفاء</button></div>`;
-  h+= tab==="dash"?viewDash(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): viewTypes();
+  h+= tab==="dash"?viewDash(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?viewUsers(): viewTypes();
   app.innerHTML=h;
 }
 
@@ -1318,6 +1307,7 @@ async function sbPull(){
   if(tab==="types") render();
 }
 function sbPanel(){
+  if(supabaseClient&&ME) return accountPanel();
   if(window.claude||supabaseClient) return "";
   const on=!!SB.access;
   return `<section class="panel settings sbp">
@@ -1731,8 +1721,134 @@ const ICON_SUN='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stro
 document.getElementById("lock-btn").addEventListener("click",()=>{ if(isUnlocked()){ lockNow(); toast("تم القفل"); } else { pinPending=null; showPin(); } });
 updLockBtn();
 /* ---------- boot ---------- */
-render();
-loadSupabase();
+/* ---------- accounts: login, per-user roster, admin ---------- */
+const STAFF_DOMAIN="@roster.app";
+const staffEmail=n=>String(n||"").trim().toLowerCase()+STAFF_DOMAIN;
+const staffOf=e=>String(e||"").split("@")[0];
+const loginRoot=document.createElement("div"); document.body.appendChild(loginRoot);
+loginRoot.innerHTML='<div class="lg"></div>';
+function freshState(name,staff){
+  const st={v:1,sample:false,cfg:{official:7,weekend:[5,6],unit:"",name:name||"",staff:staff||""},start:sundayOf(todayIso()),types:JSON.parse(JSON.stringify(DEFAULT_TYPES)),original:{},days:{},log:[],adj:{}};
+  st.bal={from:st.start,po:0,hrs:0}; return st;
+}
+function setIdentity(name){
+  const f=String(name||"").trim().split(/\s+/)[0]||"الروته";
+  document.title="روته "+f;
+  const m=document.querySelector('meta[name="apple-mobile-web-app-title"]'); if(m) m.setAttribute("content",f);
+}
+function showLogin(msg){
+  loginRoot.innerHTML=`<div class="lg"><form class="lg-card" id="lg-f">
+    <h1>تسجيل الدخول</h1>
+    <label class="label" for="lg-e">الرقم الوظيفي</label><input class="inp" id="lg-e" type="text" inputmode="numeric" dir="ltr" autocomplete="username" required>
+    <label class="label" for="lg-p">كلمة المرور</label><input class="inp" id="lg-p" type="password" dir="ltr" autocomplete="current-password" required>
+    <div class="sc-err" id="lg-m">${esc(msg||"")}</div>
+    <button class="btn primary" type="submit">دخول</button></form></div>`;
+  document.getElementById("lg-f").addEventListener("submit",async ev=>{
+    ev.preventDefault(); const m=document.getElementById("lg-m"); m.textContent="";
+    const {data,error}=await supabaseClient.auth.signInWithPassword({email:staffEmail(document.getElementById("lg-e").value),password:document.getElementById("lg-p").value});
+    if(error||!data||!data.user){ m.textContent="الرقم الوظيفي أو كلمة المرور غير صحيحة"; return; }
+    await enter(data.user);
+  });
+}
+async function enter(user){
+  let p=null;
+  try{ const r=await supabaseClient.from("profiles").select("name,is_admin").eq("id",user.id).maybeSingle(); p=r.data; }catch(e){}
+  const name=(p&&p.name)||(user.user_metadata&&user.user_metadata.name)||(user.email||"").split("@")[0];
+  ME={id:user.id,email:user.email,name,admin:!!(p&&p.is_admin)};
+  TARGET=ME.id; TNAME=name; setIdentity(name);
+  if(ME.admin&&!document.querySelector('#tabs [data-tab="users"]')) document.getElementById("tabs").insertAdjacentHTML("beforeend",'<button role="tab" data-tab="users" aria-selected="false">المستخدمون</button>');
+  if(tab==="users"&&!ME.admin) tab="dash";
+  loginRoot.innerHTML="";
+  await loadRoster(ME.id,name,false);
+  if(ME.admin) loadUsers();
+}
+async function loadRoster(uid,name,force){
+  setSave("busy","جارٍ التحميل…");
+  try{
+    const {data,error}=await supabaseClient.from(SUPABASE_TABLE).select("data,updated_at").eq("user_id",uid).maybeSingle();
+    if(error) throw error;
+    const own=uid===ME.id;
+    let lts=0,synced="",owner=""; try{ lts=+localStorage.getItem(LS_KEY+":ts")||0; synced=localStorage.getItem(LS_KEY+":synced")||""; owner=localStorage.getItem(LS_KEY+":owner")||""; }catch(e){}
+    if(data&&data.data&&data.data.types){
+      const rts=Date.parse(data.updated_at)||0;
+      const localUnsynced=!force&&own&&owner===uid&&lts&&(!synced||lts>Date.parse(synced)+2000);
+      if(localUnsynced&&lts>rts){ await flush(); }
+      else{
+        S=data.data; norm(); viewStart=S.start;
+        if(own){ try{ localStorage.setItem(LS_KEY,JSON.stringify(S)); localStorage.setItem(LS_KEY+":synced",data.updated_at); localStorage.setItem(LS_KEY+":ts",String(rts)); localStorage.setItem(LS_KEY+":owner",uid); }catch(e){} }
+      }
+    } else {
+      S=freshState(name,own?staffOf(ME.email):""); viewStart=S.start; dirty=true;
+      if(own){ try{ localStorage.setItem(LS_KEY,JSON.stringify(S)); localStorage.setItem(LS_KEY+":owner",uid); }catch(e){} }
+      await flush();
+    }
+    render(); setSave("","محفوظ في Supabase");
+  }catch(e){ console.error("Supabase load:",e); setSave("local",sbErrText(e)); render(); }
+}
+async function loadUsers(){
+  try{ const {data,error}=await supabaseClient.from("profiles").select("id,name,is_admin").order("name"); if(!error) USERS=data||[]; }catch(e){}
+  if(tab==="users") render();
+}
+function viewBanner(){
+  if(!ME||TARGET===ME.id) return "";
+  return `<div class="banner"><div class="sp">تعرض وتعدّل روته: <b>${esc(TNAME)}</b></div><button class="btn primary" data-u="back">رجوع لروتي</button></div>`;
+}
+function viewUsers(){
+  if(!ME||!ME.admin) return "";
+  return `<div class="page-head"><div><div class="eyebrow">المدير</div><h1>المستخدمون</h1></div></div>
+  <section class="panel"><h2>الحسابات (${USERS.length})</h2>
+    ${USERS.map(u=>`<div class="usr-r"><b>${esc(u.name||"—")}</b>${u.is_admin?'<span class="hint">مدير</span>':""}<button class="btn" data-u="open" data-id="${esc(u.id)}" data-name="${esc(u.name||"")}">${u.id===ME.id?"روتي":"فتح الروته"}</button></div>`).join("")}
+  </section>
+  <section class="panel" style="margin-top:12px"><h2>إضافة مستخدم</h2>
+    <div class="usr-f">
+      <input class="inp" id="nu-name" placeholder="الاسم (يظهر على أيقونة التطبيق)">
+      <input class="inp" id="nu-email" type="text" inputmode="numeric" dir="ltr" placeholder="الرقم الوظيفي">
+      <input class="inp" id="nu-pass" type="text" dir="ltr" placeholder="كلمة المرور (٦ أحرف فأكثر)" autocomplete="off">
+      <button class="btn primary" data-u="add">إضافة</button>
+      <div class="sc-err" id="nu-msg"></div>
+    </div>
+  </section>`;
+}
+function accountPanel(){
+  return `<section class="panel settings sbp"><div class="field" style="grid-column:1/-1"><span class="label">الحساب</span><span class="hint">${esc(ME.name)} · ${esc(staffOf(ME.email))}</span><div style="margin-top:8px"><button class="btn ghost" data-u="out">تسجيل الخروج</button></div></div></section>`;
+}
+async function switchTo(id,name){
+  clearTimeout(saveTimer); if(dirty&&TARGET) await flush();
+  TARGET=id; TNAME=name||""; mode="current"; tab=id===ME.id?"users":"dash";
+  await loadRoster(id,name,true);
+}
+async function addUser(){
+  const m=document.getElementById("nu-msg");
+  const name=document.getElementById("nu-name").value.trim(), staff=document.getElementById("nu-email").value.trim(), pw=document.getElementById("nu-pass").value;
+  if(!name||!/^[A-Za-z0-9]+$/.test(staff)||pw.length<6){ m.textContent="عبّ الاسم والرقم الوظيفي (أرقام/حروف بدون مسافات) وكلمة مرور من ٦ أحرف على الأقل"; return; }
+  m.textContent="جارٍ الإضافة…";
+  const tmp=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  const {error}=await tmp.auth.signUp({email:staffEmail(staff),password:pw,options:{data:{name,staff}}});
+  if(error){ m.textContent=error.message; return; }
+  await loadUsers();
+  const m2=document.getElementById("nu-msg"); if(m2) m2.textContent="تمت إضافة "+name;
+}
+async function signOutNow(){
+  try{ if(dirty&&TARGET) await flush(); }catch(e){}
+  try{ await supabaseClient.auth.signOut(); }catch(e){}
+  ["",":ts",":synced",":owner",":tab"].forEach(k=>{ try{localStorage.removeItem(LS_KEY+k);}catch(e){} });
+  location.reload();
+}
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-u]"); if(!el||!ME) return; const a=el.dataset.u;
+  if(a==="out") await signOutNow();
+  else if(a==="open") await switchTo(el.dataset.id,el.dataset.name);
+  else if(a==="back") await switchTo(ME.id,ME.name);
+  else if(a==="add") await addUser();
+});
+async function boot(){
+  if(!supabaseClient){ loginRoot.innerHTML=""; render(); setSave("local","تعذّر تحميل مكتبة Supabase — محفوظ على الجهاز"); return; }
+  try{
+    const {data}=await supabaseClient.auth.getSession();
+    if(data&&data.session) await enter(data.session.user); else showLogin();
+  }catch(e){ showLogin(); }
+}
+boot();
 })();
 </script>
 
