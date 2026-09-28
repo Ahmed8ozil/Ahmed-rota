@@ -584,8 +584,11 @@ html[dir="ltr"] .mix-n{text-align:left}
 .loginov{position:fixed;inset:0;z-index:200;background:var(--ground);display:grid;place-items:center;padding:16px}
 .loginov-card{width:min(360px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;gap:8px}
 .loginov-card .btn{margin-top:8px;justify-content:center}
-.usr-r{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
-.usr-r b{flex:1}
+.usr-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.usr-info{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.usr-info .usr-name{white-space:nowrap}
+.usr-acts{display:flex;align-items:center;gap:6px}
+.tag{font-size:11px;background:var(--accent,#2563eb);color:#fff;border-radius:999px;padding:2px 8px}
 .usr-f{display:grid;gap:8px;margin-top:8px;max-width:420px}
 .linklike{background:none;border:0;padding:0;color:var(--accent,#2563eb);text-decoration:underline;cursor:pointer;font:inherit}
 </style>
@@ -1485,20 +1488,26 @@ async function autoLocateOCR(){
     const staffN=normDigits(SC.staff);
     const nameTokens=String(SC.name||"").trim().split(/\s+/).map(normWord).filter(t=>t.length>2);
     const rots=[0,90,180,270];
-    let found=null;
+    const scans=[];
     for(let i=0;i<rots.length;i++){
       if(SC.ctl.signal.aborted) throw {code:"cancelled"};
-      prog("جارٍ البحث عن اسمك… ("+(i+1)+"/4)");
+      prog("جارٍ قراءة الصورة… ("+(i+1)+"/4)");
       const cv=rotCanvas(SC.img,rots[i],1500);
       const out=await worker.recognize(cv);
       if(SC.ctl.signal.aborted) throw {code:"cancelled"};
       const words=((out&&out.data&&out.data.words)||[]).filter(w=>w.text&&w.text.trim()&&w.bbox);
-      let hit=null;
-      if(staffN.length>=3) hit=words.find(w=>normDigits(w.text)===staffN);
-      if(!hit&&nameTokens.length) hit=words.find(w=>nameTokens.includes(normWord(w.text)));
-      if(hit){ found={rot:rots[i],words,hit,W:cv.width,H:cv.height}; break; }
+      scans.push({rot:rots[i],words,W:cv.width,H:cv.height});
     }
-    if(!found) throw {msg:"ما لقيت اسمك أو رقمك الوظيفي تلقائيًا في هذه الصورة. جرّبي صورة أوضح، أو اضغطي «حدّدي صفّك بنفسك» فوق."};
+    let found=null;
+    if(staffN.length>=3){
+      prog("جارٍ البحث عن رقمك الوظيفي…");
+      for(const sc of scans){ const hit=sc.words.find(w=>normDigits(w.text)===staffN); if(hit){ found={...sc,hit}; break; } }
+    }
+    if(!found&&nameTokens.length){
+      prog("ما لقيت الرقم — أبحث بالاسم…");
+      for(const sc of scans){ const hit=sc.words.find(w=>nameTokens.includes(normWord(w.text))); if(hit){ found={...sc,hit}; break; } }
+    }
+    if(!found) throw {msg:"ما لقيت رقمك الوظيفي ولا اسمك تلقائيًا في هذه الصورة. جرّبي صورة أوضح، أو اضغطي «حدّدي صفّك بنفسك» فوق."};
     prog("وجدت صفّك — جارٍ قراءة الخانات…");
     SC.rot=found.rot;
     const hy0=found.hit.bbox.y0, hy1=found.hit.bbox.y1, hitCy=(hy0+hy1)/2, hitH=Math.max(1,hy1-hy0);
@@ -1889,7 +1898,7 @@ async function loadRoster(uid,name,force){
   }catch(e){ console.error("Supabase load:",e); setSave("local",sbErrText(e)); render(); }
 }
 async function loadUsers(){
-  try{ const {data,error}=await supabaseClient.from("profiles").select("id,name,is_admin").order("name"); if(!error) USERS=data||[]; }catch(e){}
+  try{ const {data,error}=await supabaseClient.from("profiles").select("id,name,staff,is_admin").order("name"); if(!error) USERS=data||[]; }catch(e){}
   if(tab==="users") render();
 }
 function viewBanner(){
@@ -1900,7 +1909,18 @@ function viewUsers(){
   if(!ME||!ME.admin) return "";
   return `<div class="page-head"><div><div class="eyebrow">المدير</div><h1>المستخدمون</h1></div></div>
   <section class="panel"><h2>الحسابات (${USERS.length})</h2>
-    ${USERS.map(u=>`<div class="usr-r"><b>${esc(u.name||"—")}</b>${u.is_admin?'<span class="hint">مدير</span>':""}<button class="btn" data-u="open" data-id="${esc(u.id)}" data-name="${esc(u.name||"")}">${u.id===ME.id?"روتي":"فتح الروته"}</button></div>`).join("")}
+    ${USERS.map(u=>`<div class="usr-r" data-row="${esc(u.id)}">
+        <div class="usr-info">
+          <b class="usr-name" data-id="${esc(u.id)}">${esc(u.name||"—")}</b>
+          <span class="hint" dir="ltr">${esc(u.staff||"")}</span>
+          ${u.is_admin?'<span class="tag">مدير</span>':""}
+        </div>
+        <div class="usr-acts">
+          <button class="btn" data-u="open" data-id="${esc(u.id)}" data-name="${esc(u.name||"")}">${u.id===ME.id?"روتي":"فتح الروته"}</button>
+          <button class="icon-btn" data-u="rename" data-id="${esc(u.id)}" data-name="${esc(u.name||"")}" aria-label="تعديل الاسم" title="تعديل الاسم">✏️</button>
+          <button class="icon-btn" data-u="admin" data-id="${esc(u.id)}" data-cur="${u.is_admin?1:0}" aria-label="${u.is_admin?"إزالة صلاحية المدير":"جعله مديرًا"}" title="${u.is_admin?"إزالة صلاحية المدير":"جعله مديرًا"}">${u.is_admin?"🛡️":"🔓"}</button>
+        </div>
+      </div>`).join("")}
   </section>
   <section class="panel" style="margin-top:12px"><h2>إضافة مستخدم</h2>
     <div class="usr-f">
@@ -1943,7 +1963,25 @@ document.addEventListener("click",async e=>{
   else if(a==="open") await switchTo(el.dataset.id,el.dataset.name);
   else if(a==="back") await switchTo(ME.id,ME.name);
   else if(a==="add") await addUser();
+  else if(a==="rename") await renameUser(el.dataset.id,el.dataset.name);
+  else if(a==="admin") await toggleAdmin(el.dataset.id,el.dataset.cur==="1");
 });
+async function renameUser(id,cur){
+  const name=(prompt("الاسم الجديد:",cur||"")||"").trim();
+  if(!name||name===cur) return;
+  const {error}=await supabaseClient.from("profiles").update({name}).eq("id",id);
+  if(error){ alert("تعذّر التعديل: "+error.message); return; }
+  if(id===ME.id){ ME.name=name; setIdentity(name); }
+  if(id===TARGET) TNAME=name;
+  await loadUsers();
+}
+async function toggleAdmin(id,cur){
+  if(id===ME.id&&cur){ if(!confirm("بتشيل صلاحية المدير عن نفسك، وما تقدر ترجعها إلا من مدير ثاني. متأكد؟")) return; }
+  const {error}=await supabaseClient.from("profiles").update({is_admin:!cur}).eq("id",id);
+  if(error){ alert("تعذّر التعديل: "+error.message); return; }
+  if(id===ME.id) ME.admin=!cur;
+  await loadUsers();
+}
 async function boot(){
   if(!supabaseClient){ loginRoot.innerHTML=""; render(); setSave("local","تعذّر تحميل مكتبة Supabase — محفوظ على الجهاز"); return; }
   try{
