@@ -1384,7 +1384,7 @@ function drawScan(){
       <div class="hint">${SC.sel?"✓ تم تحديد الصف":(SC.engine==="ocr"?"حدّدي الخانات أولاً":SC.forceManual?"اسحبي مستطيلاً حول خانات الأيام الـ28 في صفّك — سأقرأها بالاعتماد على تاريخ الصفحة":"بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)")}</div>`;
     foot=`<button class="btn primary" data-act="sc-read" ${(SC.engine==="ocr"||SC.forceManual)&&!SC.sel?"disabled":""}>قراءة الروته</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
   } else if(SC.step==="busy"){
-    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?(SC.forceManual?"جارٍ تحليل الصورة…":"جارٍ البحث عن صفّك وقراءة الشفتات…"):"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.engine==="ocr"?(SC.forceManual?"ثوانٍ قليلة":"قد يأخذ حتى نصف دقيقة"):"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
+    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?(SC.forceManual?"جارٍ تحليل الصورة…":"جارٍ البحث عن صفّك وقراءة الشفتات…"):"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.engine==="ocr"?(SC.forceManual?"ثوانٍ قليلة":"قد يأخذ حتى دقيقة"):"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
     foot=`<button class="btn" data-act="sc-stop">إيقاف</button>`;
   } else if(SC.step==="review"){
     const R=SC.res; const st=sundayOf(SC.start||S.start);
@@ -1485,39 +1485,69 @@ async function autoLocateOCR(){
   try{
     const worker=await getTessWorker();
     if(!SC) return;
+    const sig=SC.ctl.signal;
     const staffN=normDigits(SC.staff);
     const nameTokens=String(SC.name||"").trim().split(/\s+/).map(normWord).filter(t=>t.length>2);
     const rots=[0,90,180,270];
-    const scans=[];
-    for(let i=0;i<rots.length;i++){
-      if(SC.ctl.signal.aborted) throw {code:"cancelled"};
-      prog("جارٍ قراءة الصورة… ("+(i+1)+"/4)");
-      const cv=rotCanvas(SC.img,rots[i],1500);
-      const out=await worker.recognize(cv);
-      if(SC.ctl.signal.aborted) throw {code:"cancelled"};
-      const words=((out&&out.data&&out.data.words)||[]).filter(w=>w.text&&w.text.trim()&&w.bbox);
-      scans.push({rot:rots[i],words,W:cv.width,H:cv.height});
-    }
+
+    // Pass 1: digits-only, sparse-text mode — fast and much more accurate for finding a staff number in a dense table.
     let found=null;
     if(staffN.length>=3){
       prog("جارٍ البحث عن رقمك الوظيفي…");
-      for(const sc of scans){ const hit=sc.words.find(w=>normDigits(w.text)===staffN); if(hit){ found={...sc,hit}; break; } }
+      await worker.setParameters({tessedit_char_whitelist:"0123456789",tessedit_pageseg_mode:"11"});
+      for(let i=0;i<rots.length&&!found;i++){
+        if(sig.aborted) throw {code:"cancelled"};
+        prog("جارٍ البحث عن رقمك الوظيفي… ("+(i+1)+"/4)");
+        const cv=rotCanvas(SC.img,rots[i],2200);
+        const out=await worker.recognize(cv);
+        if(sig.aborted) throw {code:"cancelled"};
+        const words=((out&&out.data&&out.data.words)||[]).filter(w=>w.text&&w.text.trim()&&w.bbox);
+        const hit=words.find(w=>normDigits(w.text)===staffN);
+        if(hit) found={rot:rots[i],hit,W:cv.width,H:cv.height};
+      }
     }
+    // Pass 2: full charset, sparse-text mode — fallback to name matching.
     if(!found&&nameTokens.length){
       prog("ما لقيت الرقم — أبحث بالاسم…");
-      for(const sc of scans){ const hit=sc.words.find(w=>nameTokens.includes(normWord(w.text))); if(hit){ found={...sc,hit}; break; } }
+      await worker.setParameters({tessedit_char_whitelist:"",tessedit_pageseg_mode:"11"});
+      for(let i=0;i<rots.length&&!found;i++){
+        if(sig.aborted) throw {code:"cancelled"};
+        prog("جارٍ البحث عن اسمك… ("+(i+1)+"/4)");
+        const cv=rotCanvas(SC.img,rots[i],2200);
+        const out=await worker.recognize(cv);
+        if(sig.aborted) throw {code:"cancelled"};
+        const words=((out&&out.data&&out.data.words)||[]).filter(w=>w.text&&w.text.trim()&&w.bbox);
+        const hit=words.find(w=>nameTokens.includes(normWord(w.text)));
+        if(hit) found={rot:rots[i],hit,W:cv.width,H:cv.height};
+      }
     }
-    if(!found) throw {msg:"ما لقيت رقمك الوظيفي ولا اسمك تلقائيًا في هذه الصورة. جرّبي صورة أوضح، أو اضغطي «حدّدي صفّك بنفسك» فوق."};
-    prog("وجدت صفّك — جارٍ قراءة الخانات…");
+    if(!found) throw {msg:"ما لقيت رقمك الوظيفي ولا اسمك تلقائيًا في هذه الصورة. جرّبي صورة أوضح وأقرب، أو اضغطي «حدّدي صفّك بنفسك» فوق."};
+    prog("وجدت صفّك — جارٍ تكبير الصف وقراءته…");
     SC.rot=found.rot;
-    const hy0=found.hit.bbox.y0, hy1=found.hit.bbox.y1, hitCy=(hy0+hy1)/2, hitH=Math.max(1,hy1-hy0);
-    const band=found.words.filter(w=>Math.abs(((w.bbox.y0+w.bbox.y1)/2)-hitCy)<hitH*0.9).sort((a,b)=>a.bbox.x0-b.bbox.x0);
+
+    // Re-crop just this employee's row at high resolution from the original photo, then re-OCR it cleanly.
+    const rh=(found.hit.bbox.y1-found.hit.bbox.y0)/found.H, ry=found.hit.bbox.y0/found.H;
+    const pad=rh*1.1;
+    const fy0=Math.max(0,ry-pad), fy1=Math.min(1,ry+rh+pad);
+    const full=rotCanvas(SC.img,SC.rot,3400);
+    const ry0=Math.round(fy0*full.height), ry1=Math.round(fy1*full.height);
+    const rowH=Math.max(1,ry1-ry0);
+    const zoom=Math.min(4,Math.max(1,90/rowH));
+    const rc=document.createElement("canvas"); rc.width=Math.round(full.width*zoom); rc.height=Math.round(rowH*zoom);
+    const rx=rc.getContext("2d"); rx.imageSmoothingQuality="high"; rx.drawImage(full,0,ry0,full.width,rowH,0,0,rc.width,rc.height);
+    await worker.setParameters({tessedit_char_whitelist:"",tessedit_pageseg_mode:"6"});
+    const rowOut=await worker.recognize(rc);
+    if(sig.aborted) throw {code:"cancelled"};
+    const rowWords=((rowOut&&rowOut.data&&rowOut.data.words)||[]).filter(w=>w.text&&w.text.trim()&&w.bbox).sort((a,b)=>a.bbox.x0-b.bbox.x0);
+
     const known=new Set(S.types.map(t=>t.code.toUpperCase()));
-    const hitPos=band.indexOf(found.hit);
-    const codes=[]; let started=false;
-    for(let i=hitPos+1;i<band.length&&codes.length<28;i++){
-      const raw=normWord(band[i].text); if(!raw) continue;
-      if(!started){ if(known.has(raw)||raw.length<=3||/^\d{1,2}$/.test(raw)) started=true; else continue; }
+    let anchorPos=-1;
+    if(staffN.length>=3) anchorPos=rowWords.findIndex(w=>normDigits(w.text)===staffN);
+    if(anchorPos<0&&nameTokens.length) anchorPos=rowWords.findIndex(w=>nameTokens.includes(normWord(w.text)));
+    const codes=[]; let started=anchorPos<0;
+    for(let i=Math.max(0,anchorPos+1);i<rowWords.length&&codes.length<28;i++){
+      const raw=normWord(rowWords[i].text); if(!raw) continue;
+      if(!started){ if(known.has(raw)||raw.length<=3) started=true; else continue; }
       codes.push(raw);
     }
     while(codes.length<28) codes.push("");
