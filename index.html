@@ -1343,10 +1343,10 @@ let sampleFn=null, sampleImgOK=false, sampleMax=0;
 const scanRoot=document.createElement("div"); document.body.appendChild(scanRoot);
 let SC=null;
 function scanAvailable(){ return true; }
-const APIKEY_LS=LS_KEY+":apikey", APIMODEL_LS=LS_KEY+":apimodel";
+const APIKEY_LS=LS_KEY+":apikey", APIMODEL_LS=LS_KEY+":apimodel", GKEY_LS=LS_KEY+":gkey", GMODEL_LS=LS_KEY+":gmodel";
 function lsGet(k){ try{return localStorage.getItem(k)||"";}catch(e){return "";} }
 function lsSet(k,v){ try{ if(v) localStorage.setItem(k,v); else localStorage.removeItem(k);}catch(e){} }
-function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(lsGet(APIKEY_LS)?"api":"ocr"); }
+function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(lsGet(GKEY_LS)?"gemini":lsGet(APIKEY_LS)?"api":"gemini"); }
 function scanBtn(cls){ return scanAvailable()?`<button class="${cls||"btn"}" data-act="scan-open">📷 مسح صورة الروته</button>`:""; }
 function openScan(){ SC={step:"pick",rot:0,sel:null,img:null,err:"",staff:S.cfg.staff||"",name:S.cfg.name||""}; SC.engine=engineOf(); drawScan(); }
 function closeScan(){ if(SC&&SC.ctl) SC.ctl.abort(); SC=null; scanRoot.innerHTML=""; }
@@ -1361,13 +1361,15 @@ function drawScan(){
   if(!SC){scanRoot.innerHTML="";return;}
   let body="", foot="";
   if(SC.step==="pick"){
-    body=`<p class="sc-p">${SC.engine==="api"?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم."}</p>
+    body=`<p class="sc-p">${(SC.engine==="api"||SC.engine==="gemini")?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم."}</p>
       <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري صورة الروته</b><span>JPG أو PNG</span></label>
       <input type="file" id="sc-file" accept="image/*" hidden>
       <div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
-        ${window.claude?"":`<label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
+        ${window.claude?"":`<label class="eng-o ${SC.engine==="gemini"?"on":""}"><input type="radio" name="sc-eng" value="gemini" ${SC.engine==="gemini"?"checked":""}><span><b>Gemini (مجاني)</b> — تلقائي وسهل، مفتاح مجاني من Google بدون بطاقة</span></label>
+        ${SC.engine==="gemini"?`<div class="eng-k"><input class="inp" id="sc-gkey" type="password" dir="ltr" autocomplete="off" placeholder="AIza…" value="${esc(lsGet(GKEY_LS))}"><input class="inp" id="sc-gmodel" dir="ltr" value="${esc(lsGet(GMODEL_LS)||"gemini-flash-latest")}" aria-label="Model"><span class="hint">المفتاح المجاني: افتح aistudio.google.com/apikey ← Create API key، والصقه هنا مرة وحدة. يُحفظ على هذا الجهاز فقط.</span></div>`:""}
+        <label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
         ${SC.engine==="api"?`<div class="eng-k"><input class="inp" id="sc-key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(lsGet(APIKEY_LS))}"><input class="inp" id="sc-model" value="${esc(lsGet(APIMODEL_LS)||"claude-sonnet-5")}" aria-label="Model"><span class="hint">المفتاح يُحفظ على هذا الجهاز فقط ويُرسل مباشرة إلى Anthropic. تحصلين عليه من console.anthropic.com، وتكلفة المسح الواحد قليلة جداً.</span></div>`:""}`}
         <label class="eng-o ${SC.engine==="ocr"?"on":""}"><input type="radio" name="sc-eng" value="ocr" ${SC.engine==="ocr"?"checked":""}><span><b>قراءة على الجهاز</b> — مجانية وبدون إنترنت، تأكّدين الرموز بضغطات قليلة</span></label>
       </div>`}
@@ -1421,14 +1423,16 @@ function drawScan(){
     <div class="m-body">${body}</div>${foot?`<div class="m-foot">${foot}</div>`:""}</div></div>`;
   if(SC.step==="pick"){
     const f=document.getElementById("sc-file");
-    f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
-      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if(SC.engine==="api"&&lsGet(APIKEY_LS)){ autoScan(); } else { SC.step="crop"; drawScan(); } };
+    f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); const gk=document.getElementById("sc-gkey"); if(gk) lsSet(GKEY_LS,gk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
+      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if((SC.engine==="api"&&lsGet(APIKEY_LS))||(SC.engine==="gemini"&&lsGet(GKEY_LS))){ autoScan(); } else { SC.step="crop"; drawScan(); } };
       img.onerror=()=>{ SC.err="تعذّر فتح الصورة. جرّبي صورة JPG أو PNG."; drawScan(); }; img.src=URL.createObjectURL(file); });
   }
   if(SC.step==="pick"){
     document.querySelectorAll('input[name="sc-eng"]').forEach(r=>r.addEventListener("change",()=>{ SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim(); SC.engine=r.value; drawScan(); }));
     const k=document.getElementById("sc-key"); if(k) k.addEventListener("change",()=>lsSet(APIKEY_LS,k.value.trim()));
     const m=document.getElementById("sc-model"); if(m) m.addEventListener("change",()=>lsSet(APIMODEL_LS,m.value.trim()));
+    const gk=document.getElementById("sc-gkey"); if(gk) gk.addEventListener("change",()=>lsSet(GKEY_LS,gk.value.trim()));
+    const gm=document.getElementById("sc-gmodel"); if(gm) gm.addEventListener("change",()=>lsSet(GMODEL_LS,gm.value.trim()));
   }
   if(SC.step==="crop") setupCropCanvas();
   if(SC.step==="groups") document.querySelectorAll("[data-grp]").forEach(el=>el.addEventListener("change",()=>{ const gr=SC.ocr.groups[+el.dataset.grp]; gr.code=el.value; gr.sure=true; }));
@@ -1467,7 +1471,7 @@ Return only JSON: {"found":true,"rotation":0,"box":{"x":0.1,"y":0.2,"w":0.05,"h"
 - "rotation": clockwise degrees (0, 90, 180 or 270) that make the printed text upright.
 - "box": tight bounding box of that person's ENTIRE strip (their name/number header, all 28 daily cells, and the totals cells that follow), as fractions 0-1 of the ORIGINAL image width and height (x,y = top-left corner).
 If that person is not on this page, return {"found":false}.`;
-    const r=await apiVision(prompt,[await toBlob(rotCanvas(SC.img,0,2000),0.9)],SC.ctl.signal);
+    const r=await visionCall(prompt,[await toBlob(rotCanvas(SC.img,0,2000),0.9)],SC.ctl.signal);
     if(!SC) return;
     const b=r&&r.box;
     if(!r||!r.found||!b||!(+b.w>0)||!(+b.h>0)) throw {msg:"ما لقيت "+(SC.staff?"الرقم "+SC.staff:"اسمك")+" في هذه الصورة. جرّب صورة أوضح أو صفحة ثانية."};
@@ -1511,7 +1515,7 @@ Use null for anything not visible. The photo may be rotated or skewed; read it u
   try{
     let r;
     if(eng==="claude") r=await sampleFn.json(prompt,{images:imgs,modelTier:"complex",signal:SC.ctl.signal});
-    else if(eng==="api") r=await apiVision(prompt,imgs,SC.ctl.signal);
+    else if(eng==="api"||eng==="gemini") r=await visionCall(prompt,imgs,SC.ctl.signal);
     else { await ocrRow(full,SC.ctl.signal); if(!SC) return; SC.step="groups"; drawScan(); return; }
     if(!SC) return;
     if(!r||!Array.isArray(r.shifts)) throw {code:"invalid_json"};
@@ -1547,6 +1551,27 @@ async function apiVision(prompt,imgs,signal){
   if(!res.ok){ let t=""; try{ const j=await res.json(); t=j&&j.error&&j.error.message||""; }catch(e){}
     throw {msg:res.status===401?"مفتاح API غير صحيح.":res.status===404?"اسم الموديل غير صحيح: "+t:res.status===429?"تجاوزتِ الحد المسموح. حاولي بعد قليل.":res.status===400&&/credit/i.test(t)?"رصيد حساب API غير كافٍ.":"خطأ من Claude API ("+res.status+") "+t}; }
   const j=await res.json(); const txt=(j.content||[]).map(c=>c.text||"").join("");
+  const r=parseLooseJSON(txt); if(!r) throw {code:"invalid_json"}; return r;
+}
+
+const visionCall=(pr,im,sg)=>engineOf()==="gemini"?geminiVision(pr,im,sg):apiVision(pr,im,sg);
+async function geminiVision(prompt,imgs,signal){
+  const key=lsGet(GKEY_LS); if(!key) throw {msg:"الصق مفتاح Gemini المجاني أولاً، أو اختر «قراءة على الجهاز»."};
+  const parts=[]; for(const b of imgs) parts.push({inline_data:{mime_type:"image/jpeg",data:await blobToB64(b)}});
+  parts.push({text:prompt});
+  const model=lsGet(GMODEL_LS)||"gemini-flash-latest";
+  let res;
+  try{ res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",signal,headers:{"content-type":"application/json","x-goog-api-key":key},body:JSON.stringify({contents:[{parts}],generationConfig:{responseMimeType:"application/json",temperature:0}})}); }
+  catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {msg:"تعذّر الاتصال بـ Gemini. تأكد من الإنترنت."}; }
+  if(!res.ok){ let t=""; try{ const j=await res.json(); t=(j&&j.error&&j.error.message)||""; }catch(e){}
+    let m;
+    if(res.status===429) m="وصلت للحد المجاني حاليًا. جرّب بعد دقيقة.";
+    else if(res.status===403||(res.status===400&&/api key/i.test(t))) m="مفتاح Gemini غير صحيح أو غير مفعّل.";
+    else if(res.status===404) m="اسم الموديل غير صحيح: "+t;
+    else m="خطأ من Gemini ("+res.status+") "+t;
+    throw {msg:m}; }
+  const j=await res.json(); const c=j.candidates&&j.candidates[0];
+  const txt=((c&&c.content&&c.content.parts)||[]).map(x=>x.text||"").join("");
   const r=parseLooseJSON(txt); if(!r) throw {code:"invalid_json"}; return r;
 }
 function prog(t){ const el=document.getElementById("sc-prog"); if(el) el.textContent=t; }
