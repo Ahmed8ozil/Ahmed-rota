@@ -1371,7 +1371,7 @@ function drawScan(){
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
         ${window.claude?"":`<label class="eng-o ${SC.engine==="gemini"?"on":""}"><input type="radio" name="sc-eng" value="gemini" ${SC.engine==="gemini"?"checked":""}><span><b>Gemini (مجاني)</b> — تلقائي وسهل، مفتاح مجاني من Google بدون بطاقة</span></label>
-        ${SC.engine==="gemini"?`<div class="eng-k"><input class="inp" id="sc-gkey" type="password" dir="ltr" autocomplete="off" placeholder="AIza…" value="${esc(lsGet(GKEY_LS))}"><input class="inp" id="sc-gmodel" dir="ltr" value="${esc(lsGet(GMODEL_LS)||"gemini-2.5-pro")}" aria-label="Model"><span class="hint">${DEFAULT_GKEY?"مفتاح مشترك مفعّل تلقائيًا — ما تحتاج تحط شي (الحقل اختياري لو عندك مفتاحك).":""} المفتاح المجاني: افتح aistudio.google.com/apikey ← Create API key، والصقه هنا مرة وحدة. يُحفظ على هذا الجهاز فقط.</span></div>`:""}
+        ${SC.engine==="gemini"?`<div class="eng-k"><input class="inp" id="sc-gkey" type="password" dir="ltr" autocomplete="off" placeholder="AIza…" value="${esc(lsGet(GKEY_LS))}"><input class="inp" id="sc-gmodel" dir="ltr" value="${esc(lsGet(GMODEL_LS)||"gemini-3.8-flash")}" aria-label="Model"><span class="hint">${DEFAULT_GKEY?"مفتاح مشترك مفعّل تلقائيًا — ما تحتاج تحط شي (الحقل اختياري لو عندك مفتاحك).":""} المفتاح المجاني: افتح aistudio.google.com/apikey ← Create API key، والصقه هنا مرة وحدة. يُحفظ على هذا الجهاز فقط.</span></div>`:""}
         <label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
         ${SC.engine==="api"?`<div class="eng-k"><input class="inp" id="sc-key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(lsGet(APIKEY_LS))}"><input class="inp" id="sc-model" value="${esc(lsGet(APIMODEL_LS)||"claude-sonnet-5-5")}" aria-label="Model"><span class="hint">المفتاح يُحفظ على هذا الجهاز فقط ويُرسل مباشرة إلى Anthropic. تحصلين عليه من console.anthropic.com، وتكلفة المسح الواحد قليلة جداً.</span></div>`:""}`}
         <label class="eng-o ${SC.engine==="ocr"?"on":""}"><input type="radio" name="sc-eng" value="ocr" ${SC.engine==="ocr"?"checked":""}><span><b>قراءة على الجهاز</b> — مجانية وبدون إنترنت، تأكّدين الرموز بضغطات قليلة</span></label>
@@ -1709,8 +1709,8 @@ async function geminiVision(prompt,imgs,signal){
   const parts=[]; for(const b of imgs) parts.push({inline_data:{mime_type:"image/jpeg",data:await blobToB64(b)}});
   parts.push({text:prompt});
   const body=JSON.stringify({contents:[{parts}],generationConfig:{responseMimeType:"application/json",temperature:0}});
-  const first=lsGet(GMODEL_LS)||"gemini-2.5-pro";
-  const models=[first,...["gemini-flash-latest","gemini-2.5-flash"].filter(m=>m!==first)];
+  const first=lsGet(GMODEL_LS)||"gemini-3.8-flash";
+  const models=[first,...["gemini-flash-latest"].filter(m=>m!==first)];
   const sleep=ms=>new Promise((ok,no)=>{ const t=setTimeout(ok,ms); if(signal) signal.addEventListener("abort",()=>{clearTimeout(t);no({code:"cancelled"});}); });
   let lastMsg="";
   for(let mi=0;mi<models.length;mi++){
