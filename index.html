@@ -1212,7 +1212,7 @@ document.addEventListener("click",e=>{
   const dt=el.closest("[data-deltype]"); if(dt){ S.types.splice(+dt.dataset.deltype,1); persist(); render(); return;}
   const a=el.closest("[data-act]"); if(!a) return;
   const act=a.dataset.act;
-  if(act==="scan-open"){ openScan(); return; }
+  if(act==="scan-open"){ openScan(); return; } if(act==="qe-open"){ qeOpen(); return; }
   if(act==="sb-in"){ sbLogin(false); return; }
   if(act==="sb-up"){ sbLogin(true); return; }
   if(act==="sb-sync"){ sbPull(); return; }
@@ -1350,7 +1350,7 @@ const gkey=()=>lsGet(GKEY_LS)||DEFAULT_GKEY;
 function lsGet(k){ try{return localStorage.getItem(k)||"";}catch(e){return "";} }
 function lsSet(k,v){ try{ if(v) localStorage.setItem(k,v); else localStorage.removeItem(k);}catch(e){} }
 function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(gkey()?"gemini":lsGet(APIKEY_LS)?"api":"gemini"); }
-function scanBtn(cls){ return scanAvailable()?`<button class="${cls||"btn"}" data-act="scan-open">📷 مسح صورة الروته</button>`:""; }
+function scanBtn(cls){ return `<button class="${cls||"btn"}" data-act="qe-open">⚡ إدخال سريع</button><button class="btn" data-act="scan-open">📷 استيراد ملف/صورة</button>`; }
 function openScan(){ SC={step:"pick",rot:0,sel:null,img:null,err:"",staff:S.cfg.staff||"",name:S.cfg.name||""}; SC.engine=engineOf(); drawScan(); }
 function closeScan(){ if(SC&&SC.ctl) SC.ctl.abort(); SC=null; scanRoot.innerHTML=""; }
 function rotCanvas(img,rot,maxSide){
@@ -1367,7 +1367,7 @@ function drawScan(){
     body=`<p class="sc-p">${(SC.engine==="api"||SC.engine==="gemini")?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم."}</p>
       <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري ملف الروته</b><span>PDF أو Excel (الأدق) — أو صورة</span></label>
       <input type="file" id="sc-file" accept=".pdf,.xlsx,.xls,.csv,application/pdf,image/*" hidden>
-      <details style="margin-top:8px"><summary class="hint" style="cursor:pointer">أو الصقي نصاً / لقطة شاشة (Ctrl+V) في أي مكان بالنافذة</summary><textarea class="inp" id="sc-paste" rows="4" dir="ltr" placeholder="انسخي سطر الأيام وسطرك من الجدول والصقيهم هنا"></textarea><button class="btn" onclick="pasteImport()" style="margin-top:6px">استيراد النص</button></details><div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
+      <details style="margin-top:8px"><summary class="hint" style="cursor:pointer">أو الصقي نصاً / لقطة شاشة (Ctrl+V) في أي مكان بالنافذة</summary><textarea class="inp" id="sc-paste" rows="4" dir="ltr" placeholder="الصقي هنا الكود اللي يعطيك إياه Claude (RT|رقمك|2026-09-20|M,E,N,...) أو انسخي سطر الأيام وسطرك"></textarea><button class="btn" onclick="pasteImport()" style="margin-top:6px">استيراد النص</button></details><div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
         ${window.claude?"":`<label class="eng-o ${SC.engine==="gemini"?"on":""}"><input type="radio" name="sc-eng" value="gemini" ${SC.engine==="gemini"?"checked":""}><span><b>Gemini (مجاني)</b> — تلقائي وسهل، مفتاح مجاني من Google بدون بطاقة</span></label>
@@ -1598,8 +1598,10 @@ function pasteImport(){
   const it=[]; txt.split(/\r?\n/).forEach((ln,r)=>{ const parts=ln.includes("\t")?ln.split("\t"):ln.trim().split(/\s+/); parts.forEach((p,c)=>{ p=p.trim(); if(p) it.push({t:p,x:c*100,y:r*100,l:100,s:30}); }); });
   SC.step="busy"; if(tryAll([it],"نص ملصوق")) return;
   const line=txt.split(/\r?\n/).find(l=>l.replace(/\s/g,"").includes(stripDig(SC.staff)))||txt;
-  const toks=line.trim().split(/[\s,\t]+/).filter(t=>/^[A-Za-z]{1,3}\d?$/.test(t)&&!/^(SN|NO|ST)$/i.test(t)).map(t=>t.toUpperCase());
-  if(toks.length>=28){ const st=sundayOf(addDays(S.start,28)); SC.res={name:SC.name,staff:SC.staff,uncertain:[],worked_hours:null,old_balance:null,engine:"file",notes:"الصف بدون تواريخ: تأكدي من تاريخ بداية الروته (الأحد)."}; SC.codes=toks.slice(0,28); SC.start=st; SC.useBal=false; SC.step="review"; return drawScan(); }
+  const toks=line.trim().split(/[\s,\t|]+/).filter(t=>/^[A-Za-z]{1,3}\d?$/.test(t)&&!/^(SN|NO|ST|RT)$/i.test(t)).map(t=>t.toUpperCase());
+  if(toks.length>=28){ const dm=txt.match(/\d{4}-\d{2}-\d{2}/); const st=dm&&!isNaN(toD(dm[0]))?sundayOf(dm[0]):sundayOf(addDays(S.start,28));
+    SC.res={name:SC.name,staff:SC.staff,uncertain:[],worked_hours:null,old_balance:null,engine:"file",notes:dm?"":"الصف بدون تاريخ: تأكدي من تاريخ بداية الروته (الأحد)."}; SC.codes=toks.slice(0,28); SC.start=st; SC.useBal=false;
+    if(dm){ applyScan(); scanToast("تم استيراد الروته ✓ بداية "+fmtShort(st)); return; } SC.step="review"; return drawScan(); }
   failImport("ما قدرت أفهم النص. انسخي الصف مع سطر الأيام (1..28) فوقه.");
 }
 /* auto-pick the newest available Gemini flash model (never breaks when Google retires one) */
@@ -1616,6 +1618,45 @@ document.addEventListener("paste",e=>{
   if(!SC||SC.step!=="pick"||!e.clipboardData) return; const cd=e.clipboardData; const f=cd.files&&cd.files[0];
   if(f){ e.preventDefault(); const inp=document.getElementById("sc-file"); if(inp){ const dt=new DataTransfer(); dt.items.add(f); inp.files=dt.files; inp.dispatchEvent(new Event("change")); } return; }
   const t=cd.getData("text"); if(t&&t.length>60&&!/^(INPUT|TEXTAREA)$/.test(e.target.tagName)){ e.preventDefault(); const ta=document.getElementById("sc-paste"); if(ta){ ta.value=t; pasteImport(); } }
+});
+/* ---------- quick entry: keypad auto-advance + typed shorthand + hours check (no scanning) ---------- */
+let QE=null; const qeRoot=document.createElement("div"); document.body.appendChild(qeRoot);
+function qeOpen(){ const filled=cycleDays(S.start).some(d=>S.original[d]); QE={start:filled?addDays(S.start,28):S.start,codes:Array(28).fill(""),i:0,text:"",paper:""}; qeDraw(); }
+function qeClose(){ QE=null; qeRoot.innerHTML=""; }
+function qeDraw(){
+  if(!QE) return; const st=sundayOf(QE.start); QE.start=st; const worked=scanHours(QE.codes); const pw=parseFloat(QE.paper); const filled=QE.codes.filter(Boolean).length;
+  const cells=QE.codes.map((c,k)=>{ const d=addDays(st,k); const t=c?typeOf(c):null; const cur=k===QE.i;
+    return `<button data-q="cell" data-v="${k}" style="border:2px solid ${cur?"#0B6E78":"transparent"};background:${t?t.color:"var(--line,#e5e9ea)"};color:${t?"#fff":"inherit"};border-radius:10px;padding:6px 0;font:600 12px system-ui;min-height:46px"><span style="opacity:.75;display:block">${toD(d).getUTCDate()}</span>${c?esc(c):"·"}</button>`; }).join("");
+  const keys=S.types.map(t=>`<button data-q="code" data-v="${esc(t.code)}" style="background:${t.color};color:#fff;border:0;border-radius:12px;padding:12px 14px;font:700 15px system-ui;min-width:52px">${esc(t.code)}</button>`).join("");
+  qeRoot.innerHTML=`<div class="overlay"><div class="modal sc-modal" role="dialog" aria-modal="true" style="max-height:92vh;overflow:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b style="font-size:17px">⚡ إدخال سريع للروته</b><button class="btn" data-q="close">✕</button></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><label class="hint" for="qe-start">بداية الروته (الأحد)</label><input class="inp" type="date" id="qe-start" value="${st}" style="max-width:170px"></div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px" dir="ltr">${DAY_EN.map(x=>`<div class="hint" style="text-align:center">${x}</div>`).join("")}${cells}</div>
+    <div class="hint" style="margin-bottom:6px">${QE.i<28?"اضغطي الشفت لليوم المحدد (يتقدم لليوم التالي تلقائياً):":"كملتِ الـ28 يوم. اضغطي أي يوم للتعديل."}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" dir="ltr">${keys}<button data-q="code" data-v="" class="btn">فارغ</button><button data-q="undo" class="btn">↶</button></div>
+    <div style="margin-bottom:10px"><label class="hint" for="qe-text">أو اكتبيها دفعة وحدة (رقم قبل الرمز = عدد الأيام):</label><input class="inp" id="qe-text" dir="ltr" placeholder="2N 2O 3M 2E 2O AL 2M ..." value="${esc(QE.text)}"><button class="btn" data-q="text" style="margin-top:6px">تطبيق النص</button> <button class="btn" data-q="rep" style="margin-top:6px">كرّري الأسبوع الأول</button></div>
+    <div class="ck ${isFinite(pw)&&QE.paper!==""?(Math.abs(pw-worked)<0.01?"ok":"bad"):""}" style="margin-bottom:8px">ساعات العمل المحسوبة <b>${fmtH(worked)}</b> · <input class="inp" id="qe-paper" inputmode="decimal" placeholder="ساعات الورقة (اختياري)" value="${esc(QE.paper)}" style="max-width:150px;display:inline-block"> ${isFinite(pw)&&QE.paper!==""?(Math.abs(pw-worked)<0.01?"✓ مطابقة":"⚠ غير مطابقة، راجعي الأيام"):""}</div>
+    <button class="btn primary" data-q="apply" ${filled?"":"disabled"} style="width:100%">اعتماد وإضافة للجدول الأصلي (${filled}/28)</button></div></div>`;
+  const sd=document.getElementById("qe-start"); sd.onchange=()=>{ if(sd.value){ QE.start=sd.value; qeDraw(); } };
+  document.getElementById("qe-text").oninput=e=>{QE.text=e.target.value;};
+  document.getElementById("qe-paper").onchange=e=>{QE.paper=e.target.value.trim(); qeDraw();};
+}
+function qeText(){
+  const out=[]; QE.text.trim().split(/[\s,|]+/).filter(Boolean).forEach(tok=>{ const m=tok.match(/^(\d+)?([A-Za-z][A-Za-z0-9]*)$/); if(m) for(let n=0;n<(+m[1]||1);n++) out.push(m[2].toUpperCase()); });
+  if(!out.length) return; QE.codes=Array(28).fill("").map((_,k)=>out[k]||""); QE.i=Math.min(out.length,28);
+}
+qeRoot.addEventListener("click",e=>{
+  const b=e.target.closest("[data-q]"); if(!b||!QE) { if(QE&&e.target.classList&&e.target.classList.contains("overlay")) qeClose(); return; } e.stopPropagation(); const q=b.dataset.q, v=b.dataset.v;
+  if(q==="close") return qeClose();
+  if(q==="cell") QE.i=+v;
+  else if(q==="code"){ if(QE.i>=28) QE.i=27; QE.codes[QE.i]=v; QE.i=Math.min(QE.i+1,28); }
+  else if(q==="undo"){ if(QE.i>0||QE.codes[0]){ if(QE.i>=28) QE.i=27; else if(QE.i>0) QE.i--; QE.codes[QE.i]=""; } }
+  else if(q==="rep"){ for(let k=7;k<28;k++) QE.codes[k]=QE.codes[k%7]; QE.i=28; }
+  else if(q==="text") qeText();
+  else if(q==="apply"){ const st=sundayOf(QE.start);
+    QE.codes.forEach((c,k)=>{ const d=addDays(st,k); if(!c){ delete S.original[d]; return; } let t=typeOf(c); if(!t){ t={code:c,name:c,start:"",end:"",color:"#7A8A91",work:false}; S.types.push(t); } S.original[d]={code:c,start:t.start,end:t.end}; });
+    S.start=st; viewStart=st; S.sample=false; persist(); qeClose(); tab="roster"; mode="current"; render(); return; }
+  qeDraw();
 });
 async function autoScan(){
   SC.ctl=new AbortController(); const sg=SC.ctl.signal; SC.step="busy"; drawScan(); prog("جارٍ البحث عن صفّك برقمك الوظيفي…");
