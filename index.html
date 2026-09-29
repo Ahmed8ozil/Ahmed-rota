@@ -1367,7 +1367,7 @@ function drawScan(){
     body=`<p class="sc-p">${(SC.engine==="api"||SC.engine==="gemini")?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم."}</p>
       <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري ملف الروته</b><span>PDF أو Excel (الأدق) — أو صورة</span></label>
       <input type="file" id="sc-file" accept=".pdf,.xlsx,.xls,.csv,application/pdf,image/*" hidden>
-      <details style="margin-top:8px"><summary class="hint" style="cursor:pointer">أو الصقي الصف كنص</summary><textarea class="inp" id="sc-paste" rows="4" dir="ltr" placeholder="انسخي سطر الأيام وسطرك من الجدول والصقيهم هنا"></textarea><button class="btn" onclick="pasteImport()" style="margin-top:6px">استيراد النص</button></details><div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
+      <details style="margin-top:8px"><summary class="hint" style="cursor:pointer">أو الصقي نصاً / لقطة شاشة (Ctrl+V) في أي مكان بالنافذة</summary><textarea class="inp" id="sc-paste" rows="4" dir="ltr" placeholder="انسخي سطر الأيام وسطرك من الجدول والصقيهم هنا"></textarea><button class="btn" onclick="pasteImport()" style="margin-top:6px">استيراد النص</button></details><div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
         ${window.claude?"":`<label class="eng-o ${SC.engine==="gemini"?"on":""}"><input type="radio" name="sc-eng" value="gemini" ${SC.engine==="gemini"?"checked":""}><span><b>Gemini (مجاني)</b> — تلقائي وسهل، مفتاح مجاني من Google بدون بطاقة</span></label>
@@ -1602,6 +1602,21 @@ function pasteImport(){
   if(toks.length>=28){ const st=sundayOf(addDays(S.start,28)); SC.res={name:SC.name,staff:SC.staff,uncertain:[],worked_hours:null,old_balance:null,engine:"file",notes:"الصف بدون تواريخ: تأكدي من تاريخ بداية الروته (الأحد)."}; SC.codes=toks.slice(0,28); SC.start=st; SC.useBal=false; SC.step="review"; return drawScan(); }
   failImport("ما قدرت أفهم النص. انسخي الصف مع سطر الأيام (1..28) فوقه.");
 }
+/* auto-pick the newest available Gemini flash model (never breaks when Google retires one) */
+async function geminiModels(key){
+  const CK=LS_KEY+":gmc"; let list=[];
+  try{ const c=JSON.parse(lsGet(CK)||"null"); if(c&&c.k===key.slice(-6)&&Date.now()-c.t<864e5&&c.l.length) list=c.l; }catch(e){}
+  if(!list.length){ try{ const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",{headers:{"x-goog-api-key":key}});
+    if(r.ok){ const j=await r.json(); list=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes("generateContent")).map(m=>m.name.replace("models/","")).filter(n=>/^gemini-[\d.]+-flash$/.test(n)).sort((a,b)=>parseFloat(b.split("-")[1])-parseFloat(a.split("-")[1]));
+      if(list.length) lsSet(CK,JSON.stringify({k:key.slice(-6),t:Date.now(),l:list})); } }catch(e){} }
+  return [...new Set([lsGet(GMODEL_LS),...list,"gemini-flash-latest"].filter(Boolean))];
+}
+/* one entry point: paste a screenshot / file / text anywhere in the import window */
+document.addEventListener("paste",e=>{
+  if(!SC||SC.step!=="pick"||!e.clipboardData) return; const cd=e.clipboardData; const f=cd.files&&cd.files[0];
+  if(f){ e.preventDefault(); const inp=document.getElementById("sc-file"); if(inp){ const dt=new DataTransfer(); dt.items.add(f); inp.files=dt.files; inp.dispatchEvent(new Event("change")); } return; }
+  const t=cd.getData("text"); if(t&&t.length>60&&!/^(INPUT|TEXTAREA)$/.test(e.target.tagName)){ e.preventDefault(); const ta=document.getElementById("sc-paste"); if(ta){ ta.value=t; pasteImport(); } }
+});
 async function autoScan(){
   SC.ctl=new AbortController(); const sg=SC.ctl.signal; SC.step="busy"; drawScan(); prog("جارٍ البحث عن صفّك برقمك الوظيفي…");
   try{
@@ -1709,8 +1724,7 @@ async function geminiVision(prompt,imgs,signal){
   const parts=[]; for(const b of imgs) parts.push({inline_data:{mime_type:"image/jpeg",data:await blobToB64(b)}});
   parts.push({text:prompt});
   const body=JSON.stringify({contents:[{parts}],generationConfig:{responseMimeType:"application/json",temperature:0}});
-  const first=lsGet(GMODEL_LS)||"gemini-3.8-flash";
-  const models=[first,...["gemini-flash-latest"].filter(m=>m!==first)];
+  const models=await geminiModels(key);
   const sleep=ms=>new Promise((ok,no)=>{ const t=setTimeout(ok,ms); if(signal) signal.addEventListener("abort",()=>{clearTimeout(t);no({code:"cancelled"});}); });
   let lastMsg="";
   for(let mi=0;mi<models.length;mi++){
@@ -1735,7 +1749,7 @@ async function geminiVision(prompt,imgs,signal){
     }
     if(mi<models.length-1) prog("تجربة موديل آخر…");
   }
-  throw {msg:lastMsg||"تعذّر الاتصال بـ Gemini."};
+  lsSet(LS_KEY+":gmc",""); throw {msg:lastMsg||"تعذّر الاتصال بـ Gemini."};
 }
 function prog(t){ const el=document.getElementById("sc-prog"); if(el) el.textContent=t; }
 /* ---- on-device reader: cell glyphs -> shape groups -> user confirms each group ---- */
