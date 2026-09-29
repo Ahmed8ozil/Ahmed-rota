@@ -1482,7 +1482,7 @@ function stackC(head,strip){
   else { const hw=Math.round(head.width*strip.height/head.height); c.width=hw+strip.width; c.height=strip.height; x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(head,0,0,hw,strip.height); x.drawImage(strip,hw,0); }
   return c;
 }
-const hoursOf=codes=>{let w=0; codes.forEach(c=>{const t=typeOf(c); if(t&&t.work) w+=diffH(t.start,t.end);}); return w;};
+const scanHours=codes=>{let w=0; codes.forEach(c=>{const t=typeOf(c); if(t&&t.work) w+=diffH(t.start,t.end);}); return w;};
 const locPrompt=(who,first)=>`This is a photo/screenshot of a hospital nursing duty rota page with MANY staff. Staff may be rows, or columns (name written vertically, dates running downward).
 Find ${who}. Match by staff number (SN) first, then name.
 Return only JSON: {"found":true,${first?'"rotation":0,':''}"box":{"x":0.1,"y":0.2,"w":0.05,"h":0.6},"header_box":{"x":0.1,"y":0.05,"w":0.05,"h":0.1},"staff":"number matched","name":"name matched"}
@@ -1514,7 +1514,7 @@ function combineReads(reads){
   for(let i=0;i<28;i++){ const v={}; use.forEach(x=>{const c=x.a.codes[i]; v[c]=(v[c]||0)+1;}); const s=Object.keys(v).sort((a,b)=>v[b]-v[a]); codes.push(s[0]);
     if(s.length>1||use.some(x=>(x.r.uncertain||[]).includes(i)||x.a.missing.includes(i))) disagree.push(i); }
   const wh=use.map(x=>x.r.worked_hours).filter(v=>typeof v==="number").sort((a,b)=>a-b); const worked=wh.length?wh[wh.length>>1]:null;
-  return {start,codes,disagree,r:use[0].r,worked,hoursOK:worked==null?null:Math.abs(worked-hoursOf(codes))<0.01};
+  return {start,codes,disagree,r:use[0].r,worked,hoursOK:worked==null?null:Math.abs(worked-scanHours(codes))<0.01};
 }
 function scanToast(t){const d=document.createElement("div");d.textContent=t;d.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0B6E78;color:#fff;padding:12px 18px;border-radius:12px;z-index:99999;font:600 14px system-ui;max-width:90vw;text-align:center";document.body.appendChild(d);setTimeout(()=>d.remove(),5000);}
 /* ---------- import roster from PDF / Excel / pasted text (no OCR, no scanning) ---------- */
