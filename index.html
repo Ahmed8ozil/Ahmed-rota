@@ -759,10 +759,21 @@ const cycleDays=start=>Array.from({length:28},(_,i)=>addDays(start,i));
 /* ---------- view state ---------- */
 let tab="dash"; let viewStart=null; let mode="current"; let brush=null; let layout="grid";
 try{const l=localStorage.getItem(LS_KEY+":layout"); if(l) layout=l;}catch(e){}
-try{const t=localStorage.getItem(LS_KEY+":tab"); if(t) tab=t;}catch(e){}
+try{const t=localStorage.getItem(LS_KEY+":tab"); if(t&&t!=="users") tab=t;}catch(e){}
 const app=document.getElementById("app");
 
 document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]"); if(!b) return; tab=b.dataset.tab; try{localStorage.setItem(LS_KEY+":tab",tab);}catch(e){} render();});
+document.addEventListener("submit",async e=>{
+  if(e.target&&e.target.id==="ul-f"){
+    e.preventDefault();
+    const p=document.getElementById("ul-p").value; const m=document.getElementById("ul-m"); m.textContent="جارٍ التحقق…";
+    try{
+      const {error}=await supabaseClient.auth.signInWithPassword({email:ME.email,password:p});
+      if(error){ m.textContent="كلمة المرور غير صحيحة"; return; }
+      USERS_UNLOCKED=true; try{localStorage.setItem(LS_KEY+":tab","users");}catch(e){} render();
+    }catch(err){ m.textContent="تعذّر التحقق — تأكدي من الإنترنت"; }
+  }
+});
 
 function sbErrText(e){
   const m=(e&&(e.message||e.msg))||"";
@@ -778,7 +789,7 @@ function render(){
   if(!viewStart) viewStart=S.start;
   let h=viewBanner();
   if(S.sample) h+=`<div class="banner"><div class="sp"><b>هذه بيانات مثال</b> لتري كيف يعمل الموقع. ابدئي جدولك الحقيقي، ثم أدخلي الروته الأصلية من صفحة «الروته» بوضع <b>الجدول الأصلي</b>.</div><button class="btn primary" data-act="start-fresh">ابدئي جدولي</button><button class="btn ghost" data-act="keep-sample">إخفاء</button></div>`;
-  h+= tab==="dash"?viewDash(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?viewUsers(): viewTypes();
+  h+= tab==="dash"?viewDash(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?usersGate(): viewTypes();
   app.innerHTML=h;
 }
 
@@ -1366,10 +1377,10 @@ function drawScan(){
   if(!SC){scanRoot.innerHTML="";return;}
   let body="", foot="";
   if(SC.step==="pick"){
-    body=`<p class="sc-p">${SC.engine==="api"?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"اختاري صورة الروته، وسأبحث تلقائيًا عن اسمك ورقمك الوظيفي وأكتب شفتاتك — بالكامل على جهازك، بدون إنترنت وبدون أي طرف خارجي. صوّري بوضوح وإضاءة جيدة لأفضل نتيجة."}</p>
+    body=`<p class="sc-p">${SC.engine==="api"?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"اختاري صورة الروته، وبعدها تسحبين مستطيلًا حول خانات الأيام الـ28 في صفّك، وتؤكدين كل رمز مرة وحدة."}</p>
       <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري صورة الروته</b><span>JPG أو PNG</span></label>
       <input type="file" id="sc-file" accept="image/*" hidden>
-      <div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b> — أو <button type="button" class="linklike" data-act="sc-manual">حدّدي صفّك بنفسك من الصورة</button></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
+      ${SC.engine==="api"?`<div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b> — أو <button type="button" class="linklike" data-act="sc-manual">حدّدي صفّك بنفسك من الصورة</button></div>`:""}<details ${(SC.engine==="api"&&(SC.staff||SC.name))?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">${SC.engine==="api"?"تغيير الاسم / الرقم":"اسمك ورقمك الوظيفي (اختياري)"}</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
         ${window.claude?"":`<label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
@@ -1382,9 +1393,9 @@ function drawScan(){
       <div class="sc-tools"><button class="btn" data-act="sc-rot" data-r="-90">↺ تدوير</button><button class="btn" data-act="sc-rot" data-r="90">↻ تدوير</button>${SC.sel?`<button class="btn ghost" data-act="sc-clear">مسح التحديد</button>`:""}</div>
       <div class="sc-cv-wrap"><canvas id="sc-cv"></canvas></div>
       <div class="hint">${SC.sel?"✓ تم تحديد الصف":(SC.engine==="ocr"?"حدّدي الخانات أولاً":SC.forceManual?"اسحبي مستطيلاً حول خانات الأيام الـ28 في صفّك — سأقرأها بالاعتماد على تاريخ الصفحة":"بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)")}</div>`;
-    foot=`<button class="btn primary" data-act="sc-read" ${(SC.engine==="ocr"||SC.forceManual)&&!SC.sel?"disabled":""}>قراءة الروته</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
+    foot=`<button class="btn primary" data-act="sc-read" ${(SC.engine==="ocr"||SC.forceManual)&&!SC.sel?"disabled":""}>قراءة الروته</button>${SC.engine==="ocr"&&(SC.staff||SC.name)&&!SC.guide?`<button class="btn" data-act="sc-autofind">🔍 جربي إيجاد صفّي تلقائيًا</button>`:""}<button class="btn" data-act="sc-back">صورة أخرى</button>`;
   } else if(SC.step==="busy"){
-    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?(SC.forceManual?"جارٍ تحليل الصورة…":"جارٍ البحث عن صفّك…"):"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.engine==="ocr"?(SC.forceManual?"ثوانٍ قليلة":"قد يأخذ نصف دقيقة تقريبًا"):"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
+    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.locating?"جارٍ البحث عن صفّك…":SC.engine==="ocr"?"جارٍ تحليل الصورة…":"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.locating?"قد يأخذ نصف دقيقة تقريبًا":SC.engine==="ocr"?"ثوانٍ قليلة":"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
     foot=`<button class="btn" data-act="sc-stop">إيقاف</button>`;
   } else if(SC.step==="review"){
     const R=SC.res; const st=sundayOf(SC.start||S.start);
@@ -1427,7 +1438,7 @@ function drawScan(){
   if(SC.step==="pick"){
     const f=document.getElementById("sc-file");
     f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
-      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if(!SC.forceManual&&SC.engine==="api"&&lsGet(APIKEY_LS)){ autoScan(); } else if(!SC.forceManual&&SC.engine==="ocr"){ autoLocateOCR(); } else { SC.step="crop"; drawScan(); } };
+      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if(!SC.forceManual&&SC.engine==="api"&&lsGet(APIKEY_LS)){ autoScan(); } else { SC.step="crop"; drawScan(); } };
       img.onerror=()=>{ SC.err="تعذّر فتح الصورة. جرّبي صورة JPG أو PNG."; drawScan(); }; img.src=URL.createObjectURL(file); });
   }
   if(SC.step==="pick"){
@@ -1484,7 +1495,7 @@ async function getTessWorker(){ await loadTesseract(); if(!tessWorker) tessWorke
 const normDigits=s=>String(s||"").replace(/\D/g,"");
 const normWord=s=>String(s||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
 async function autoLocateOCR(){
-  SC.ctl=new AbortController(); SC.step="busy"; drawScan(); prog("جارٍ تحميل أداة القراءة (مرة واحدة فقط)…");
+  SC.ctl=new AbortController(); SC.locating=true; SC.step="busy"; drawScan(); prog("جارٍ تحميل أداة القراءة (مرة واحدة فقط)…");
   try{
     const worker=await getTessWorker();
     if(!SC) return;
@@ -1532,11 +1543,12 @@ async function autoLocateOCR(){
     const hitH=Math.max(1,found.hit.bbox.y1-found.hit.bbox.y0)/found.H;
     const pad=hitH*0.9;
     const y=Math.max(0,hitCy-hitH/2-pad), h=Math.min(1-y,hitH+pad*2);
-    SC.sel=null; SC.guide={y,h};
+    SC.sel=null; SC.guide={y,h}; SC.locating=false;
     SC.step="crop"; SC.foundStaff=!!(staffN.length>=3&&normDigits(found.hit.text)===staffN);
   }catch(e){
     if(!SC) return;
-    if(e&&e.code==="cancelled"){ SC.step="pick"; drawScan(); return; }
+    SC.locating=false;
+    if(e&&e.code==="cancelled"){ SC.step="crop"; drawScan(); return; }
     SC.err=(e&&e.msg)||"تعذّر تحميل أداة القراءة — تأكدي من الإنترنت (تحميلها أول مرة فقط)، أو حدّدي صفّك بنفسك."; SC.step="error"; drawScan(); return;
   }
   drawScan();
@@ -1730,6 +1742,7 @@ scanRoot.addEventListener("click",e=>{
   else if(act==="sc-read"||act==="sc-retry") runScan();
   else if(act==="sc-stop"){ if(SC.ctl) SC.ctl.abort(); }
   else if(act==="sc-manual"){ SC.forceManual=true; document.getElementById("sc-file").click(); }
+  else if(act==="sc-autofind") autoLocateOCR();
   else if(act==="sc-back"){ SC.step="pick"; SC.img=null; SC.sel=null; SC.guide=null; SC.err=""; drawScan(); }
   else if(act==="sc-apply") applyScan();
   else if(act==="grp-ok"){ const codes=new Array(28).fill(""); const unc=[]; SC.ocr.groups.forEach(gr=>gr.idx.forEach(i=>{ codes[i]=gr.code; if(!gr.sure) unc.push(i); }));
@@ -1912,6 +1925,18 @@ async function loadUsers(){
 function viewBanner(){
   if(!ME||TARGET===ME.id) return "";
   return `<div class="banner"><div class="sp">تعرض وتعدّل روته: <b>${esc(TNAME)}</b></div><button class="btn primary" data-u="back">رجوع لروتي</button></div>`;
+}
+let USERS_UNLOCKED=false;
+function usersGate(){
+  if(!ME||!ME.admin) return "";
+  if(USERS_UNLOCKED) return viewUsers();
+  return `<div class="page-head"><div><div class="eyebrow">المدير</div><h1>المستخدمون</h1></div></div>
+  <section class="panel"><form id="ul-f" class="usr-f" style="max-width:340px">
+    <p class="hint">أدخلي كلمة مرور حسابك للمتابعة</p>
+    <input class="inp" id="ul-p" type="password" dir="ltr" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">فتح</button>
+    <div class="sc-err" id="ul-m"></div>
+  </form></section>`;
 }
 function viewUsers(){
   if(!ME||!ME.admin) return "";
