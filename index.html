@@ -1365,9 +1365,9 @@ function drawScan(){
   let body="", foot="";
   if(SC.step==="pick"){
     body=`<p class="sc-p">${(SC.engine==="api"||SC.engine==="gemini")?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم."}</p>
-      <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري صورة الروته</b><span>JPG أو PNG</span></label>
-      <input type="file" id="sc-file" accept="image/*" hidden>
-      <div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
+      <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري ملف الروته</b><span>PDF أو Excel (الأدق) — أو صورة</span></label>
+      <input type="file" id="sc-file" accept=".pdf,.xlsx,.xls,.csv,application/pdf,image/*" hidden>
+      <details style="margin-top:8px"><summary class="hint" style="cursor:pointer">أو الصقي الصف كنص</summary><textarea class="inp" id="sc-paste" rows="4" dir="ltr" placeholder="انسخي سطر الأيام وسطرك من الجدول والصقيهم هنا"></textarea><button class="btn" onclick="pasteImport()" style="margin-top:6px">استيراد النص</button></details><div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
         ${window.claude?"":`<label class="eng-o ${SC.engine==="gemini"?"on":""}"><input type="radio" name="sc-eng" value="gemini" ${SC.engine==="gemini"?"checked":""}><span><b>Gemini (مجاني)</b> — تلقائي وسهل، مفتاح مجاني من Google بدون بطاقة</span></label>
@@ -1427,7 +1427,7 @@ function drawScan(){
   if(SC.step==="pick"){
     const f=document.getElementById("sc-file");
     f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); const gk=document.getElementById("sc-gkey"); if(gk) lsSet(GKEY_LS,gk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
-      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if((SC.engine==="api"&&lsGet(APIKEY_LS))||(SC.engine==="gemini"&&gkey())){ autoScan(); } else { SC.step="crop"; drawScan(); } };
+      if(!/^image\//.test(file.type)){ importFile(file); return; } const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if((SC.engine==="api"&&lsGet(APIKEY_LS))||(SC.engine==="gemini"&&gkey())){ autoScan(); } else { SC.step="crop"; drawScan(); } };
       img.onerror=()=>{ SC.err="تعذّر فتح الصورة. جرّبي صورة JPG أو PNG."; drawScan(); }; img.src=URL.createObjectURL(file); });
   }
   if(SC.step==="pick"){
@@ -1517,6 +1517,91 @@ function combineReads(reads){
   return {start,codes,disagree,r:use[0].r,worked,hoursOK:worked==null?null:Math.abs(worked-hoursOf(codes))<0.01};
 }
 function scanToast(t){const d=document.createElement("div");d.textContent=t;d.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0B6E78;color:#fff;padding:12px 18px;border-radius:12px;z-index:99999;font:600 14px system-ui;max-width:90vw;text-align:center";document.body.appendChild(d);setTimeout(()=>d.remove(),5000);}
+/* ---------- import roster from PDF / Excel / pasted text (no OCR, no scanning) ---------- */
+function loadScript(u){ return new Promise((ok,no)=>{ const s=document.createElement("script"); s.src=u; s.onload=ok; s.onerror=()=>no({msg:"تعذّر تحميل مكتبة القراءة. تأكدي من الإنترنت."}); document.head.appendChild(s); }); }
+async function getPdfjs(){
+  if(!window.pdfjsLib){ await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
+    const w=await (await fetch("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js")).text();
+    pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([w],{type:"text/javascript"})); }
+  return window.pdfjsLib;
+}
+const isDay=t=>/^\d{1,2}$/.test(t)&&+t>=1&&+t<=31;
+const nextDay=(a,b)=>b===a+1||(b===1&&a>=28);
+function findChain(items,vert){
+  const key=vert?"x":"y", pos=vert?"y":"x", groups=[];
+  items.filter(i=>isDay(i.t)).forEach(i=>{ const g=groups.find(g=>Math.abs(g.k-i[key])<=Math.max(3,i.s*0.6)); if(g) g.a.push(i); else groups.push({k:i[key],a:[i]}); });
+  const out=[];
+  groups.forEach(g=>{ const a=g.a.sort((p,q)=>p[pos]-q[pos]);
+    for(let s=0;s+28<=a.length;s++){ let ok=true; for(let j=1;j<28;j++) if(!nextDay(+a[s+j-1].t,+a[s+j].t)){ok=false;break;} if(ok){ out.push({k:g.k,cols:a.slice(s,s+28)}); break; } } });
+  return out;
+}
+function parseItems(items,staff,vert){
+  const key=vert?"x":"y", pos=vert?"y":"x", sn=stripDig(staff); if(!sn) return null;
+  const heads=findChain(items,vert); if(!heads.length) return null;
+  const who=items.filter(i=>stripDig(i.t)===sn||(sn.length>=4&&i.t.replace(/\s/g,"").includes(sn)));
+  for(const w of who){
+    const tol=Math.max(3,w.s*0.6); const line=items.filter(i=>Math.abs(i[key]-w[key])<=tol&&i!==w);
+    const h=heads.slice().sort((a,b)=>Math.abs(a.k-w[key])-Math.abs(b.k-w[key]))[0];
+    const centers=h.cols.map(c=>c[pos]+c.l/2); const gap=(centers[27]-centers[0])/27||1;
+    const lo=centers[0]-gap*0.6, hi=centers[27]+gap*0.6; const cells=Array(28).fill("");
+    line.filter(i=>i.t&&i[pos]+i.l/2>=lo&&i[pos]+i.l/2<=hi).sort((a,b)=>a[pos]-b[pos]).forEach(i=>{
+      const c=i[pos]+i.l/2; let bi=0,bd=1e9; centers.forEach((v,j)=>{const d=Math.abs(v-c); if(d<bd){bd=d;bi=j;}});
+      cells[bi]+=i.t.replace(/\s+/g,"").toUpperCase(); });
+    if(cells.filter(Boolean).length<10) continue;
+    return {cells,first:+h.cols[0].t,name:(line.filter(i=>/[A-Za-z\u0600-\u06FF]{3,}/.test(i.t)&&i[pos]<lo).map(i=>i.t).join(" ")).slice(0,60)};
+  }
+  return null;
+}
+function guessStart(items,first){
+  const base=addDays(S.start,28); let best=null;
+  for(const i of items){ const m=i.t.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/); if(!m) continue;
+    const d=`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`; if(!isNaN(toD(d))&&dow(d)===0&&domOf(d)===first) return d; }
+  for(let k=0;k<60;k++){ const s=addDays(sundayOf(base),(k%2?-((k+1)>>1):k>>1)*7); if(domOf(s)===first){best=s;break;} }
+  return best||sundayOf(base);
+}
+function finishImport(res,items,srcName){
+  const start=guessStart(items,res.first); const empty=res.cells.map((c,i)=>c?-1:i).filter(i=>i>=0);
+  SC.res={name:res.name||SC.name,staff:SC.staff,uncertain:empty,worked_hours:null,old_balance:null,engine:"file",notes:"قُرئت من الملف مباشرة ("+srcName+") بدون مسح صور."};
+  SC.codes=res.cells; SC.start=start; SC.useBal=false; SC.step="review";
+  if(!empty.length){ applyScan(); scanToast("تم استيراد الروته وتعبئته تلقائياً ✓ (بداية "+fmtShort(start)+")"); }
+  else drawScan();
+}
+function failImport(m){ if(!SC) return; SC.step="pick"; SC.err=m; drawScan(); }
+function tryAll(pages,name){
+  for(const items of pages){ for(const v of [false,true]){ const r=parseItems(items,SC.staff,v); if(r){ finishImport(r,items,name); return true; } } }
+  return false;
+}
+async function importFile(file){
+  if(!stripDig(SC.staff)) return failImport("اكتبي الرقم الوظيفي أولاً (تغيير الاسم / الرقم) عشان ألقى صفك.");
+  SC.step="busy"; drawScan(); prog("جارٍ قراءة الملف…");
+  try{
+    const pages=[]; const buf=await file.arrayBuffer();
+    if(/pdf/i.test(file.type)||/\.pdf$/i.test(file.name)){
+      const lib=await getPdfjs(); const pdf=await lib.getDocument({data:buf}).promise;
+      for(let p=1;p<=pdf.numPages;p++){ const tc=await (await pdf.getPage(p)).getTextContent();
+        pages.push(tc.items.filter(i=>i.str&&i.str.trim()).map(i=>({t:i.str.trim(),x:i.transform[4],y:-i.transform[5],l:i.width||1,s:Math.abs(i.height||i.transform[3]||8)}))); }
+      if(!pages.some(p=>p.length>20)) return failImport("هذا الـ PDF عبارة عن صورة (بدون نص) فما أقدر أقرأه. اطلبي ملف Excel أو PDF الأصلي من التمريض، أو الصقي الصف كنص.");
+    } else {
+      if(!window.XLSX) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
+      const wb=XLSX.read(buf,{type:"array",cellDates:true});
+      wb.SheetNames.forEach(n=>{ const aoa=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:""}); const it=[];
+        aoa.forEach((row,r)=>row.forEach((v,c)=>{ if(v===""||v==null) return; const t=v instanceof Date?String(new Date(v.getTime()+432e5).getUTCDate()):String(v).trim(); if(t) it.push({t,x:c*100,y:r*100,l:100,s:30}); })); pages.push(it); });
+    }
+    if(!SC) return;
+    if(!tryAll(pages,file.name)) failImport("ما لقيت الرقم "+SC.staff+" مع أيام الروته الـ28 في الملف. تأكدي من الرقم أو جرّبي لصق الصف كنص.");
+  }catch(e){ failImport((e&&e.msg)||"تعذّرت قراءة الملف. جرّبي ملف ثاني أو الصقي النص."); }
+}
+function pasteImport(){
+  const ta=document.getElementById("sc-paste"); const si=document.getElementById("sc-staff"); if(si) SC.staff=si.value.trim();
+  const txt=ta&&ta.value.trim(); if(!txt) return failImport("الصقي نص الروته أولاً.");
+  if(!stripDig(SC.staff)) return failImport("اكتبي الرقم الوظيفي أولاً.");
+  const it=[]; txt.split(/\r?\n/).forEach((ln,r)=>{ const parts=ln.includes("\t")?ln.split("\t"):ln.trim().split(/\s+/); parts.forEach((p,c)=>{ p=p.trim(); if(p) it.push({t:p,x:c*100,y:r*100,l:100,s:30}); }); });
+  SC.step="busy"; if(tryAll([it],"نص ملصوق")) return;
+  const line=txt.split(/\r?\n/).find(l=>l.replace(/\s/g,"").includes(stripDig(SC.staff)))||txt;
+  const toks=line.trim().split(/[\s,\t]+/).filter(t=>/^[A-Za-z]{1,3}\d?$/.test(t)&&!/^(SN|NO|ST)$/i.test(t)).map(t=>t.toUpperCase());
+  if(toks.length>=28){ const st=sundayOf(addDays(S.start,28)); SC.res={name:SC.name,staff:SC.staff,uncertain:[],worked_hours:null,old_balance:null,engine:"file",notes:"الصف بدون تواريخ: تأكدي من تاريخ بداية الروته (الأحد)."}; SC.codes=toks.slice(0,28); SC.start=st; SC.useBal=false; SC.step="review"; return drawScan(); }
+  failImport("ما قدرت أفهم النص. انسخي الصف مع سطر الأيام (1..28) فوقه.");
+}
 async function autoScan(){
   SC.ctl=new AbortController(); const sg=SC.ctl.signal; SC.step="busy"; drawScan(); prog("جارٍ البحث عن صفّك برقمك الوظيفي…");
   try{
