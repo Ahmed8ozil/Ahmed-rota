@@ -587,6 +587,7 @@ html[dir="ltr"] .mix-n{text-align:left}
 .usr-r{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .usr-r b{flex:1}
 .usr-f{display:grid;gap:8px;margin-top:8px;max-width:420px}
+.bd{border-collapse:collapse;font-size:12px;min-width:max-content}.bd th,.bd td{border:1px solid var(--line);padding:5px 3px;text-align:center;min-width:30px;background:var(--surface)}.bd th{background:var(--bg,#f3f5f5);font-weight:700}.bd .nm{text-align:left;min-width:170px;position:sticky;left:0;z-index:1}@media print{.tabs,.cycle-nav,.btn{display:none!important}}
 </style>
 </head>
 <body>
@@ -634,6 +635,9 @@ const addDays=(s,n)=>{const d=toD(s);d.setUTCDate(d.getUTCDate()+n);return iso(d
 const dow=s=>toD(s).getUTCDay();
 const todayIso=()=>{const n=new Date();return iso(new Date(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())));};
 const sundayOf=s=>addDays(s,-dow(s));
+/* one shared 28-day cycle for ALL users: every roster starts on the same Sunday */
+const CYCLE_ANCHOR="2026-09-20";
+const alignCycle=d=>{ const n=Math.round((toD(sundayOf(d))-toD(CYCLE_ANCHOR))/864e5); return addDays(CYCLE_ANCHOR,Math.floor(n/28)*28); };
 const fmtShort=s=>{const d=toD(s);return d.getUTCDate()+" "+MONTHS[d.getUTCMonth()];};
 const fmtLong=s=>DAYS[dow(s)]+" "+fmtShort(s)+" "+toD(s).getUTCFullYear();
 const fmtStamp=t=>{const d=new Date(t);return d.getDate()+" "+MONTHS[d.getMonth()]+" "+d.getFullYear()+" · "+fmt12(String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"));};
@@ -666,12 +670,12 @@ function sampleState(){
   return st;
 }
 function emptyState(keepTypes){
-  return {v:1,sample:false,cfg:(S&&S.cfg)||{...DEFAULT_CFG},start:sundayOf(todayIso()),types:keepTypes||JSON.parse(JSON.stringify(DEFAULT_TYPES)),original:{},days:{},log:[]};
+  return {v:1,sample:false,cfg:(S&&S.cfg)||{...DEFAULT_CFG},start:alignCycle(todayIso()),types:keepTypes||JSON.parse(JSON.stringify(DEFAULT_TYPES)),original:{},days:{},log:[]};
 }
 let S=null;
 try{ const raw=localStorage.getItem(LS_KEY); if(raw) S=JSON.parse(raw);}catch(e){}
 if(!S||!S.types) S=sampleState();
-function norm(){ if(!S.cfg) S.cfg={...DEFAULT_CFG}; if(!S.bal) S.bal={from:"2026-09-20",po:77,hrs:6}; if(!S.adj) S.adj={}; }
+function norm(){ if(!S.cfg) S.cfg={...DEFAULT_CFG}; if(!S.bal) S.bal={from:"2026-09-20",po:77,hrs:6}; if(!S.adj) S.adj={}; if(S.start) S.start=alignCycle(S.start); if(S.bal&&S.bal.from) S.bal.from=alignCycle(S.bal.from); }
 norm();
 
 const SUPABASE_URL = "https://uprtxqnjajtmvhxwicaq.supabase.co";
@@ -774,7 +778,7 @@ function render(){
   if(!viewStart) viewStart=S.start;
   let h=viewBanner();
   if(S.sample) h+=`<div class="banner"><div class="sp"><b>هذه بيانات مثال</b> لتري كيف يعمل الموقع. ابدئي جدولك الحقيقي، ثم أدخلي الروته الأصلية من صفحة «الروته» بوضع <b>الجدول الأصلي</b>.</div><button class="btn primary" data-act="start-fresh">ابدئي جدولي</button><button class="btn ghost" data-act="keep-sample">إخفاء</button></div>`;
-  h+= tab==="dash"?viewDash(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?viewUsers(): viewTypes();
+  h+= tab==="dash"?viewDash(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?viewUsers(): tab==="board"?viewBoard(): viewTypes();
   app.innerHTML=h;
 }
 
@@ -1189,7 +1193,7 @@ function revertModal(){
 let wipeArm=false;
 document.addEventListener("click",e=>{
   const el=e.target;
-  if(scanRoot.contains(el)) return;
+  if(qeRoot.contains(el)) return;
   if(mroot.contains(el)){
     if(el.dataset.close&&el.closest("[data-close]")===el){closeModal();return;}
     const cl=el.closest("[data-close]"); if(cl&&cl.tagName==="BUTTON"){closeModal();return;}
@@ -1212,7 +1216,7 @@ document.addEventListener("click",e=>{
   const dt=el.closest("[data-deltype]"); if(dt){ S.types.splice(+dt.dataset.deltype,1); persist(); render(); return;}
   const a=el.closest("[data-act]"); if(!a) return;
   const act=a.dataset.act;
-  if(act==="scan-open"){ openScan(); return; } if(act==="qe-open"){ qeOpen(); return; }
+  if(act==="qe-open"){ qeOpen(); return; }
   if(act==="sb-in"){ sbLogin(false); return; }
   if(act==="sb-up"){ sbLogin(true); return; }
   if(act==="sb-sync"){ sbPull(); return; }
@@ -1232,14 +1236,14 @@ app.addEventListener("change",e=>{
   const el=e.target;
   if(el.id==="ob-po"){ S.bal.po=+el.value||0; persist(); render(); return; }
   if(el.id==="ob-h"){ S.bal.hrs=+el.value||0; persist(); render(); return; }
-  if(el.id==="ob-from"&&el.value){ S.bal.from=sundayOf(el.value); persist(); render(); return; }
+  if(el.id==="ob-from"&&el.value){ S.bal.from=alignCycle(el.value); persist(); render(); return; }
   if(el.dataset.adj){ const k=el.dataset.adj, f=el.dataset.f; const a=S.adj[k]||(S.adj[k]={}); a[f]=f==="note"?el.value.trim():(+el.value||0); if(!a.po&&!a.hrs&&!a.note) delete S.adj[k]; persist(); render(); return; }
   if(el.id==="set-pin"){ const v=el.value.replace(/\D/g,""); if(v.length>=4){ S.cfg.pinHash=pinHash(v); persist(); el.value=""; toast("تم تغيير الرقم السري"); } else if(v){ el.value=""; toast("الرقم لازم 4 أرقام أو أكثر"); } return; }
   if(el.id==="set-name"){ S.cfg.name=el.value.trim(); persist(); render(); return; }
   if(el.id==="set-staff"){ S.cfg.staff=el.value.trim(); persist(); render(); return; }
   if(el.id==="set-unit"){ S.cfg.unit=el.value.trim(); persist(); render(); return; }
   if(el.id==="set-off"){ S.cfg.official=Math.max(0,+el.value||0); persist(); render(); return; }
-  if(el.id==="set-start"&&el.value){ S.start=sundayOf(el.value); viewStart=S.start; persist(); render(); return; }
+  if(el.id==="set-start"&&el.value){ S.start=alignCycle(el.value); viewStart=S.start; persist(); render(); return; }
   if(el.dataset.ti!=null){
     const t=S.types[+el.dataset.ti], f=el.dataset.f;
     if(f==="work") t.work=el.checked;
@@ -1339,292 +1343,14 @@ async function sbLogin(signup){
   }catch(e){ sbMsg=(e&&e.msg)||"تعذّر الاتصال. تأكدي من الرابط والإنترنت."; render(); }
 }
 
-/* ---------- scan roster photo ---------- */
-let sampleFn=null, sampleImgOK=false, sampleMax=0;
-const scanRoot=document.createElement("div"); document.body.appendChild(scanRoot);
-let SC=null;
-function scanAvailable(){ return true; }
-const APIKEY_LS=LS_KEY+":apikey", APIMODEL_LS=LS_KEY+":apimodel", GKEY_LS=LS_KEY+":gkey", GMODEL_LS=LS_KEY+":gmodel";
-const DEFAULT_GKEY="AQ.Ab8RN6JwP3i1ot6hfoM1ik8dXxN-KPv_QYfS8HjpuYB5Nqt3HA";
-const gkey=()=>lsGet(GKEY_LS)||DEFAULT_GKEY;
-function lsGet(k){ try{return localStorage.getItem(k)||"";}catch(e){return "";} }
-function lsSet(k,v){ try{ if(v) localStorage.setItem(k,v); else localStorage.removeItem(k);}catch(e){} }
-function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(gkey()?"gemini":lsGet(APIKEY_LS)?"api":"gemini"); }
-function scanBtn(cls){ return `<button class="${cls||"btn"}" data-act="qe-open">⚡ إدخال سريع</button><button class="btn" data-act="scan-open">📷 استيراد ملف/صورة</button>`; }
-function openScan(){ SC={step:"pick",rot:0,sel:null,img:null,err:"",staff:S.cfg.staff||"",name:S.cfg.name||""}; SC.engine=engineOf(); drawScan(); }
-function closeScan(){ if(SC&&SC.ctl) SC.ctl.abort(); SC=null; scanRoot.innerHTML=""; }
-function rotCanvas(img,rot,maxSide){
-  const w=img.naturalWidth,h=img.naturalHeight; const sc=Math.min(1,(maxSide||4200)/Math.max(w,h));
-  const rw=Math.round(w*sc), rh=Math.round(h*sc); const c=document.createElement("canvas");
-  const sw=rot%180?rh:rw, sh=rot%180?rw:rh; c.width=sw; c.height=sh; const x=c.getContext("2d");
-  x.translate(sw/2,sh/2); x.rotate(rot*Math.PI/180); x.drawImage(img,-rw/2,-rh/2,rw,rh); return c;
-}
-const toBlob=(c,q)=>new Promise(r=>c.toBlob(r,"image/jpeg",q||0.92));
-function drawScan(){
-  if(!SC){scanRoot.innerHTML="";return;}
-  let body="", foot="";
-  if(SC.step==="pick"){
-    body=`<p class="sc-p">${(SC.engine==="api"||SC.engine==="gemini")?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم."}</p>
-      <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري ملف الروته</b><span>PDF أو Excel (الأدق) — أو صورة</span></label>
-      <input type="file" id="sc-file" accept=".pdf,.xlsx,.xls,.csv,application/pdf,image/*" hidden>
-      <details style="margin-top:8px"><summary class="hint" style="cursor:pointer">أو الصقي نصاً / لقطة شاشة (Ctrl+V) في أي مكان بالنافذة</summary><textarea class="inp" id="sc-paste" rows="4" dir="ltr" placeholder="الصقي هنا الكود اللي يعطيك إياه Claude (RT|رقمك|2026-09-20|M,E,N,...) أو انسخي سطر الأيام وسطرك"></textarea><button class="btn" onclick="pasteImport()" style="margin-top:6px">استيراد النص</button></details><div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
-      ${sampleFn&&sampleImgOK?"":`<div class="eng">
-        <span class="label" style="margin:0">طريقة القراءة</span>
-        ${window.claude?"":`<label class="eng-o ${SC.engine==="gemini"?"on":""}"><input type="radio" name="sc-eng" value="gemini" ${SC.engine==="gemini"?"checked":""}><span><b>Gemini (مجاني)</b> — تلقائي وسهل، مفتاح مجاني من Google بدون بطاقة</span></label>
-        ${SC.engine==="gemini"?`<div class="eng-k"><input class="inp" id="sc-gkey" type="password" dir="ltr" autocomplete="off" placeholder="AIza…" value="${esc(lsGet(GKEY_LS))}"><input class="inp" id="sc-gmodel" dir="ltr" value="${esc(lsGet(GMODEL_LS)||"gemini-3.8-flash")}" aria-label="Model"><span class="hint">${DEFAULT_GKEY?"مفتاح مشترك مفعّل تلقائيًا — ما تحتاج تحط شي (الحقل اختياري لو عندك مفتاحك).":""} المفتاح المجاني: افتح aistudio.google.com/apikey ← Create API key، والصقه هنا مرة وحدة. يُحفظ على هذا الجهاز فقط.</span></div>`:""}
-        <label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
-        ${SC.engine==="api"?`<div class="eng-k"><input class="inp" id="sc-key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(lsGet(APIKEY_LS))}"><input class="inp" id="sc-model" value="${esc(lsGet(APIMODEL_LS)||"claude-sonnet-5-5")}" aria-label="Model"><span class="hint">المفتاح يُحفظ على هذا الجهاز فقط ويُرسل مباشرة إلى Anthropic. تحصلين عليه من console.anthropic.com، وتكلفة المسح الواحد قليلة جداً.</span></div>`:""}`}
-        <label class="eng-o ${SC.engine==="ocr"?"on":""}"><input type="radio" name="sc-eng" value="ocr" ${SC.engine==="ocr"?"checked":""}><span><b>قراءة على الجهاز</b> — مجانية وبدون إنترنت، تأكّدين الرموز بضغطات قليلة</span></label>
-      </div>`}
-      ${SC.err?`<div class="sc-err">${esc(SC.err)}</div>`:""}`;
-  } else if(SC.step==="crop"){
-    body=`<p class="sc-p"><b>1.</b> دوّري الصورة حتى يصير الكلام مستقيم. ${SC.engine==="ocr"?`<b>2.</b> اسحبي مستطيل حول <b>خانات الأيام الـ28 فقط</b> في صفّك — من حافة أول يوم إلى حافة آخر يوم، بدون الاسم والمجاميع. كبّري الصورة قبل التصوير إن أمكن.`:`<b>2.</b> اسحبي بإصبعك مستطيل حول <b>صفّك كامل</b> (من اسمك إلى آخر يوم).`}</p>
-      <div class="sc-tools"><button class="btn" data-act="sc-rot" data-r="-90">↺ تدوير</button><button class="btn" data-act="sc-rot" data-r="90">↻ تدوير</button>${SC.sel?`<button class="btn ghost" data-act="sc-clear">مسح التحديد</button>`:""}</div>
-      <div class="sc-cv-wrap"><canvas id="sc-cv"></canvas></div>
-      <div class="hint">${SC.sel?"✓ تم تحديد الصف":(SC.engine==="ocr"?"حدّدي الخانات أولاً":"بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)")}</div>`;
-    foot=`<button class="btn primary" data-act="sc-read" ${SC.engine==="ocr"&&!SC.sel?"disabled":""}>قراءة الروته</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
-  } else if(SC.step==="busy"){
-    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?"جارٍ تحليل الصورة…":"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.engine==="ocr"?"ثوانٍ قليلة":"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
-    foot=`<button class="btn" data-act="sc-stop">إيقاف</button>`;
-  } else if(SC.step==="review"){
-    const R=SC.res; const st=sundayOf(SC.start||S.start);
-    const H=poH(); let worked=0;
-    SC.codes.forEach(c=>{ const t=typeOf(c); if(t&&t.work) worked+=diffH(t.start,t.end); });
-    const unknown=[...new Set(SC.codes.filter(c=>c&&!typeOf(c)))];
-    const match=R.worked_hours!=null?Math.abs(R.worked_hours-worked)<0.01:null;
-    const cells=SC.codes.map((c,i)=>{ const d=addDays(st,i); const t=typeOf(c); const unc=(R.uncertain||[]).includes(i);
-      return `<div class="rv ${unc?"unc":""}" style="--c:${t?t.color:"var(--line-strong)"}"><span class="rv-d">${DAY_EN[dow(d)]} ${toD(d).getUTCDate()}</span>
-        <select id="rv-${i}" data-rv="${i}" aria-label="${esc(fmtLong(d))}">${[...S.types.map(x=>x.code),...unknown.filter(u=>u),""].filter((v,j,a)=>a.indexOf(v)===j).map(o=>`<option value="${esc(o)}" ${o===c?"selected":""}>${o?esc(o):"—"}</option>`).join("")}</select></div>`;}).join("");
-    body=`<div class="sc-sum">
-        <div><span class="k">الموظف</span><b>${esc(R.name||SC.name||"—")}</b> <span class="hint">${esc(R.staff||SC.staff||"")}</span></div>
-        <div><label class="k" for="sc-start">بداية الروته (الأحد)</label><input class="inp" type="date" id="sc-start" value="${st}"></div>
-      </div>
-      <div class="rv-grid">${DAY_EN.map(x=>`<div class="rv-h">${x}</div>`).join("")}${cells}</div>
-      <div class="sc-checks">
-        <div class="ck ${match===true?"ok":match===false?"bad":""}">${match===true?"✓":match===false?"⚠":"•"} ساعات العمل المحسوبة <b>${fmtH(worked)}</b>${R.worked_hours!=null?` · في الورقة <b>${fmtH(R.worked_hours)}</b>${match?" — مطابقة":" — غير مطابقة، راجعي الخانات"}`:""}</div>
-        ${(R.uncertain||[]).length?`<div class="ck bad">⚠ ${R.uncertain.length} خانة غير واضحة (محددة بالبرتقالي) — تأكدي منها</div>`:""}
-        ${unknown.filter(u=>u).length?`<div class="ck">رموز جديدة ستُضاف لأنواع الشفتات: <b>${unknown.filter(u=>u).map(esc).join("، ")}</b> — عدّلي ساعاتها من الإعدادات</div>`:""}
-        ${(R.staff&&SC.staff&&String(R.staff).replace(/\D/g,"")!==String(SC.staff).replace(/\D/g,""))?`<div class="ck bad">⚠ الرقم الوظيفي المقروء (${esc(R.staff)}) يختلف عن رقمك (${esc(SC.staff)}) — تأكد أنه صفّك</div>`:""}
-        ${R.notes?`<div class="ck">ملاحظة: ${esc(R.notes)}</div>`:""}
-        ${R.old_balance?`<label class="ck"><input type="checkbox" id="sc-bal" ${SC.useBal?"checked":""}> مطابقة الرصيد مع الورقة: الرصيد السابق <b dir="ltr">${R.old_balance.po} PO + ${R.old_balance.hrs} Hrs</b></label>`:""}
-      </div>`;
-    foot=`<button class="btn primary" data-act="sc-apply">اعتماد وإضافة للجدول الأصلي</button><button class="btn" data-act="sc-back">إعادة المسح</button>`;
-  } else if(SC.step==="groups"){
-    const G=SC.ocr.groups; const opts=c=>["",...S.types.map(t=>t.code)].map(o=>`<option value="${esc(o)}" ${o===c?"selected":""}>${o?esc(o):"فارغ"}</option>`).join("");
-    body=`<p class="sc-p">قسمتُ خانات صفّك إلى <b>${G.length}</b> مجموعات حسب شكل الرمز. اختاري الرمز الصحيح لكل مجموعة — مرة واحدة تكفي لكل الأيام اللي فيها.</p>
-      <div class="grp-list">${G.map((gr,gi)=>`<div class="grp ${gr.sure?"":"guess"}"><img src="${gr.thumb}" alt=""><div class="grp-i"><span class="grp-n">${gr.idx.length} ${gr.idx.length>2&&gr.idx.length<11?"أيام":"يوم"}</span><span class="grp-s">${gr.sure?"تعرّفتُ عليه":"تخمين — تأكدي"}</span></div>
-        <select id="grp-${gi}" data-grp="${gi}" aria-label="رمز المجموعة ${gi+1}">${opts(gr.code)}</select>
-        <div class="grp-more">${gr.idx.slice(1,8).map(i=>`<img src="${SC.ocr.thumbs[i]}" alt="">`).join("")}</div></div>`).join("")}</div>
-      <p class="hint">لو مجموعة فيها رمزين مختلفين، اختاري أي واحد وصحّحي الأيام في الخطوة التالية. الأشكال تُحفظ على جهازك، والمسح القادم يتعرّف عليها تلقائياً.</p>`;
-    foot=`<button class="btn primary" data-act="grp-ok">التالي: مراجعة الأيام</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
-  } else if(SC.step==="error"){
-    body=`<div class="sc-err">${esc(SC.err)}</div>`;
-    foot=`<button class="btn primary" data-act="sc-retry">حاولي مرة أخرى</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
-  }
-  scanRoot.innerHTML=`<div class="overlay" data-scclose="1"><div class="modal sc-modal" role="dialog" aria-modal="true" aria-labelledby="sc-title">
-    <div class="m-head"><h2 id="sc-title" style="font-size:18px">مسح صورة الروته</h2><button class="icon-btn" data-act="sc-close" aria-label="إغلاق">✕</button></div>
-    <div class="m-body">${body}</div>${foot?`<div class="m-foot">${foot}</div>`:""}</div></div>`;
-  if(SC.step==="pick"){
-    const f=document.getElementById("sc-file");
-    f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); const gk=document.getElementById("sc-gkey"); if(gk) lsSet(GKEY_LS,gk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
-      if(!/^image\//.test(file.type)){ importFile(file); return; } const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if((SC.engine==="api"&&lsGet(APIKEY_LS))||(SC.engine==="gemini"&&gkey())){ autoScan(); } else { SC.step="crop"; drawScan(); } };
-      img.onerror=()=>{ SC.err="تعذّر فتح الصورة. جرّبي صورة JPG أو PNG."; drawScan(); }; img.src=URL.createObjectURL(file); });
-  }
-  if(SC.step==="pick"){
-    document.querySelectorAll('input[name="sc-eng"]').forEach(r=>r.addEventListener("change",()=>{ SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim(); SC.engine=r.value; drawScan(); }));
-    const k=document.getElementById("sc-key"); if(k) k.addEventListener("change",()=>lsSet(APIKEY_LS,k.value.trim()));
-    const m=document.getElementById("sc-model"); if(m) m.addEventListener("change",()=>lsSet(APIMODEL_LS,m.value.trim()));
-    const gk=document.getElementById("sc-gkey"); if(gk) gk.addEventListener("change",()=>lsSet(GKEY_LS,gk.value.trim()));
-    const gm=document.getElementById("sc-gmodel"); if(gm) gm.addEventListener("change",()=>lsSet(GMODEL_LS,gm.value.trim()));
-  }
-  if(SC.step==="crop") setupCropCanvas();
-  if(SC.step==="groups") document.querySelectorAll("[data-grp]").forEach(el=>el.addEventListener("change",()=>{ const gr=SC.ocr.groups[+el.dataset.grp]; gr.code=el.value; gr.sure=true; }));
-  if(SC.step==="review"){
-    document.querySelectorAll("[data-rv]").forEach(s=>s.addEventListener("change",()=>{ SC.codes[+s.dataset.rv]=s.value; SC.res.uncertain=(SC.res.uncertain||[]).filter(i=>i!==+s.dataset.rv); drawScan(); }));
-    const si=document.getElementById("sc-start"); si.addEventListener("change",()=>{ if(si.value){ SC.start=sundayOf(si.value); drawScan(); } });
-    const cb=document.getElementById("sc-bal"); if(cb) cb.addEventListener("change",()=>{SC.useBal=cb.checked;});
-  }
-}
-function setupCropCanvas(){
-  const cv=document.getElementById("sc-cv"); const wrap=cv.parentElement;
-  const src=rotCanvas(SC.img,SC.rot,1800);
-  const maxW=wrap.clientWidth||600, maxH=Math.round(window.innerHeight*0.55);
-  const k=Math.min(maxW/src.width,maxH/src.height,1);
-  cv.width=Math.round(src.width*k); cv.height=Math.round(src.height*k);
-  const x=cv.getContext("2d");
-  const paint=()=>{ x.clearRect(0,0,cv.width,cv.height); x.drawImage(src,0,0,cv.width,cv.height);
-    if(SC.sel){ const s=SC.sel, X=s.x*cv.width, Y=s.y*cv.height, W=s.w*cv.width, H=s.h*cv.height;
-      x.fillStyle="rgba(8,20,24,.45)"; x.fillRect(0,0,cv.width,Y); x.fillRect(0,Y+H,cv.width,cv.height-Y-H); x.fillRect(0,Y,X,H); x.fillRect(X+W,Y,cv.width-X-W,H);
-      x.strokeStyle="#F0955A"; x.lineWidth=2; x.strokeRect(X,Y,W,H); } };
-  paint();
-  let start=null;
-  const pt=e=>{ const r=cv.getBoundingClientRect(); return {x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}; };
-  cv.addEventListener("pointerdown",e=>{ cv.setPointerCapture(e.pointerId); start=pt(e); SC.sel=null; e.preventDefault(); });
-  cv.addEventListener("pointermove",e=>{ if(!start) return; const p=pt(e); SC.sel={x:Math.min(start.x,p.x),y:Math.min(start.y,p.y),w:Math.abs(p.x-start.x),h:Math.abs(p.y-start.y)}; paint(); });
-  cv.addEventListener("pointerup",()=>{ start=null; if(SC.sel&&(SC.sel.w<0.02||SC.sel.h<0.005)) SC.sel=null; drawScan(); });
-}
-
-const stripDig=s=>String(s||"").replace(/\D/g,"");
-const domOf=s=>toD(s).getUTCDate();
-const validB=b=>b&&+b.w>0&&+b.h>0&&isFinite(+b.x)&&isFinite(+b.y);
-const nb=b=>({x:+b.x,y:+b.y,w:+b.w,h:+b.h});
-const clampB=b=>{const x=Math.max(0,b.x),y=Math.max(0,b.y);return {x,y,w:Math.min(1-x,b.w),h:Math.min(1-y,b.h)};};
-const padB=(b,m)=>clampB({x:b.x-m,y:b.y-m,w:b.w+2*m,h:b.h+2*m});
-function toRotFrame(b,rot){const {x,y,w,h}=b; if(rot===90) return {x:1-(y+h),y:x,w:h,h:w}; if(rot===180) return {x:1-(x+w),y:1-(y+h),w,h}; if(rot===270) return {x:y,y:1-(x+w),w:h,h:w}; return b;}
-function cropC(full,b,maxSide){
-  const rx=b.x*full.width,ry=b.y*full.height,rw=Math.max(8,b.w*full.width),rh=Math.max(8,b.h*full.height);
-  const sc=Math.min(Math.max(1,maxSide/Math.max(rw,rh)),4); const c=document.createElement("canvas"); c.width=Math.round(rw*sc); c.height=Math.round(rh*sc);
-  const x=c.getContext("2d"); x.imageSmoothingQuality="high"; x.drawImage(full,rx,ry,rw,rh,0,0,c.width,c.height); return c;
-}
-function stackC(head,strip){
-  const wide=strip.width>=strip.height; const c=document.createElement("canvas"); let x;
-  if(wide){ const hh=Math.round(head.height*strip.width/head.width); c.width=strip.width; c.height=hh+strip.height; x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(head,0,0,strip.width,hh); x.drawImage(strip,0,hh); }
-  else { const hw=Math.round(head.width*strip.height/head.height); c.width=hw+strip.width; c.height=strip.height; x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(head,0,0,hw,strip.height); x.drawImage(strip,hw,0); }
-  return c;
-}
 const scanHours=codes=>{let w=0; codes.forEach(c=>{const t=typeOf(c); if(t&&t.work) w+=diffH(t.start,t.end);}); return w;};
-const locPrompt=(who,first)=>`This is a photo/screenshot of a hospital nursing duty rota page with MANY staff. Staff may be rows, or columns (name written vertically, dates running downward).
-Find ${who}. Match by staff number (SN) first, then name.
-Return only JSON: {"found":true,${first?'"rotation":0,':''}"box":{"x":0.1,"y":0.2,"w":0.05,"h":0.6},"header_box":{"x":0.1,"y":0.05,"w":0.05,"h":0.1},"staff":"number matched","name":"name matched"}
-${first?'- "rotation": clockwise degrees (0, 90, 180 or 270) that make the printed text upright.\n':''}- "box": TIGHT bounding box of that ONE person's entire strip: name/number cell, all 28 daily cells and the totals cells. Exclude neighbouring staff.
-- "header_box": box of the table's date header (day numbers and weekday names) covering the same columns (or rows) as the strip.
-- All numbers are fractions 0-1 of the ${first?'ORIGINAL':'given'} image width and height (x,y = top-left corner).
-If that person is not on the page return {"found":false}.`;
-const readPrompt=(who,known)=>`You are transcribing a hospital nursing duty rota (28 consecutive dates starting on a Sunday, then totals such as Worked Hrs and Balance Old in PO and Hrs).
-The image shows the DATE HEADER (day-of-month numbers, weekday names) joined to ONE staff member's strip, columns aligned. Staff member: ${who}.
-For each of the 28 date columns in order (left to right, or top to bottom if the strip is vertical) return the day-of-month number printed in the header and the code printed in that staff member's cell for that exact date. Codes are short, e.g. ${known}. Copy exactly what is printed; ignore fill colours; an empty cell is "". Never skip or duplicate a column; check each code sits under its own date number. If unsure of a cell, give your best reading and list its index 0-27 in "uncertain".
-Also read if visible: the rota start date ("From") as YYYY-MM-DD, this person's Worked Hrs total, their Balance Old PO and Hrs, and the staff number printed in the strip.
-Reply only JSON: {"from":"2026-09-20","name":"","staff":"","cells":[{"d":20,"c":"N"},{"d":21,"c":"N"}],"worked_hours":135,"old_balance":{"po":77,"hrs":6},"uncertain":[],"notes":""}
-"cells" must have exactly 28 items in date order. Use null for anything not visible.`;
-function alignCells(r){
-  const cells=Array.isArray(r.cells)?r.cells:[]; const ds=cells.map(c=>+(c&&c.d));
-  const hint=/^\d{4}-\d{2}-\d{2}$/.test(r.from||"")?sundayOf(r.from):null; const base=hint||sundayOf(todayIso());
-  let best=base,bs=-1;
-  for(let n=0;n<61;n++){ const k=n%2?-((n+1)>>1):n>>1; const s=addDays(base,k*7); let sc=0; for(let i=0;i<28;i++) if(ds[i]===domOf(addDays(s,i))) sc++; if(sc>bs){bs=sc;best=s;} }
-  if(bs<20){ best=hint||addDays(S.start,28); bs=-1; }
-  const dom={}; for(let i=0;i<28;i++) dom[domOf(addDays(best,i))]=i;
-  const out=Array(28).fill(null);
-  cells.forEach((c,k)=>{ const code=String(c&&c.c||"").trim().toUpperCase().replace(/\s+/g,""); const idx=(bs>=0&&dom[+c.d]!==undefined)?dom[+c.d]:k; if(idx>=0&&idx<28&&out[idx]===null) out[idx]=code; });
-  return {start:best,codes:out.map(v=>v===null?"":v),missing:out.map((v,i)=>v===null?i:-1).filter(i=>i>=0),score:bs};
-}
-function combineReads(reads){
-  const cnt={}; reads.forEach(x=>{cnt[x.a.start]=(cnt[x.a.start]||0)+1;});
-  const start=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]; const use=reads.filter(x=>x.a.start===start);
-  const codes=[],disagree=[];
-  for(let i=0;i<28;i++){ const v={}; use.forEach(x=>{const c=x.a.codes[i]; v[c]=(v[c]||0)+1;}); const s=Object.keys(v).sort((a,b)=>v[b]-v[a]); codes.push(s[0]);
-    if(s.length>1||use.some(x=>(x.r.uncertain||[]).includes(i)||x.a.missing.includes(i))) disagree.push(i); }
-  const wh=use.map(x=>x.r.worked_hours).filter(v=>typeof v==="number").sort((a,b)=>a-b); const worked=wh.length?wh[wh.length>>1]:null;
-  return {start,codes,disagree,r:use[0].r,worked,hoursOK:worked==null?null:Math.abs(worked-scanHours(codes))<0.01};
-}
-function scanToast(t){const d=document.createElement("div");d.textContent=t;d.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0B6E78;color:#fff;padding:12px 18px;border-radius:12px;z-index:99999;font:600 14px system-ui;max-width:90vw;text-align:center";document.body.appendChild(d);setTimeout(()=>d.remove(),5000);}
-/* ---------- import roster from PDF / Excel / pasted text (no OCR, no scanning) ---------- */
-function loadScript(u){ return new Promise((ok,no)=>{ const s=document.createElement("script"); s.src=u; s.onload=ok; s.onerror=()=>no({msg:"تعذّر تحميل مكتبة القراءة. تأكدي من الإنترنت."}); document.head.appendChild(s); }); }
-async function getPdfjs(){
-  if(!window.pdfjsLib){ await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
-    const w=await (await fetch("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js")).text();
-    pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([w],{type:"text/javascript"})); }
-  return window.pdfjsLib;
-}
-const isDay=t=>/^\d{1,2}$/.test(t)&&+t>=1&&+t<=31;
-const nextDay=(a,b)=>b===a+1||(b===1&&a>=28);
-function findChain(items,vert){
-  const key=vert?"x":"y", pos=vert?"y":"x", groups=[];
-  items.filter(i=>isDay(i.t)).forEach(i=>{ const g=groups.find(g=>Math.abs(g.k-i[key])<=Math.max(3,i.s*0.6)); if(g) g.a.push(i); else groups.push({k:i[key],a:[i]}); });
-  const out=[];
-  groups.forEach(g=>{ const a=g.a.sort((p,q)=>p[pos]-q[pos]);
-    for(let s=0;s+28<=a.length;s++){ let ok=true; for(let j=1;j<28;j++) if(!nextDay(+a[s+j-1].t,+a[s+j].t)){ok=false;break;} if(ok){ out.push({k:g.k,cols:a.slice(s,s+28)}); break; } } });
-  return out;
-}
-function parseItems(items,staff,vert){
-  const key=vert?"x":"y", pos=vert?"y":"x", sn=stripDig(staff); if(!sn) return null;
-  const heads=findChain(items,vert); if(!heads.length) return null;
-  const who=items.filter(i=>stripDig(i.t)===sn||(sn.length>=4&&i.t.replace(/\s/g,"").includes(sn)));
-  for(const w of who){
-    const tol=Math.max(3,w.s*0.6); const line=items.filter(i=>Math.abs(i[key]-w[key])<=tol&&i!==w);
-    const h=heads.slice().sort((a,b)=>Math.abs(a.k-w[key])-Math.abs(b.k-w[key]))[0];
-    const centers=h.cols.map(c=>c[pos]+c.l/2); const gap=(centers[27]-centers[0])/27||1;
-    const lo=centers[0]-gap*0.6, hi=centers[27]+gap*0.6; const cells=Array(28).fill("");
-    line.filter(i=>i.t&&i[pos]+i.l/2>=lo&&i[pos]+i.l/2<=hi).sort((a,b)=>a[pos]-b[pos]).forEach(i=>{
-      const c=i[pos]+i.l/2; let bi=0,bd=1e9; centers.forEach((v,j)=>{const d=Math.abs(v-c); if(d<bd){bd=d;bi=j;}});
-      cells[bi]+=i.t.replace(/\s+/g,"").toUpperCase(); });
-    if(cells.filter(Boolean).length<10) continue;
-    return {cells,first:+h.cols[0].t,name:(line.filter(i=>/[A-Za-z\u0600-\u06FF]{3,}/.test(i.t)&&i[pos]<lo).map(i=>i.t).join(" ")).slice(0,60)};
-  }
-  return null;
-}
-function guessStart(items,first){
-  const base=addDays(S.start,28); let best=null;
-  for(const i of items){ const m=i.t.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/); if(!m) continue;
-    const d=`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`; if(!isNaN(toD(d))&&dow(d)===0&&domOf(d)===first) return d; }
-  for(let k=0;k<60;k++){ const s=addDays(sundayOf(base),(k%2?-((k+1)>>1):k>>1)*7); if(domOf(s)===first){best=s;break;} }
-  return best||sundayOf(base);
-}
-function finishImport(res,items,srcName){
-  const start=guessStart(items,res.first); const empty=res.cells.map((c,i)=>c?-1:i).filter(i=>i>=0);
-  SC.res={name:res.name||SC.name,staff:SC.staff,uncertain:empty,worked_hours:null,old_balance:null,engine:"file",notes:"قُرئت من الملف مباشرة ("+srcName+") بدون مسح صور."};
-  SC.codes=res.cells; SC.start=start; SC.useBal=false; SC.step="review";
-  if(!empty.length){ applyScan(); scanToast("تم استيراد الروته وتعبئته تلقائياً ✓ (بداية "+fmtShort(start)+")"); }
-  else drawScan();
-}
-function failImport(m){ if(!SC) return; SC.step="pick"; SC.err=m; drawScan(); }
-function tryAll(pages,name){
-  for(const items of pages){ for(const v of [false,true]){ const r=parseItems(items,SC.staff,v); if(r){ finishImport(r,items,name); return true; } } }
-  return false;
-}
-async function importFile(file){
-  if(!stripDig(SC.staff)) return failImport("اكتبي الرقم الوظيفي أولاً (تغيير الاسم / الرقم) عشان ألقى صفك.");
-  SC.step="busy"; drawScan(); prog("جارٍ قراءة الملف…");
-  try{
-    const pages=[]; const buf=await file.arrayBuffer();
-    if(/pdf/i.test(file.type)||/\.pdf$/i.test(file.name)){
-      const lib=await getPdfjs(); const pdf=await lib.getDocument({data:buf}).promise;
-      for(let p=1;p<=pdf.numPages;p++){ const tc=await (await pdf.getPage(p)).getTextContent();
-        pages.push(tc.items.filter(i=>i.str&&i.str.trim()).map(i=>({t:i.str.trim(),x:i.transform[4],y:-i.transform[5],l:i.width||1,s:Math.abs(i.height||i.transform[3]||8)}))); }
-      if(!pages.some(p=>p.length>20)) return failImport("هذا الـ PDF عبارة عن صورة (بدون نص) فما أقدر أقرأه. اطلبي ملف Excel أو PDF الأصلي من التمريض، أو الصقي الصف كنص.");
-    } else {
-      if(!window.XLSX) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
-      const wb=XLSX.read(buf,{type:"array",cellDates:true});
-      wb.SheetNames.forEach(n=>{ const aoa=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:""}); const it=[];
-        aoa.forEach((row,r)=>row.forEach((v,c)=>{ if(v===""||v==null) return; const t=v instanceof Date?String(new Date(v.getTime()+432e5).getUTCDate()):String(v).trim(); if(t) it.push({t,x:c*100,y:r*100,l:100,s:30}); })); pages.push(it); });
-    }
-    if(!SC) return;
-    if(!tryAll(pages,file.name)) failImport("ما لقيت الرقم "+SC.staff+" مع أيام الروته الـ28 في الملف. تأكدي من الرقم أو جرّبي لصق الصف كنص.");
-  }catch(e){ failImport((e&&e.msg)||"تعذّرت قراءة الملف. جرّبي ملف ثاني أو الصقي النص."); }
-}
-function pasteImport(){
-  const ta=document.getElementById("sc-paste"); const si=document.getElementById("sc-staff"); if(si) SC.staff=si.value.trim();
-  const txt=ta&&ta.value.trim(); if(!txt) return failImport("الصقي نص الروته أولاً.");
-  if(!stripDig(SC.staff)) return failImport("اكتبي الرقم الوظيفي أولاً.");
-  const it=[]; txt.split(/\r?\n/).forEach((ln,r)=>{ const parts=ln.includes("\t")?ln.split("\t"):ln.trim().split(/\s+/); parts.forEach((p,c)=>{ p=p.trim(); if(p) it.push({t:p,x:c*100,y:r*100,l:100,s:30}); }); });
-  SC.step="busy"; if(tryAll([it],"نص ملصوق")) return;
-  const line=txt.split(/\r?\n/).find(l=>l.replace(/\s/g,"").includes(stripDig(SC.staff)))||txt;
-  const toks=line.trim().split(/[\s,\t|]+/).filter(t=>/^[A-Za-z]{1,3}\d?$/.test(t)&&!/^(SN|NO|ST|RT)$/i.test(t)).map(t=>t.toUpperCase());
-  if(toks.length>=28){ const dm=txt.match(/\d{4}-\d{2}-\d{2}/); const st=dm&&!isNaN(toD(dm[0]))?sundayOf(dm[0]):sundayOf(addDays(S.start,28));
-    SC.res={name:SC.name,staff:SC.staff,uncertain:[],worked_hours:null,old_balance:null,engine:"file",notes:dm?"":"الصف بدون تاريخ: تأكدي من تاريخ بداية الروته (الأحد)."}; SC.codes=toks.slice(0,28); SC.start=st; SC.useBal=false;
-    if(dm){ applyScan(); scanToast("تم استيراد الروته ✓ بداية "+fmtShort(st)); return; } SC.step="review"; return drawScan(); }
-  failImport("ما قدرت أفهم النص. انسخي الصف مع سطر الأيام (1..28) فوقه.");
-}
-/* auto-pick the newest available Gemini flash model (never breaks when Google retires one) */
-async function geminiModels(key){
-  const CK=LS_KEY+":gmc"; let list=[];
-  try{ const c=JSON.parse(lsGet(CK)||"null"); if(c&&c.k===key.slice(-6)&&Date.now()-c.t<864e5&&c.l.length) list=c.l; }catch(e){}
-  if(!list.length){ try{ const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",{headers:{"x-goog-api-key":key}});
-    if(r.ok){ const j=await r.json(); list=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes("generateContent")).map(m=>m.name.replace("models/","")).filter(n=>/^gemini-[\d.]+-flash$/.test(n)).sort((a,b)=>parseFloat(b.split("-")[1])-parseFloat(a.split("-")[1]));
-      if(list.length) lsSet(CK,JSON.stringify({k:key.slice(-6),t:Date.now(),l:list})); } }catch(e){} }
-  return [...new Set([lsGet(GMODEL_LS),...list,"gemini-flash-latest"].filter(Boolean))];
-}
-/* one entry point: paste a screenshot / file / text anywhere in the import window */
-document.addEventListener("paste",e=>{
-  if(!SC||SC.step!=="pick"||!e.clipboardData) return; const cd=e.clipboardData; const f=cd.files&&cd.files[0];
-  if(f){ e.preventDefault(); const inp=document.getElementById("sc-file"); if(inp){ const dt=new DataTransfer(); dt.items.add(f); inp.files=dt.files; inp.dispatchEvent(new Event("change")); } return; }
-  const t=cd.getData("text"); if(t&&t.length>60&&!/^(INPUT|TEXTAREA)$/.test(e.target.tagName)){ e.preventDefault(); const ta=document.getElementById("sc-paste"); if(ta){ ta.value=t; pasteImport(); } }
-});
+function scanBtn(cls){ return `<button class="${cls||"btn"}" data-act="qe-open">⚡ إدخال سريع</button>`; }
 /* ---------- quick entry: keypad auto-advance + typed shorthand + hours check (no scanning) ---------- */
 let QE=null; const qeRoot=document.createElement("div"); document.body.appendChild(qeRoot);
 function qeOpen(){ const filled=cycleDays(S.start).some(d=>S.original[d]); QE={start:filled?addDays(S.start,28):S.start,codes:Array(28).fill(""),i:0,text:"",paper:""}; qeDraw(); }
 function qeClose(){ QE=null; qeRoot.innerHTML=""; }
 function qeDraw(){
-  if(!QE) return; const st=sundayOf(QE.start); QE.start=st; const worked=scanHours(QE.codes); const pw=parseFloat(QE.paper); const filled=QE.codes.filter(Boolean).length;
+  if(!QE) return; const st=alignCycle(QE.start); QE.start=st; const worked=scanHours(QE.codes); const pw=parseFloat(QE.paper); const filled=QE.codes.filter(Boolean).length;
   const cells=QE.codes.map((c,k)=>{ const d=addDays(st,k); const t=c?typeOf(c):null; const cur=k===QE.i;
     return `<button data-q="cell" data-v="${k}" style="border:2px solid ${cur?"#0B6E78":"transparent"};background:${t?t.color:"var(--line,#e5e9ea)"};color:${t?"#fff":"inherit"};border-radius:10px;padding:6px 0;font:600 12px system-ui;min-height:46px"><span style="opacity:.75;display:block">${toD(d).getUTCDate()}</span>${c?esc(c):"·"}</button>`; }).join("");
   const keys=S.types.map(t=>`<button data-q="code" data-v="${esc(t.code)}" style="background:${t.color};color:#fff;border:0;border-radius:12px;padding:12px 14px;font:700 15px system-ui;min-width:52px">${esc(t.code)}</button>`).join("");
@@ -1653,248 +1379,49 @@ qeRoot.addEventListener("click",e=>{
   else if(q==="undo"){ if(QE.i>0||QE.codes[0]){ if(QE.i>=28) QE.i=27; else if(QE.i>0) QE.i--; QE.codes[QE.i]=""; } }
   else if(q==="rep"){ for(let k=7;k<28;k++) QE.codes[k]=QE.codes[k%7]; QE.i=28; }
   else if(q==="text") qeText();
-  else if(q==="apply"){ const st=sundayOf(QE.start);
+  else if(q==="apply"){ const st=alignCycle(QE.start);
     QE.codes.forEach((c,k)=>{ const d=addDays(st,k); if(!c){ delete S.original[d]; return; } let t=typeOf(c); if(!t){ t={code:c,name:c,start:"",end:"",color:"#7A8A91",work:false}; S.types.push(t); } S.original[d]={code:c,start:t.start,end:t.end}; });
     S.start=st; viewStart=st; S.sample=false; persist(); qeClose(); tab="roster"; mode="current"; render(); return; }
   qeDraw();
 });
-async function autoScan(){
-  SC.ctl=new AbortController(); const sg=SC.ctl.signal; SC.step="busy"; drawScan(); prog("جارٍ البحث عن صفّك برقمك الوظيفي…");
-  try{
-    if(!stripDig(SC.staff)) throw {msg:"اكتبي الرقم الوظيفي أولاً في خانة الرقم عشان أحدد صفّك تلقائياً."};
-    const who=`staff number "${SC.staff}"${SC.name?`, name "${SC.name}"`:""}`;
-    const r=await visionCall(locPrompt(who,true),[await toBlob(rotCanvas(SC.img,0,2600),0.92)],sg); if(!SC) return;
-    if(!r||!r.found||!validB(r.box)) throw {msg:"ما لقيت الرقم "+SC.staff+" في هذه الصورة. جرّبي صورة أوضح أو الصفحة الثانية."};
-    const rot=[0,90,180,270].includes(+r.rotation)?+r.rotation:0; SC.rot=rot;
-    const full=rotCanvas(SC.img,rot,4200);
-    let strip=padB(toRotFrame(nb(r.box),rot),0.01); const head=validB(r.header_box)?toRotFrame(nb(r.header_box),rot):null;
-    prog("تحديد الصف بدقة…");
-    const reg=padB(strip,0.08);
-    try{ const r2=await visionCall(locPrompt(who,false),[await toBlob(cropC(full,reg,2400),0.93)],sg);
-      if(SC&&r2&&r2.found&&validB(r2.box)){ const b=nb(r2.box); strip=padB({x:reg.x+b.x*reg.w,y:reg.y+b.y*reg.h,w:b.w*reg.w,h:b.h*reg.h},0.006); } }
-    catch(e){ if(e&&e.code==="cancelled") throw e; }
-    if(!SC) return;
-    const build=ms=>{ const s=cropC(full,strip,ms); if(!head) return s;
-      const hb=strip.w>=strip.h?{x:strip.x,w:strip.w,y:head.y,h:head.h}:{x:head.x,w:head.w,y:strip.y,h:strip.h};
-      return stackC(cropC(full,clampB(hb),ms),s); };
-    const known=S.types.map(t=>t.code).join(", "); const reads=[];
-    const doRead=async ms=>{ const rr=await visionCall(readPrompt(who,known),[await toBlob(build(ms),0.95)],sg); if(SC&&rr&&Array.isArray(rr.cells)) reads.push({r:rr,a:alignCells(rr)}); };
-    prog("جارٍ قراءة الشفتات (1/2)…"); await doRead(2200); if(!SC) return;
-    prog("جارٍ التحقق بقراءة ثانية (2/2)…"); await doRead(3200); if(!SC) return;
-    if(!reads.length) throw {code:"invalid_json"};
-    let fin=combineReads(reads);
-    if((fin.disagree.length||fin.hoursOK===false)&&reads.length<3){ prog("مراجعة إضافية للخانات المشكوك فيها…"); await doRead(2700); if(!SC) return; fin=combineReads(reads); }
-    const R=fin.r; const rs=stripDig(R.staff);
-    if(rs&&rs!==stripDig(SC.staff)) throw {msg:"الصف اللي قرأته رقمه ("+R.staff+") غير رقمك ("+SC.staff+"). جرّبي صورة أوضح حتى ما أعبي صف غيرك."};
-    const unc=[...new Set(fin.disagree)];
-    SC.res={...R,uncertain:unc,worked_hours:fin.worked,old_balance:(R.old_balance&&typeof R.old_balance.po==="number")?{po:R.old_balance.po,hrs:+R.old_balance.hrs||0}:null,engine:engineOf()};
-    SC.codes=fin.codes; SC.start=fin.start; SC.useBal=!!SC.res.old_balance; SC.step="review";
-    if(fin.hoursOK===true&&!unc.length){ applyScan(); scanToast("تمت قراءة الروته وتعبئته تلقائياً ✓ الساعات مطابقة للورقة"); return; }
-  }catch(e){
-    if(!SC) return;
-    if(e&&e.code==="cancelled"){ SC.step="pick"; drawScan(); return; }
-    const m={not_granted:"لم يُسمح للموقع باستخدام Claude.",rate_limited:"وصلتِ للحد المسموح حالياً. حاولي بعد قليل.",image_rejected:"الصورة غير مقبولة (كبيرة جداً أو نوعها غير مدعوم).",invalid_json:"ما قدرت أقرأ الجدول بشكل صحيح. جرّبي صورة أوضح.",refused:"تعذّرت قراءة الصورة. جرّبي صورة أوضح."};
-    SC.err=(e&&e.msg)||m[e&&e.code]||"صار خطأ أثناء القراءة. حاولي مرة أخرى."; SC.step="error";
-  }
-  drawScan();
-}
-async function runScan(){
-  const full=rotCanvas(SC.img,SC.rot,4200);
-  const imgs=[];
-  if(SC.sel){ const s=SC.sel; const rx=s.x*full.width, ry=s.y*full.height, rw=s.w*full.width, rh=s.h*full.height;
-    const sc=Math.min(Math.max(1,2000/rw),4); const c=document.createElement("canvas"); c.width=Math.round(rw*sc); c.height=Math.round(rh*sc);
-    const x=c.getContext("2d"); x.imageSmoothingQuality="high"; x.drawImage(full,rx,ry,rw,rh,0,0,c.width,c.height); imgs.push(await toBlob(c,0.95)); }
-  if(!SC.sel||sampleMax>=2){ imgs.push(await toBlob(rotCanvas(SC.img,SC.rot,2000),0.9)); }
-  const who=`staff number "${SC.staff||"?"}"${SC.name?`, name "${SC.name}"`:""}`;
-  const known=S.types.map(t=>t.code).join(", ");
-  const prompt=`You are transcribing a hospital nursing duty rota (a 28-day "Nursing Duty Rota" table: one row per staff member, columns are 28 consecutive dates starting on a Sunday, then totals such as Worked Hrs, Due, Overtime, and Balance Old/Final in PO and Hrs).
-${SC.sel?(imgs.length>1?"Image 1 is a high-resolution close-up crop of ONE staff member's row. Image 2 is the whole page for context (dates, headers, totals).":"The image is a high-resolution close-up crop of ONE staff member's row."):"The image is the whole page. Find the row for the staff member below."}
-Staff member: ${who}.
-Read that staff member's 28 daily shift codes in date order (earliest date first). Codes are short, e.g. ${known}. Transcribe exactly what is printed in each cell; ignore highlight colours (yellow/pink fills are not codes). If a cell has handwriting over it or you are not sure, give your best reading and list its index (0-27) in "uncertain". Count carefully so there are exactly 28 codes and none are skipped or duplicated; if the crop shows the name/number columns or totals, exclude them.
-Also read, if visible: the rota start date ("From"), this staff member's Worked Hrs total, and their Balance "Old" PO and Hrs.
-Reply with only JSON of this shape:
-{"from":"2026-09-20","name":"Ahmed Ali Al Mamari","staff":"76221","shifts":["N","N","O", "... 28 codes total"],"worked_hours":135,"old_balance":{"po":77,"hrs":6},"uncertain":[11],"notes":"one short sentence or empty"}
-Use null for anything not visible. The photo may be rotated or skewed; read it upright. The strip may still run vertically (dates going downward): in that case read the dates from earliest to latest. Also report the staff number printed in that strip as \"staff\".`;
-  SC.ctl=new AbortController(); SC.step="busy"; drawScan();
-  const eng=engineOf();
-  try{
-    let r;
-    if(eng==="claude") r=await sampleFn.json(prompt,{images:imgs,modelTier:"complex",signal:SC.ctl.signal});
-    else if(eng==="api"||eng==="gemini") r=await visionCall(prompt,imgs,SC.ctl.signal);
-    else { await ocrRow(full,SC.ctl.signal); if(!SC) return; SC.step="groups"; drawScan(); return; }
-    if(!SC) return;
-    if(!r||!Array.isArray(r.shifts)) throw {code:"invalid_json"};
-    const codes=r.shifts.slice(0,28).map(c=>String(c||"").trim().toUpperCase().replace(/\s+/g,""));
-    while(codes.length<28) codes.push("");
-    const unc=(Array.isArray(r.uncertain)?r.uncertain:[]).map(Number).filter(n=>n>=0&&n<28);
-    if(r.shifts.length!==28) unc.push(...codes.map((c,i)=>i).filter(i=>!codes[i]));
-    SC.res={...r,uncertain:[...new Set(unc)],worked_hours:(typeof r.worked_hours==="number")?r.worked_hours:null,
-      old_balance:(r.old_balance&&typeof r.old_balance.po==="number")?{po:r.old_balance.po,hrs:+r.old_balance.hrs||0}:null};
-    SC.codes=codes; SC.start=(typeof r.from==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(r.from))?sundayOf(r.from):addDays(S.start,28);
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(r.from||"")&&cycleDays(S.start).every(d=>!S.original[d])) SC.start=S.start;
-    SC.res.engine=eng;
-    SC.useBal=!!SC.res.old_balance; SC.step="review";
-  }catch(e){
-    if(!SC) return;
-    if(e&&e.code==="cancelled"){ SC.step="crop"; drawScan(); return; }
-    if(e&&e.msg){ SC.err=e.msg; SC.step="error"; drawScan(); return; }
-    const m={not_granted:"لم يُسمح للموقع باستخدام Claude. اسمحي له عند الطلب ثم حاولي مرة أخرى.",rate_limited:"وصلتِ للحد المسموح حالياً. حاولي بعد قليل.",image_rejected:"الصورة غير مقبولة (كبيرة جداً أو نوعها غير مدعوم). جرّبي صورة أخرى.",invalid_json:"ما قدرت أقرأ الجدول بشكل صحيح. حدّدي صفّك بدقة أكبر وحاولي مرة أخرى.",refused:"تعذّرت قراءة الصورة. جرّبي صورة أوضح.",session_expired:"انتهت الجلسة. سجّلي الدخول مرة أخرى."};
-    SC.err=m[e&&e.code]||"صار خطأ أثناء القراءة. حاولي مرة أخرى."; SC.step="error";
-  }
-  drawScan();
-}
-async function blobToB64(b){ const buf=new Uint8Array(await b.arrayBuffer()); let s=""; for(let i=0;i<buf.length;i+=0x8000) s+=String.fromCharCode.apply(null,buf.subarray(i,i+0x8000)); return btoa(s); }
-function parseLooseJSON(t){ try{return JSON.parse(t);}catch(e){} const m=t.match(/```(?:json)?\s*([\s\S]*?)```/); if(m){try{return JSON.parse(m[1]);}catch(e){}} const a=t.indexOf("{"), b=t.lastIndexOf("}"); if(a>=0&&b>a){ try{return JSON.parse(t.slice(a,b+1));}catch(e){} } return null; }
-async function apiVision(prompt,imgs,signal){
-  const key=lsGet(APIKEY_LS); if(!key) throw {msg:"أدخلي مفتاح Claude API أولاً، أو اختاري «قراءة على الجهاز»."};
-  const content=[]; for(const b of imgs) content.push({type:"image",source:{type:"base64",media_type:"image/jpeg",data:await blobToB64(b)}});
-  content.push({type:"text",text:prompt});
-  let res;
-  try{ res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal,headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-    body:JSON.stringify({model:lsGet(APIMODEL_LS)||"claude-sonnet-5-5",max_tokens:3500,messages:[{role:"user",content}]})}); }
-  catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {msg:"تعذّر الاتصال بـ Claude API. تأكدي من الإنترنت."}; }
-  if(!res.ok){ let t=""; try{ const j=await res.json(); t=j&&j.error&&j.error.message||""; }catch(e){}
-    throw {msg:res.status===401?"مفتاح API غير صحيح.":res.status===404?"اسم الموديل غير صحيح: "+t:res.status===429?"تجاوزتِ الحد المسموح. حاولي بعد قليل.":res.status===400&&/credit/i.test(t)?"رصيد حساب API غير كافٍ.":"خطأ من Claude API ("+res.status+") "+t}; }
-  const j=await res.json(); const txt=(j.content||[]).map(c=>c.text||"").join("");
-  const r=parseLooseJSON(txt); if(!r) throw {code:"invalid_json"}; return r;
-}
 
-const visionCall=(pr,im,sg)=>engineOf()==="gemini"?geminiVision(pr,im,sg):apiVision(pr,im,sg);
-async function geminiVision(prompt,imgs,signal){
-  const key=gkey(); if(!key) throw {msg:"الصق مفتاح Gemini المجاني أولاً، أو اختر «قراءة على الجهاز»."};
-  const parts=[]; for(const b of imgs) parts.push({inline_data:{mime_type:"image/jpeg",data:await blobToB64(b)}});
-  parts.push({text:prompt});
-  const body=JSON.stringify({contents:[{parts}],generationConfig:{responseMimeType:"application/json",temperature:0}});
-  const models=await geminiModels(key);
-  const sleep=ms=>new Promise((ok,no)=>{ const t=setTimeout(ok,ms); if(signal) signal.addEventListener("abort",()=>{clearTimeout(t);no({code:"cancelled"});}); });
-  let lastMsg="";
-  for(let mi=0;mi<models.length;mi++){
-    for(let attempt=0;attempt<2;attempt++){
-      let res;
-      try{ res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(models[mi])+":generateContent",{method:"POST",signal,headers:{"content-type":"application/json","x-goog-api-key":key},body}); }
-      catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {msg:"تعذّر الاتصال بـ Gemini. تأكد من الإنترنت."}; }
-      if(res.ok){
-        const j=await res.json(); const c=j.candidates&&j.candidates[0];
-        const txt=((c&&c.content&&c.content.parts)||[]).map(x=>x.text||"").join("");
-        const r=parseLooseJSON(txt); if(!r) throw {code:"invalid_json"}; return r;
-      }
-      let t=""; try{ const j=await res.json(); t=(j&&j.error&&j.error.message)||""; }catch(e){}
-      if(res.status===403||(res.status===400&&/api key/i.test(t))) throw {msg:"مفتاح Gemini غير صحيح أو غير مفعّل."};
-      if(res.status===404){ lastMsg="اسم الموديل غير صحيح: "+t; break; }
-      if(res.status===503||res.status===500||res.status===429){
-        lastMsg=res.status===429?"وصلت للحد المجاني حاليًا. جرّب بعد دقيقة.":"Gemini مزدحم الآن. جرّب بعد قليل.";
-        if(res.status===503&&attempt===0){ prog("الخدمة مزدحمة — إعادة المحاولة…"); await sleep(2500); continue; }
-        break;
-      }
-      throw {msg:"خطأ من Gemini ("+res.status+") "+t};
-    }
-    if(mi<models.length-1) prog("تجربة موديل آخر…");
-  }
-  lsSet(LS_KEY+":gmc",""); throw {msg:lastMsg||"تعذّر الاتصال بـ Gemini."};
+/* ---------- manager board: all rosters stacked, sorted by staff number (descending) ---------- */
+let BD={start:"",rows:null,loading:false,err:""};
+async function loadBoard(){
+  BD.loading=true; BD.err="";
+  try{
+    const [a,b]=await Promise.all([supabaseClient.from(SUPABASE_TABLE).select("user_id,data"),supabaseClient.from("profiles").select("id,name")]);
+    if(a.error) throw a.error; const nm={}; (b.data||[]).forEach(p=>nm[p.id]=p.name);
+    BD.rows=(a.data||[]).map(r=>{ const d=r.data||{}, c=d.cfg||{}; return {id:r.user_id,name:c.name||nm[r.user_id]||"",staff:String(c.staff||""),orig:d.original||{},types:d.types||[]}; });
+  }catch(e){ BD.err="تعذّر تحميل الروتات: "+((e&&e.message)||"تأكدي من صلاحيات المدير في Supabase"); BD.rows=[]; }
+  BD.loading=false; if(tab==="board") render();
 }
-function prog(t){ const el=document.getElementById("sc-prog"); if(el) el.textContent=t; }
-/* ---- on-device reader: cell glyphs -> shape groups -> user confirms each group ---- */
-const PROTO_LS=LS_KEY+":ocr-protos"; const GW=24, GH=24;
-function grayOf(ctx,w,h){ const d=ctx.getImageData(0,0,w,h).data; const g=new Float32Array(w*h); for(let i=0,j=0;i<g.length;i++,j+=4) g[i]=0.299*d[j]+0.587*d[j+1]+0.114*d[j+2]; return g; }
-function pctl(arr,p){ const h=new Uint32Array(256); for(const v of arr) h[Math.max(0,Math.min(255,v|0))]++; let t=arr.length*p, c=0; for(let i=0;i<256;i++){ c+=h[i]; if(c>=t) return i; } return 255; }
-function otsu(vals){ const h=new Float64Array(256); for(const v of vals) h[Math.max(0,Math.min(255,v|0))]++; const tot=vals.length; let sa=0; for(let i=0;i<256;i++) sa+=i*h[i];
-  let wB=0,sB=0,best=0,t=128; for(let i=0;i<256;i++){ wB+=h[i]; if(!wB) continue; const wF=tot-wB; if(!wF) break; sB+=i*h[i]; const mB=sB/wB, mF=(sa-sB)/wF, bt=wB*wF*(mB-mF)*(mB-mF); if(bt>best){best=bt;t=i;} } return t; }
-function glyphOf(g,W,x0,x1,H){
-  const w=x1-x0; if(w<6) return null;
-  const core=[]; for(let y=Math.floor(H*0.2);y<Math.floor(H*0.8);y++) for(let x=x0+Math.floor(w*0.15);x<x0+Math.floor(w*0.85);x++) core.push(g[y*W+x]);
-  let mn=255,mx=0; for(const v of core){ if(v<mn)mn=v; if(v>mx)mx=v; } if(mx-mn<40) return null;
-  const t=otsu(core); const b=new Uint8Array(w*H); for(let y=0;y<H;y++) for(let x=0;x<w;x++) b[y*w+x]=g[y*W+x0+x]<t?1:0;
-  const lab=new Int32Array(w*H), keep=new Uint8Array(w*H); let n=0; const st=[];
-  for(let s=0;s<w*H;s++){ if(!b[s]||lab[s]) continue; n++; lab[s]=n; st.push(s); const pts=[]; let x0b=w,x1b=0,y0b=H,y1b=0;
-    while(st.length){ const p=st.pop(); pts.push(p); const py=(p/w)|0, px=p-py*w; if(px<x0b)x0b=px; if(px>x1b)x1b=px; if(py<y0b)y0b=py; if(py>y1b)y1b=py;
-      if(px>0&&b[p-1]&&!lab[p-1]){lab[p-1]=n;st.push(p-1);} if(px<w-1&&b[p+1]&&!lab[p+1]){lab[p+1]=n;st.push(p+1);}
-      if(py>0&&b[p-w]&&!lab[p-w]){lab[p-w]=n;st.push(p-w);} if(py<H-1&&b[p+w]&&!lab[p+w]){lab[p+w]=n;st.push(p+w);} }
-    const ch=y1b-y0b+1, cw=x1b-x0b+1, cy=(y0b+y1b)/2;
-    if(ch>0.85*H||cw>0.85*w) continue; if(ch<0.2*H||pts.length<8) continue;
-    if(cw<0.07*w&&(x0b<0.2*w||x1b>0.8*w)) continue; if(cy<0.2*H||cy>0.8*H) continue;
-    for(const p of pts) keep[p]=1; }
-  let bx0=w,bx1=-1,by0=H,by1=-1; for(let y=0;y<H;y++) for(let x=0;x<w;x++) if(keep[y*w+x]){ if(x<bx0)bx0=x; if(x>bx1)bx1=x; if(y<by0)by0=y; if(y>by1)by1=y; }
-  if(bx1<0) return null;
-  const gw=bx1-bx0+1, gh=by1-by0+1; const v=new Float32Array(GW*GH);
-  for(let y=0;y<GH;y++) for(let x=0;x<GW;x++){ const sx=bx0+(x+0.5)*gw/GW-0.5, sy=by0+(y+0.5)*gh/GH-0.5; const xa=Math.max(bx0,Math.floor(sx)), ya=Math.max(by0,Math.floor(sy)); const xb=Math.min(bx1,xa+1), yb=Math.min(by1,ya+1); const fx=Math.max(0,sx-xa), fy=Math.max(0,sy-ya);
-    const k=(yy,xx)=>keep[yy*w+xx]; v[y*GW+x]=k(ya,xa)*(1-fx)*(1-fy)+k(ya,xb)*fx*(1-fy)+k(yb,xa)*(1-fx)*fy+k(yb,xb)*fx*fy; }
-  return {v:Array.from(v),ar:gw/gh};
+function boardCell(e,types){
+  if(!e||!e.code) return `<td></td>`; const t=types.find(x=>x.code===e.code)||{}; const c=/^#[0-9a-f]{6}$/i.test(t.color||"")?t.color:"#7A8A91";
+  return `<td style="background:${c}26;color:${c};font-weight:700">${esc(e.code)}</td>`;
 }
-function gsim(a,b){ if(!a||!b) return (!a&&!b)?1:0; let ma=0,mb=0; const n=a.v.length; for(let i=0;i<n;i++){ma+=a.v[i];mb+=b.v[i];} ma/=n; mb/=n; let s=0,na=0,nb=0;
-  for(let i=0;i<n;i++){ const x=a.v[i]-ma, y=b.v[i]-mb; s+=x*y; na+=x*x; nb+=y*y; } return s/(Math.sqrt(na*nb)+1e-9)-0.5*Math.abs(Math.log(a.ar/b.ar)); }
-function groupGlyphs(gs,thr){ let groups=gs.map((_,i)=>[i]); const S2=gs.map((a,i)=>gs.map((b,j)=>i===j?1:gsim(a,b)));
-  for(;;){ let best=null; for(let a=0;a<groups.length;a++) for(let b=a+1;b<groups.length;b++){ let s=0; for(const i of groups[a]) for(const j of groups[b]) s+=S2[i][j]; s/=groups[a].length*groups[b].length; if(s>thr&&(!best||s>best[0])) best=[s,a,b]; }
-    if(!best) break; groups[best[1]]=groups[best[1]].concat(groups[best[2]]); groups.splice(best[2],1); }
-  return groups; }
-let fontTpl=null;
-function fontTemplates(){ if(fontTpl) return fontTpl; fontTpl=[]; const c=document.createElement("canvas"); c.width=260; c.height=110; const x=c.getContext("2d");
-  for(const t of S.types) for(const f of ['bold 64px Arial, Helvetica, sans-serif','bold 64px "Arial Narrow", "Helvetica Neue", sans-serif']){ x.fillStyle="#fff"; x.fillRect(0,0,260,110); x.fillStyle="#000"; x.font=f; x.textBaseline="middle"; x.fillText(t.code,20,55);
-    const g=grayOf(x,260,110); const gl=glyphOf(g,260,0,260,110); if(gl) fontTpl.push({code:t.code,g:gl}); }
-  return fontTpl; }
-function loadProtos(){ try{ return JSON.parse(localStorage.getItem(PROTO_LS)||"{}"); }catch(e){ return {}; } }
-function saveProtos(glyphs,codes){ const P=loadProtos(); glyphs.forEach((g,i)=>{ const c=codes[i]; if(!g||!c) return; const cur=P[c]; if(!cur){ P[c]={v:g.v.map(n=>Math.round(n*100)/100),ar:g.ar,n:1}; return; }
-    const k=Math.min(cur.n,20); cur.v=cur.v.map((a,j)=>Math.round(((a*k+g.v[j])/(k+1))*100)/100); cur.ar=(cur.ar*k+g.ar)/(k+1); cur.n=k+1; });
-  try{ localStorage.setItem(PROTO_LS,JSON.stringify(P)); }catch(e){} }
-function guessCode(g){ if(!g) return {code:"",sure:true}; const P=loadProtos(); let best=null;
-  for(const c in P){ if(!typeOf(c)) continue; const s=gsim(g,P[c]); if(!best||s>best.s) best={code:c,s}; }
-  if(best&&best.s>0.6) return {code:best.code,sure:true};
-  let fb=null; for(const t of fontTemplates()){ const s=gsim(g,t.g); if(!fb||s>fb.s) fb={code:t.code,s}; }
-  return {code:fb?fb.code:"",sure:false}; }
-async function ocrRow(full,signal){
-  if(!SC.sel) throw {msg:"حدّدي خانات الأيام الـ28 أولاً."};
-  prog("تحليل الخانات…"); await new Promise(r=>setTimeout(r,30));
-  const s=SC.sel; const rx=s.x*full.width, ry=s.y*full.height, rw=s.w*full.width, rh=s.h*full.height;
-  const k=Math.min(4,Math.max(1,2800/rw)); const y0=Math.max(0,ry-rh*0.25), y1=Math.min(full.height,ry+rh*1.25);
-  const W=Math.round(rw*k), H=Math.round((y1-y0)*k); const c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d",{willReadFrequently:true});
-  x.imageSmoothingQuality="high"; x.drawImage(full,rx,y0,rw,y1-y0,0,0,W,H);
-  const g=grayOf(x,W,H); const base=pctl(g,0.5)-45;
-  const prof=new Float32Array(W); for(let yy=0;yy<H;yy++) for(let xx=0;xx<W;xx++) if(g[yy*W+xx]<base) prof[xx]++; for(let i=0;i<W;i++) prof[i]/=H;
-  const cw=W/28; const xs=[]; { let j0=0,m=0; for(let i=0;i<cw*0.5;i++) if(prof[i]>m){m=prof[i];j0=i;} xs.push(m>0.5?j0:0); }
-  for(let i=1;i<=28;i++){ const e=xs[i-1]+cw; const lo=Math.max(0,Math.floor(e-cw*0.3)), hi=Math.min(W-1,Math.ceil(e+cw*0.3)); let j=Math.round(e), m=0; for(let q=lo;q<=hi;q++) if(prof[q]>m){m=prof[q];j=q;} xs.push(m>0.5?j:Math.min(W-1,Math.round(e))); }
-  const glyphs=[], thumbs=[];
-  for(let i=0;i<28;i++){ if(signal.aborted) throw {code:"cancelled"};
-    const a=Math.min(W-1,xs[i]+3), b=Math.max(a+1,xs[i+1]-2); glyphs.push(glyphOf(g,W,a,b,H));
-    const t=document.createElement("canvas"); t.width=56; t.height=56; const tx=t.getContext("2d"); tx.fillStyle="#fff"; tx.fillRect(0,0,56,56);
-    const sw=b-a, sh=H*0.7, sc=Math.min(56/sw,56/sh); tx.drawImage(c,a,H*0.15,sw,sh,(56-sw*sc)/2,(56-sh*sc)/2,sw*sc,sh*sc); thumbs.push(t.toDataURL("image/png")); }
-  const groups=groupGlyphs(glyphs,0.55).sort((p,q)=>p[0]-q[0]).map(idx=>{ const gu=guessCode(glyphs[idx[0]]); return {idx,code:gu.code,sure:gu.sure,thumb:thumbs[idx[0]],empty:!glyphs[idx[0]]}; });
-  SC.ocr={glyphs,thumbs,groups};
-  return null;
+function viewBoard(){
+  if(!ME||!ME.admin) return "";
+  if(!BD.start) BD.start=alignCycle(S.start);
+  if(!BD.rows&&!BD.loading) loadBoard();
+  const st=BD.start, days=Array.from({length:28},(_,i)=>addDays(st,i)), en=days[27];
+  const all=(BD.rows||[]).map(r=>{ let hrs=0,wd=0; days.forEach(d=>{ const e=r.orig[d]; if(!e||!e.code) return; const t=r.types.find(x=>x.code===e.code); if(t&&t.work&&(e.start||t.start)){ hrs+=diffH(e.start||t.start,e.end||t.end); wd++; } }); return {...r,hrs,wd,has:days.some(d=>r.orig[d]&&r.orig[d].code)}; });
+  const rows=all.filter(r=>r.has).sort((a,b)=>{ const x=parseInt(b.staff), y=parseInt(a.staff); return (isNaN(x)?-1:x)-(isNaN(y)?-1:y); });
+  const hidden=all.length-rows.length;
+  const th1=days.map(d=>`<th style="${dow(d)>=5?"background:#d9dee0":""}">${toD(d).getUTCDate()}</th>`).join(""), th2=days.map(d=>`<th style="${dow(d)>=5?"background:#d9dee0":""}">${DAY_EN[dow(d)]}</th>`).join("");
+  const body=rows.map((r,i)=>`<tr><td class="nm"><b>${i+1}. ${esc(r.staff||"—")}</b><br><button class="linkish" data-u="open" data-id="${esc(r.id)}" data-name="${esc(r.name)}">${esc(r.name||"—")}</button></td>${days.map(d=>boardCell(r.orig[d],r.types)).join("")}<td><b>${fmtH(r.hrs)}</b></td><td>${r.wd}</td></tr>`).join("");
+  return `<div class="page-head"><div><div class="eyebrow">المدير</div><h1>جدول الروتات</h1><p>مرتّبة تنازلياً حسب الرقم الوظيفي · كل الروتات تبدأ بنفس اليوم</p></div>
+    <div class="cycle-nav" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="btn" data-bd="prev">▶</button><input class="inp" type="date" id="bd-start" value="${st}" style="max-width:160px"><button class="btn" data-bd="next">◀</button><button class="btn" data-bd="reload">↻</button><button class="btn" onclick="window.print()">🖨</button></div></div>
+  <div class="hint" style="margin-bottom:8px">From ${esc(fmtLong(st))} — To ${esc(fmtLong(en))}${hidden>0?` · ${hidden} بدون روته لهذه الفترة`:""}</div>
+  ${BD.err?`<div class="sc-err">${esc(BD.err)}</div>`:""}${BD.loading?`<div class="hint">جارٍ التحميل…</div>`:""}
+  <section class="panel tbl-wrap"><table class="bd" dir="ltr"><thead><tr><th rowspan="2" class="nm">St.No / Name</th>${th1}<th rowspan="2">Worked<br>Hrs</th><th rowspan="2">Work<br>Days</th></tr><tr>${th2}</tr></thead><tbody>${body||`<tr><td colspan="31" class="hint" style="padding:18px">لا توجد روتات لهذه الفترة. غيّري التاريخ.</td></tr>`}</tbody></table></section>`;
 }
-
-function applyScan(){
-  if(SC.ocr&&SC.res&&SC.res.engine==="ocr") saveProtos(SC.ocr.glyphs,SC.codes);
-  const st=sundayOf(SC.start); const H=poH();
-  SC.codes.forEach((c,i)=>{ const d=addDays(st,i); if(!c){ delete S.original[d]; return; }
-    let t=typeOf(c); if(!t){ t={code:c,name:c,start:"",end:"",color:"#7A8A91",work:false}; S.types.push(t); }
-    S.original[d]={code:c,start:t.start,end:t.end}; });
-  S.start=st; viewStart=st; S.sample=false;
-  if(SC.res.staff&&!S.cfg.staff) S.cfg.staff=String(SC.res.staff);
-  if(SC.res.name&&!S.cfg.name) S.cfg.name=String(SC.res.name);
-  if(SC.useBal&&SC.res.old_balance){
-    const sheetH=SC.res.old_balance.po*H+SC.res.old_balance.hrs;
-    if(st<=S.bal.from){ S.bal={from:st,po:SC.res.old_balance.po,hrs:SC.res.old_balance.hrs}; }
-    else { const row=ledger().rows.find(r=>r.start===st);
-      if(row){ const diff=Math.round((sheetH-row.old)*10)/10; if(diff){ const prev=addDays(st,-28); const a=S.adj[prev]||(S.adj[prev]={}); a.hrs=Math.round(((+a.hrs||0)+diff)*10)/10; a.note=(a.note?a.note+" · ":"")+"مطابقة مع ورقة الروته"; } } }
-  }
-  persist(); closeScan(); tab="roster"; mode="current"; render();
-}
-scanRoot.addEventListener("click",e=>{
-  const el=e.target;
-  if(el.dataset&&el.dataset.scclose&&el===el.closest("[data-scclose]")){ if(SC&&SC.step!=="busy") closeScan(); return; }
-  const a=el.closest("[data-act]"); if(!a) return; const act=a.dataset.act;
-  if(act==="sc-close") closeScan();
-  else if(act==="sc-rot"){ SC.rot=(SC.rot+ +a.dataset.r+360)%360; SC.sel=null; drawScan(); }
-  else if(act==="sc-clear"){ SC.sel=null; drawScan(); }
-  else if(act==="sc-read"||act==="sc-retry") runScan();
-  else if(act==="sc-stop"){ if(SC.ctl) SC.ctl.abort(); }
-  else if(act==="sc-back"){ SC.step="pick"; SC.img=null; SC.sel=null; SC.err=""; drawScan(); }
-  else if(act==="sc-apply") applyScan();
-  else if(act==="grp-ok"){ const codes=new Array(28).fill(""); const unc=[]; SC.ocr.groups.forEach(gr=>gr.idx.forEach(i=>{ codes[i]=gr.code; if(!gr.sure) unc.push(i); }));
-    SC.codes=codes; SC.res={from:null,name:SC.name||null,staff:SC.staff||null,shifts:codes,worked_hours:null,old_balance:null,uncertain:unc,notes:"",engine:"ocr"};
-    SC.start=cycleDays(S.start).every(d=>!S.original[d])?S.start:addDays(S.start,28); SC.useBal=false; SC.step="review"; drawScan(); }
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-bd]"); if(!b) return; const a=b.dataset.bd;
+  if(a==="prev") BD.start=addDays(BD.start,-28); else if(a==="next") BD.start=addDays(BD.start,28); else if(a==="reload"){ BD.rows=null; }
+  render();
 });
-(async()=>{ try{ if(!window.claude||!window.claude.use) return; const s=await window.claude.use("sample"); if(!s) return; sampleFn=s;
-  const lim=await s.limits().catch(()=>null); sampleImgOK=!!(lim&&lim.images); sampleMax=sampleImgOK?(lim.images.maxCount||1):0; if(sampleImgOK) render(); }catch(e){} })();
+document.addEventListener("change",e=>{ if(e.target.id==="bd-start"&&e.target.value){ BD.start=alignCycle(e.target.value); render(); } });
 
 /* ---------- PIN lock for edits ---------- */
 const PIN_DEFAULT="dc4f39aa", UNLOCK_MS=5*60*1000;
@@ -1929,7 +1456,7 @@ function showPin(){
 const EDIT_SEL='[data-edit],[data-cell],[data-brush],[data-dellog],[data-deltype],[data-mode],[data-undo],[data-act]:not([data-act^="sb-"])';
 function needsPin(t){
   if(!t||!t.closest) return null;
-  if(t.closest("#modal-root,.pin-ov")||scanRoot.contains(t)) return null;
+  if(t.closest("#modal-root,.pin-ov")||qeRoot.contains(t)) return null;
   const app=document.getElementById("app"), toastEl=document.getElementById("toast");
   const inApp=app.contains(t)||(toastEl&&toastEl.contains(t)); if(!inApp) return null;
   const hit=t.closest(EDIT_SEL); if(hit) return hit;
@@ -1954,7 +1481,7 @@ function tickClock(){
   set("date",DAYS[n.getDay()]+" "+n.getDate()+" "+MONTHS[n.getMonth()]+" "+n.getFullYear());
   set("short",DAYS[n.getDay()]+" "+n.getDate()+" "+MONTHS[n.getMonth()]);
   if(hijriFmt){ let hj=""; try{ hj=hijriFmt.format(n); }catch(e){} set("hijri",hj?(EN?hj:hj.replace(/\s*هـ$/,"")+" هـ"):""); }
-  if(n.getSeconds()===0&&tab==="dash"&&!M&&!SC&&!document.activeElement.matches("input,select,textarea")) render();
+  if(n.getSeconds()===0&&tab==="dash"&&!M&&!QE&&!document.activeElement.matches("input,select,textarea")) render();
 }
 const _render=render; render=function(){ document.body.setAttribute("data-page",tab); _render(); tickClock(); };
 setInterval(tickClock,1000);
@@ -2005,7 +1532,7 @@ const staffOf=e=>String(e||"").split("@")[0];
 const loginRoot=document.createElement("div"); document.body.appendChild(loginRoot);
 loginRoot.innerHTML='<div class="loginov"></div>';
 function freshState(name,staff){
-  const st={v:1,sample:false,cfg:{official:7,weekend:[5,6],unit:"",name:name||"",staff:staff||""},start:sundayOf(todayIso()),types:JSON.parse(JSON.stringify(DEFAULT_TYPES)),original:{},days:{},log:[],adj:{}};
+  const st={v:1,sample:false,cfg:{official:7,weekend:[5,6],unit:"",name:name||"",staff:staff||""},start:alignCycle(todayIso()),types:JSON.parse(JSON.stringify(DEFAULT_TYPES)),original:{},days:{},log:[],adj:{}};
   st.bal={from:st.start,po:0,hrs:0}; return st;
 }
 function setIdentity(name){
@@ -2033,8 +1560,8 @@ async function enter(user){
   const name=(p&&p.name)||(user.user_metadata&&user.user_metadata.name)||(user.email||"").split("@")[0];
   ME={id:user.id,email:user.email,name,admin:!!(p&&p.is_admin)};
   TARGET=ME.id; TNAME=name; setIdentity(name);
-  if(ME.admin&&!document.querySelector('#tabs [data-tab="users"]')) document.getElementById("tabs").insertAdjacentHTML("beforeend",'<button role="tab" data-tab="users" aria-selected="false">المستخدمون</button>');
-  if(tab==="users"&&!ME.admin) tab="dash";
+  if(ME.admin&&!document.querySelector('#tabs [data-tab="board"]')) document.getElementById("tabs").insertAdjacentHTML("beforeend",'<button role="tab" data-tab="users" aria-selected="false">المستخدمون</button><button role="tab" data-tab="board" aria-selected="false">جدول الروتات</button>');
+  if((tab==="users"||tab==="board")&&!ME.admin) tab="dash";
   loginRoot.innerHTML=""; document.getElementById("out-btn").hidden=false;
   await loadRoster(ME.id,name,false);
   if(ME.admin) loadUsers();
