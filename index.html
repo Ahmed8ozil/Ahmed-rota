@@ -584,13 +584,9 @@ html[dir="ltr"] .mix-n{text-align:left}
 .loginov{position:fixed;inset:0;z-index:200;background:var(--ground);display:grid;place-items:center;padding:16px}
 .loginov-card{width:min(360px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;gap:8px}
 .loginov-card .btn{margin-top:8px;justify-content:center}
-.usr-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.usr-info{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.usr-info .usr-name{white-space:nowrap}
-.usr-acts{display:flex;align-items:center;gap:6px}
-.tag{font-size:11px;background:var(--accent,#2563eb);color:#fff;border-radius:999px;padding:2px 8px}
+.usr-r{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.usr-r b{flex:1}
 .usr-f{display:grid;gap:8px;margin-top:8px;max-width:420px}
-.linklike{background:none;border:0;padding:0;color:var(--accent,#2563eb);text-decoration:underline;cursor:pointer;font:inherit}
 </style>
 </head>
 <body>
@@ -759,21 +755,10 @@ const cycleDays=start=>Array.from({length:28},(_,i)=>addDays(start,i));
 /* ---------- view state ---------- */
 let tab="dash"; let viewStart=null; let mode="current"; let brush=null; let layout="grid";
 try{const l=localStorage.getItem(LS_KEY+":layout"); if(l) layout=l;}catch(e){}
-try{const t=localStorage.getItem(LS_KEY+":tab"); if(t&&t!=="users") tab=t;}catch(e){}
+try{const t=localStorage.getItem(LS_KEY+":tab"); if(t) tab=t;}catch(e){}
 const app=document.getElementById("app");
 
 document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]"); if(!b) return; tab=b.dataset.tab; try{localStorage.setItem(LS_KEY+":tab",tab);}catch(e){} render();});
-document.addEventListener("submit",async e=>{
-  if(e.target&&e.target.id==="ul-f"){
-    e.preventDefault();
-    const p=document.getElementById("ul-p").value; const m=document.getElementById("ul-m"); m.textContent="جارٍ التحقق…";
-    try{
-      const {error}=await supabaseClient.auth.signInWithPassword({email:ME.email,password:p});
-      if(error){ m.textContent="كلمة المرور غير صحيحة"; return; }
-      USERS_UNLOCKED=true; try{localStorage.setItem(LS_KEY+":tab","users");}catch(e){} render();
-    }catch(err){ m.textContent="تعذّر التحقق — تأكدي من الإنترنت"; }
-  }
-});
 
 function sbErrText(e){
   const m=(e&&(e.message||e.msg))||"";
@@ -789,7 +774,7 @@ function render(){
   if(!viewStart) viewStart=S.start;
   let h=viewBanner();
   if(S.sample) h+=`<div class="banner"><div class="sp"><b>هذه بيانات مثال</b> لتري كيف يعمل الموقع. ابدئي جدولك الحقيقي، ثم أدخلي الروته الأصلية من صفحة «الروته» بوضع <b>الجدول الأصلي</b>.</div><button class="btn primary" data-act="start-fresh">ابدئي جدولي</button><button class="btn ghost" data-act="keep-sample">إخفاء</button></div>`;
-  h+= tab==="dash"?viewDash(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?usersGate(): viewTypes();
+  h+= tab==="dash"?viewDash(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?viewUsers(): viewTypes();
   app.innerHTML=h;
 }
 
@@ -1359,10 +1344,12 @@ let sampleFn=null, sampleImgOK=false, sampleMax=0;
 const scanRoot=document.createElement("div"); document.body.appendChild(scanRoot);
 let SC=null;
 function scanAvailable(){ return true; }
-const APIKEY_LS=LS_KEY+":apikey", APIMODEL_LS=LS_KEY+":apimodel";
+const APIKEY_LS=LS_KEY+":apikey", APIMODEL_LS=LS_KEY+":apimodel", GKEY_LS=LS_KEY+":gkey", GMODEL_LS=LS_KEY+":gmodel";
+const DEFAULT_GKEY="AQ.Ab8RN6JwP3i1ot6hfoM1ik8dXxN-KPv_QYfS8HjpuYB5Nqt3HA";
+const gkey=()=>lsGet(GKEY_LS)||DEFAULT_GKEY;
 function lsGet(k){ try{return localStorage.getItem(k)||"";}catch(e){return "";} }
 function lsSet(k,v){ try{ if(v) localStorage.setItem(k,v); else localStorage.removeItem(k);}catch(e){} }
-function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(lsGet(APIKEY_LS)?"api":"ocr"); }
+function engineOf(){ if(sampleFn&&sampleImgOK) return "claude"; if(window.claude) return "ocr"; return SC&&SC.engine?SC.engine:(gkey()?"gemini":lsGet(APIKEY_LS)?"api":"gemini"); }
 function scanBtn(cls){ return scanAvailable()?`<button class="${cls||"btn"}" data-act="scan-open">📷 مسح صورة الروته</button>`:""; }
 function openScan(){ SC={step:"pick",rot:0,sel:null,img:null,err:"",staff:S.cfg.staff||"",name:S.cfg.name||""}; SC.engine=engineOf(); drawScan(); }
 function closeScan(){ if(SC&&SC.ctl) SC.ctl.abort(); SC=null; scanRoot.innerHTML=""; }
@@ -1377,25 +1364,27 @@ function drawScan(){
   if(!SC){scanRoot.innerHTML="";return;}
   let body="", foot="";
   if(SC.step==="pick"){
-    body=`<p class="sc-p">${SC.engine==="api"?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"اختاري صورة الروته، وبعدها تسحبين مستطيلًا حول خانات الأيام الـ28 في صفّك، وتؤكدين كل رمز مرة وحدة."}</p>
+    body=`<p class="sc-p">${(SC.engine==="api"||SC.engine==="gemini")?"اختر صورة صفحة الروته (حتى لو فيها موظفين كثير أو كانت مقلوبة) وأنا ألقى صفّك تلقائيًا بالرقم الوظيفي والاسم.":"صوّري صفحة الروته اللي فيها اسمك بوضوح وبإضاءة جيدة، أو اختاري الصورة من الألبوم."}</p>
       <label class="drop" for="sc-file"><span class="drop-i">📷</span><b>اختاري صورة الروته</b><span>JPG أو PNG</span></label>
       <input type="file" id="sc-file" accept="image/*" hidden>
-      ${SC.engine==="api"?`<div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b> — أو <button type="button" class="linklike" data-act="sc-manual">حدّدي صفّك بنفسك من الصورة</button></div>`:""}<details ${(SC.engine==="api"&&(SC.staff||SC.name))?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">${SC.engine==="api"?"تغيير الاسم / الرقم":"اسمك ورقمك الوظيفي (اختياري)"}</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
+      <div class="hint" style="margin-top:8px">سأبحث تلقائيًا عن: <b>${esc(SC.name||"—")}</b> · <b dir="ltr">${esc(SC.staff||"—")}</b></div><details ${SC.staff||SC.name?"":"open"} style="margin-top:6px"><summary class="hint" style="cursor:pointer">تغيير الاسم / الرقم</summary><div class="sc-row"><div><label class="label" for="sc-staff">St.No</label><input class="inp" id="sc-staff" value="${esc(SC.staff)}"></div><div><label class="label" for="sc-name">الاسم كما في الروته</label><input class="inp" id="sc-name" value="${esc(SC.name)}"></div></div></details>
       ${sampleFn&&sampleImgOK?"":`<div class="eng">
         <span class="label" style="margin:0">طريقة القراءة</span>
-        ${window.claude?"":`<label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
-        ${SC.engine==="api"?`<div class="eng-k"><input class="inp" id="sc-key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(lsGet(APIKEY_LS))}"><input class="inp" id="sc-model" value="${esc(lsGet(APIMODEL_LS)||"claude-sonnet-5")}" aria-label="Model"><span class="hint">المفتاح يُحفظ على هذا الجهاز فقط ويُرسل مباشرة إلى Anthropic. تحصلين عليه من console.anthropic.com، وتكلفة المسح الواحد قليلة جداً.</span></div>`:""}`}
-        <label class="eng-o ${SC.engine==="ocr"?"on":""}"><input type="radio" name="sc-eng" value="ocr" ${SC.engine==="ocr"?"checked":""}><span><b>قراءة على الجهاز (مجانية)</b> — تشتغل بالكامل على جهازك، بدون إنترنت ولا أي طرف خارجي؛ تأكّدين الرموز بضغطات قليلة</span></label>
+        ${window.claude?"":`<label class="eng-o ${SC.engine==="gemini"?"on":""}"><input type="radio" name="sc-eng" value="gemini" ${SC.engine==="gemini"?"checked":""}><span><b>Gemini (مجاني)</b> — تلقائي وسهل، مفتاح مجاني من Google بدون بطاقة</span></label>
+        ${SC.engine==="gemini"?`<div class="eng-k"><input class="inp" id="sc-gkey" type="password" dir="ltr" autocomplete="off" placeholder="AIza…" value="${esc(lsGet(GKEY_LS))}"><input class="inp" id="sc-gmodel" dir="ltr" value="${esc(lsGet(GMODEL_LS)||"gemini-2.5-pro")}" aria-label="Model"><span class="hint">${DEFAULT_GKEY?"مفتاح مشترك مفعّل تلقائيًا — ما تحتاج تحط شي (الحقل اختياري لو عندك مفتاحك).":""} المفتاح المجاني: افتح aistudio.google.com/apikey ← Create API key، والصقه هنا مرة وحدة. يُحفظ على هذا الجهاز فقط.</span></div>`:""}
+        <label class="eng-o ${SC.engine==="api"?"on":""}"><input type="radio" name="sc-eng" value="api" ${SC.engine==="api"?"checked":""}><span><b>Claude API</b> — دقيق، يحتاج مفتاح API</span></label>
+        ${SC.engine==="api"?`<div class="eng-k"><input class="inp" id="sc-key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(lsGet(APIKEY_LS))}"><input class="inp" id="sc-model" value="${esc(lsGet(APIMODEL_LS)||"claude-sonnet-5-5")}" aria-label="Model"><span class="hint">المفتاح يُحفظ على هذا الجهاز فقط ويُرسل مباشرة إلى Anthropic. تحصلين عليه من console.anthropic.com، وتكلفة المسح الواحد قليلة جداً.</span></div>`:""}`}
+        <label class="eng-o ${SC.engine==="ocr"?"on":""}"><input type="radio" name="sc-eng" value="ocr" ${SC.engine==="ocr"?"checked":""}><span><b>قراءة على الجهاز</b> — مجانية وبدون إنترنت، تأكّدين الرموز بضغطات قليلة</span></label>
       </div>`}
       ${SC.err?`<div class="sc-err">${esc(SC.err)}</div>`:""}`;
   } else if(SC.step==="crop"){
-    body=`<p class="sc-p">${SC.guide?`لوّنت شريطًا حول صفّك تقريبًا (${SC.foundStaff?"وجدته برقمك الوظيفي":"وجدته باسمك"}) — تأكدي أنه صفّك الصحيح، ثم `:""}<b>1.</b> دوّري الصورة حتى يصير الكلام مستقيم إذا لزم. ${SC.engine==="ocr"?`<b>2.</b> اسحبي مستطيل حول <b>خانات الأيام الـ28 فقط</b> في صفّك — من حافة أول يوم إلى حافة آخر يوم، بدون الاسم والمجاميع. كبّري الصورة قبل التصوير إن أمكن.`:`<b>2.</b> اسحبي بإصبعك مستطيل حول <b>صفّك كامل</b> (من اسمك إلى آخر يوم).`}</p>
+    body=`<p class="sc-p"><b>1.</b> دوّري الصورة حتى يصير الكلام مستقيم. ${SC.engine==="ocr"?`<b>2.</b> اسحبي مستطيل حول <b>خانات الأيام الـ28 فقط</b> في صفّك — من حافة أول يوم إلى حافة آخر يوم، بدون الاسم والمجاميع. كبّري الصورة قبل التصوير إن أمكن.`:`<b>2.</b> اسحبي بإصبعك مستطيل حول <b>صفّك كامل</b> (من اسمك إلى آخر يوم).`}</p>
       <div class="sc-tools"><button class="btn" data-act="sc-rot" data-r="-90">↺ تدوير</button><button class="btn" data-act="sc-rot" data-r="90">↻ تدوير</button>${SC.sel?`<button class="btn ghost" data-act="sc-clear">مسح التحديد</button>`:""}</div>
       <div class="sc-cv-wrap"><canvas id="sc-cv"></canvas></div>
-      <div class="hint">${SC.sel?"✓ تم تحديد الصف":(SC.engine==="ocr"?"حدّدي الخانات أولاً":SC.forceManual?"اسحبي مستطيلاً حول خانات الأيام الـ28 في صفّك — سأقرأها بالاعتماد على تاريخ الصفحة":"بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)")}</div>`;
-    foot=`<button class="btn primary" data-act="sc-read" ${(SC.engine==="ocr"||SC.forceManual)&&!SC.sel?"disabled":""}>قراءة الروته</button>${SC.engine==="ocr"&&(SC.staff||SC.name)&&!SC.guide?`<button class="btn" data-act="sc-autofind">🔍 جربي إيجاد صفّي تلقائيًا</button>`:""}<button class="btn" data-act="sc-back">صورة أخرى</button>`;
+      <div class="hint">${SC.sel?"✓ تم تحديد الصف":(SC.engine==="ocr"?"حدّدي الخانات أولاً":"بدون تحديد: سيبحث عن اسمك في الصفحة كاملة (دقة أقل)")}</div>`;
+    foot=`<button class="btn primary" data-act="sc-read" ${SC.engine==="ocr"&&!SC.sel?"disabled":""}>قراءة الروته</button><button class="btn" data-act="sc-back">صورة أخرى</button>`;
   } else if(SC.step==="busy"){
-    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.locating?"جارٍ البحث عن صفّك…":SC.engine==="ocr"?"جارٍ تحليل الصورة…":"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.locating?"قد يأخذ نصف دقيقة تقريبًا":SC.engine==="ocr"?"ثوانٍ قليلة":"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
+    body=`<div class="sc-busy"><div class="spin"></div><b>${SC.engine==="ocr"?"جارٍ تحليل الصورة…":"جارٍ قراءة الروته…"}</b><span id="sc-prog">${SC.engine==="ocr"?"ثوانٍ قليلة":"قد يأخذ من 20 ثانية إلى دقيقة"}</span></div>`;
     foot=`<button class="btn" data-act="sc-stop">إيقاف</button>`;
   } else if(SC.step==="review"){
     const R=SC.res; const st=sundayOf(SC.start||S.start);
@@ -1415,7 +1404,7 @@ function drawScan(){
         <div class="ck ${match===true?"ok":match===false?"bad":""}">${match===true?"✓":match===false?"⚠":"•"} ساعات العمل المحسوبة <b>${fmtH(worked)}</b>${R.worked_hours!=null?` · في الورقة <b>${fmtH(R.worked_hours)}</b>${match?" — مطابقة":" — غير مطابقة، راجعي الخانات"}`:""}</div>
         ${(R.uncertain||[]).length?`<div class="ck bad">⚠ ${R.uncertain.length} خانة غير واضحة (محددة بالبرتقالي) — تأكدي منها</div>`:""}
         ${unknown.filter(u=>u).length?`<div class="ck">رموز جديدة ستُضاف لأنواع الشفتات: <b>${unknown.filter(u=>u).map(esc).join("، ")}</b> — عدّلي ساعاتها من الإعدادات</div>`:""}
-        ${(!SC.forceManual&&R.staff&&SC.staff&&String(R.staff).replace(/\D/g,"")!==String(SC.staff).replace(/\D/g,""))?`<div class="ck bad">⚠ الرقم الوظيفي المقروء (${esc(R.staff)}) يختلف عن رقمك (${esc(SC.staff)}) — تأكد أنه صفّك</div>`:""}
+        ${(R.staff&&SC.staff&&String(R.staff).replace(/\D/g,"")!==String(SC.staff).replace(/\D/g,""))?`<div class="ck bad">⚠ الرقم الوظيفي المقروء (${esc(R.staff)}) يختلف عن رقمك (${esc(SC.staff)}) — تأكد أنه صفّك</div>`:""}
         ${R.notes?`<div class="ck">ملاحظة: ${esc(R.notes)}</div>`:""}
         ${R.old_balance?`<label class="ck"><input type="checkbox" id="sc-bal" ${SC.useBal?"checked":""}> مطابقة الرصيد مع الورقة: الرصيد السابق <b dir="ltr">${R.old_balance.po} PO + ${R.old_balance.hrs} Hrs</b></label>`:""}
       </div>`;
@@ -1437,15 +1426,16 @@ function drawScan(){
     <div class="m-body">${body}</div>${foot?`<div class="m-foot">${foot}</div>`:""}</div></div>`;
   if(SC.step==="pick"){
     const f=document.getElementById("sc-file");
-    f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
-      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if(!SC.forceManual&&SC.engine==="api"&&lsGet(APIKEY_LS)){ autoScan(); } else { SC.step="crop"; drawScan(); } };
+    f.addEventListener("change",()=>{ const file=f.files&&f.files[0]; if(!file) return; { const kk=document.getElementById("sc-key"); if(kk) lsSet(APIKEY_LS,kk.value.trim()); const gk=document.getElementById("sc-gkey"); if(gk) lsSet(GKEY_LS,gk.value.trim()); } SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim();
+      const img=new Image(); img.onload=()=>{ SC.img=img; SC.rot=img.naturalWidth>img.naturalHeight?0:0; SC.sel=null; if((SC.engine==="api"&&lsGet(APIKEY_LS))||(SC.engine==="gemini"&&gkey())){ autoScan(); } else { SC.step="crop"; drawScan(); } };
       img.onerror=()=>{ SC.err="تعذّر فتح الصورة. جرّبي صورة JPG أو PNG."; drawScan(); }; img.src=URL.createObjectURL(file); });
   }
   if(SC.step==="pick"){
     document.querySelectorAll('input[name="sc-eng"]').forEach(r=>r.addEventListener("change",()=>{ SC.staff=document.getElementById("sc-staff").value.trim(); SC.name=document.getElementById("sc-name").value.trim(); SC.engine=r.value; drawScan(); }));
     const k=document.getElementById("sc-key"); if(k) k.addEventListener("change",()=>lsSet(APIKEY_LS,k.value.trim()));
     const m=document.getElementById("sc-model"); if(m) m.addEventListener("change",()=>lsSet(APIMODEL_LS,m.value.trim()));
-    
+    const gk=document.getElementById("sc-gkey"); if(gk) gk.addEventListener("change",()=>lsSet(GKEY_LS,gk.value.trim()));
+    const gm=document.getElementById("sc-gmodel"); if(gm) gm.addEventListener("change",()=>lsSet(GMODEL_LS,gm.value.trim()));
   }
   if(SC.step==="crop") setupCropCanvas();
   if(SC.step==="groups") document.querySelectorAll("[data-grp]").forEach(el=>el.addEventListener("change",()=>{ const gr=SC.ocr.groups[+el.dataset.grp]; gr.code=el.value; gr.sure=true; }));
@@ -1465,10 +1455,7 @@ function setupCropCanvas(){
   const paint=()=>{ x.clearRect(0,0,cv.width,cv.height); x.drawImage(src,0,0,cv.width,cv.height);
     if(SC.sel){ const s=SC.sel, X=s.x*cv.width, Y=s.y*cv.height, W=s.w*cv.width, H=s.h*cv.height;
       x.fillStyle="rgba(8,20,24,.45)"; x.fillRect(0,0,cv.width,Y); x.fillRect(0,Y+H,cv.width,cv.height-Y-H); x.fillRect(0,Y,X,H); x.fillRect(X+W,Y,cv.width-X-W,H);
-      x.strokeStyle="#F0955A"; x.lineWidth=2; x.strokeRect(X,Y,W,H); }
-    else if(SC.guide){ const Y=SC.guide.y*cv.height, H=Math.max(3,SC.guide.h*cv.height);
-      x.fillStyle="rgba(240,149,90,.22)"; x.fillRect(0,Y,cv.width,H);
-      x.strokeStyle="#F0955A"; x.lineWidth=2; x.setLineDash([6,5]); x.strokeRect(1,Y,cv.width-2,H); x.setLineDash([]); } };
+      x.strokeStyle="#F0955A"; x.lineWidth=2; x.strokeRect(X,Y,W,H); } };
   paint();
   let start=null;
   const pt=e=>{ const r=cv.getBoundingClientRect(); return {x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}; };
@@ -1477,113 +1464,98 @@ function setupCropCanvas(){
   cv.addEventListener("pointerup",()=>{ start=null; if(SC.sel&&(SC.sel.w<0.02||SC.sel.h<0.005)) SC.sel=null; drawScan(); });
 }
 
-
-/* ---------- on-device auto row-finder (Tesseract.js OCR, 100% local, free) ---------- */
-let tessWorker=null, tessLoading=null;
-function loadTesseract(){
-  if(window.Tesseract) return Promise.resolve();
-  if(tessLoading) return tessLoading;
-  tessLoading=new Promise((resolve,reject)=>{
-    const el=document.createElement("script");
-    el.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
-    el.onload=()=>resolve(); el.onerror=()=>reject(new Error("tesseract-load-failed"));
-    document.head.appendChild(el);
-  });
-  return tessLoading;
+const stripDig=s=>String(s||"").replace(/\D/g,"");
+const domOf=s=>toD(s).getUTCDate();
+const validB=b=>b&&+b.w>0&&+b.h>0&&isFinite(+b.x)&&isFinite(+b.y);
+const nb=b=>({x:+b.x,y:+b.y,w:+b.w,h:+b.h});
+const clampB=b=>{const x=Math.max(0,b.x),y=Math.max(0,b.y);return {x,y,w:Math.min(1-x,b.w),h:Math.min(1-y,b.h)};};
+const padB=(b,m)=>clampB({x:b.x-m,y:b.y-m,w:b.w+2*m,h:b.h+2*m});
+function toRotFrame(b,rot){const {x,y,w,h}=b; if(rot===90) return {x:1-(y+h),y:x,w:h,h:w}; if(rot===180) return {x:1-(x+w),y:1-(y+h),w,h}; if(rot===270) return {x:y,y:1-(x+w),w:h,h:w}; return b;}
+function cropC(full,b,maxSide){
+  const rx=b.x*full.width,ry=b.y*full.height,rw=Math.max(8,b.w*full.width),rh=Math.max(8,b.h*full.height);
+  const sc=Math.min(Math.max(1,maxSide/Math.max(rw,rh)),4); const c=document.createElement("canvas"); c.width=Math.round(rw*sc); c.height=Math.round(rh*sc);
+  const x=c.getContext("2d"); x.imageSmoothingQuality="high"; x.drawImage(full,rx,ry,rw,rh,0,0,c.width,c.height); return c;
 }
-async function getTessWorker(){ await loadTesseract(); if(!tessWorker) tessWorker=await Tesseract.createWorker("eng"); return tessWorker; }
-const normDigits=s=>String(s||"").replace(/\D/g,"");
-const normWord=s=>String(s||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
-async function autoLocateOCR(){
-  SC.ctl=new AbortController(); SC.locating=true; SC.step="busy"; drawScan(); prog("جارٍ تحميل أداة القراءة (مرة واحدة فقط)…");
-  try{
-    const worker=await getTessWorker();
-    if(!SC) return;
-    const sig=SC.ctl.signal;
-    const staffN=normDigits(SC.staff);
-    const nameTokens=String(SC.name||"").trim().split(/\s+/).map(normWord).filter(t=>t.length>2);
-    const rots=[0,90,180,270];
-
-    // Pass 1: digits-only, sparse-text mode — much more accurate for finding a staff number in a dense table.
-    let found=null;
-    if(staffN.length>=3){
-      await worker.setParameters({tessedit_char_whitelist:"0123456789",tessedit_pageseg_mode:"11"});
-      for(let i=0;i<rots.length&&!found;i++){
-        if(sig.aborted) throw {code:"cancelled"};
-        prog("جارٍ البحث عن رقمك الوظيفي… ("+(i+1)+"/4)");
-        const cv=rotCanvas(SC.img,rots[i],2200);
-        const out=await worker.recognize(cv);
-        if(sig.aborted) throw {code:"cancelled"};
-        const words=((out&&out.data&&out.data.words)||[]).filter(w=>w.text&&w.text.trim()&&w.bbox);
-        const hit=words.find(w=>normDigits(w.text)===staffN);
-        if(hit) found={rot:rots[i],hit,words,W:cv.width,H:cv.height};
-      }
-    }
-    // Pass 2: full charset — fallback to name matching.
-    if(!found&&nameTokens.length){
-      await worker.setParameters({tessedit_char_whitelist:"",tessedit_pageseg_mode:"11"});
-      for(let i=0;i<rots.length&&!found;i++){
-        if(sig.aborted) throw {code:"cancelled"};
-        prog("جارٍ البحث عن اسمك… ("+(i+1)+"/4)");
-        const cv=rotCanvas(SC.img,rots[i],2200);
-        const out=await worker.recognize(cv);
-        if(sig.aborted) throw {code:"cancelled"};
-        const words=((out&&out.data&&out.data.words)||[]).filter(w=>w.text&&w.text.trim()&&w.bbox);
-        const hit=words.find(w=>nameTokens.includes(normWord(w.text)));
-        if(hit) found={rot:rots[i],hit,words,W:cv.width,H:cv.height};
-      }
-    }
-    if(!found) throw {msg:"ما لقيت رقمك الوظيفي ولا اسمك تلقائيًا في هذه الصورة. جرّبي صورة أوضح وأقرب، أو اضغطي «حدّدي صفّك بنفسك» فوق."};
-
-    // Found the row: set rotation + a highlighted guide band around it. The precise 28-day
-    // rectangle is still drawn by the user (auto text-reading of tiny table cells is unreliable),
-    // but they no longer need to figure out the rotation or hunt for their row in a busy photo.
-    SC.rot=found.rot;
-    const hitCy=(found.hit.bbox.y0+found.hit.bbox.y1)/2/found.H;
-    const hitH=Math.max(1,found.hit.bbox.y1-found.hit.bbox.y0)/found.H;
-    const pad=hitH*0.9;
-    const y=Math.max(0,hitCy-hitH/2-pad), h=Math.min(1-y,hitH+pad*2);
-    SC.sel=null; SC.guide={y,h}; SC.locating=false;
-    SC.step="crop"; SC.foundStaff=!!(staffN.length>=3&&normDigits(found.hit.text)===staffN);
-  }catch(e){
-    if(!SC) return;
-    SC.locating=false;
-    if(e&&e.code==="cancelled"){ SC.step="crop"; drawScan(); return; }
-    SC.err=(e&&e.msg)||"تعذّر تحميل أداة القراءة — تأكدي من الإنترنت (تحميلها أول مرة فقط)، أو حدّدي صفّك بنفسك."; SC.step="error"; drawScan(); return;
-  }
-  drawScan();
+function stackC(head,strip){
+  const wide=strip.width>=strip.height; const c=document.createElement("canvas"); let x;
+  if(wide){ const hh=Math.round(head.height*strip.width/head.width); c.width=strip.width; c.height=hh+strip.height; x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(head,0,0,strip.width,hh); x.drawImage(strip,0,hh); }
+  else { const hw=Math.round(head.width*strip.height/head.height); c.width=hw+strip.width; c.height=strip.height; x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(head,0,0,hw,strip.height); x.drawImage(strip,hw,0); }
+  return c;
 }
+const hoursOf=codes=>{let w=0; codes.forEach(c=>{const t=typeOf(c); if(t&&t.work) w+=diffH(t.start,t.end);}); return w;};
+const locPrompt=(who,first)=>`This is a photo/screenshot of a hospital nursing duty rota page with MANY staff. Staff may be rows, or columns (name written vertically, dates running downward).
+Find ${who}. Match by staff number (SN) first, then name.
+Return only JSON: {"found":true,${first?'"rotation":0,':''}"box":{"x":0.1,"y":0.2,"w":0.05,"h":0.6},"header_box":{"x":0.1,"y":0.05,"w":0.05,"h":0.1},"staff":"number matched","name":"name matched"}
+${first?'- "rotation": clockwise degrees (0, 90, 180 or 270) that make the printed text upright.\n':''}- "box": TIGHT bounding box of that ONE person's entire strip: name/number cell, all 28 daily cells and the totals cells. Exclude neighbouring staff.
+- "header_box": box of the table's date header (day numbers and weekday names) covering the same columns (or rows) as the strip.
+- All numbers are fractions 0-1 of the ${first?'ORIGINAL':'given'} image width and height (x,y = top-left corner).
+If that person is not on the page return {"found":false}.`;
+const readPrompt=(who,known)=>`You are transcribing a hospital nursing duty rota (28 consecutive dates starting on a Sunday, then totals such as Worked Hrs and Balance Old in PO and Hrs).
+The image shows the DATE HEADER (day-of-month numbers, weekday names) joined to ONE staff member's strip, columns aligned. Staff member: ${who}.
+For each of the 28 date columns in order (left to right, or top to bottom if the strip is vertical) return the day-of-month number printed in the header and the code printed in that staff member's cell for that exact date. Codes are short, e.g. ${known}. Copy exactly what is printed; ignore fill colours; an empty cell is "". Never skip or duplicate a column; check each code sits under its own date number. If unsure of a cell, give your best reading and list its index 0-27 in "uncertain".
+Also read if visible: the rota start date ("From") as YYYY-MM-DD, this person's Worked Hrs total, their Balance Old PO and Hrs, and the staff number printed in the strip.
+Reply only JSON: {"from":"2026-09-20","name":"","staff":"","cells":[{"d":20,"c":"N"},{"d":21,"c":"N"}],"worked_hours":135,"old_balance":{"po":77,"hrs":6},"uncertain":[],"notes":""}
+"cells" must have exactly 28 items in date order. Use null for anything not visible.`;
+function alignCells(r){
+  const cells=Array.isArray(r.cells)?r.cells:[]; const ds=cells.map(c=>+(c&&c.d));
+  const hint=/^\d{4}-\d{2}-\d{2}$/.test(r.from||"")?sundayOf(r.from):null; const base=hint||sundayOf(todayIso());
+  let best=base,bs=-1;
+  for(let n=0;n<61;n++){ const k=n%2?-((n+1)>>1):n>>1; const s=addDays(base,k*7); let sc=0; for(let i=0;i<28;i++) if(ds[i]===domOf(addDays(s,i))) sc++; if(sc>bs){bs=sc;best=s;} }
+  if(bs<20){ best=hint||addDays(S.start,28); bs=-1; }
+  const dom={}; for(let i=0;i<28;i++) dom[domOf(addDays(best,i))]=i;
+  const out=Array(28).fill(null);
+  cells.forEach((c,k)=>{ const code=String(c&&c.c||"").trim().toUpperCase().replace(/\s+/g,""); const idx=(bs>=0&&dom[+c.d]!==undefined)?dom[+c.d]:k; if(idx>=0&&idx<28&&out[idx]===null) out[idx]=code; });
+  return {start:best,codes:out.map(v=>v===null?"":v),missing:out.map((v,i)=>v===null?i:-1).filter(i=>i>=0),score:bs};
+}
+function combineReads(reads){
+  const cnt={}; reads.forEach(x=>{cnt[x.a.start]=(cnt[x.a.start]||0)+1;});
+  const start=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]; const use=reads.filter(x=>x.a.start===start);
+  const codes=[],disagree=[];
+  for(let i=0;i<28;i++){ const v={}; use.forEach(x=>{const c=x.a.codes[i]; v[c]=(v[c]||0)+1;}); const s=Object.keys(v).sort((a,b)=>v[b]-v[a]); codes.push(s[0]);
+    if(s.length>1||use.some(x=>(x.r.uncertain||[]).includes(i)||x.a.missing.includes(i))) disagree.push(i); }
+  const wh=use.map(x=>x.r.worked_hours).filter(v=>typeof v==="number").sort((a,b)=>a-b); const worked=wh.length?wh[wh.length>>1]:null;
+  return {start,codes,disagree,r:use[0].r,worked,hoursOK:worked==null?null:Math.abs(worked-hoursOf(codes))<0.01};
+}
+function scanToast(t){const d=document.createElement("div");d.textContent=t;d.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0B6E78;color:#fff;padding:12px 18px;border-radius:12px;z-index:99999;font:600 14px system-ui;max-width:90vw;text-align:center";document.body.appendChild(d);setTimeout(()=>d.remove(),5000);}
 async function autoScan(){
-  SC.ctl=new AbortController(); SC.step="busy"; drawScan(); prog("جارٍ البحث عن صفّك في الصفحة…");
+  SC.ctl=new AbortController(); const sg=SC.ctl.signal; SC.step="busy"; drawScan(); prog("جارٍ البحث عن صفّك برقمك الوظيفي…");
   try{
-    const who=`staff number "${SC.staff||"?"}"${SC.name?`, name "${SC.name}"`:""}`;
-    const prompt=`This is a photo/screenshot of a hospital nursing duty rota page with MANY staff members. It may be rotated or transposed: staff can be columns (name written vertically, "SN"/staff number above it, dates running downward) or rows.
-Find this staff member: ${who}. Match by staff number first, then by name.
-Return only JSON: {"found":true,"rotation":0,"box":{"x":0.1,"y":0.2,"w":0.05,"h":0.6},"staff":"the number you matched","name":"the name you matched"}
-- "rotation": clockwise degrees (0, 90, 180 or 270) that make the printed text upright.
-- "box": tight bounding box of that person's ENTIRE strip (their name/number header, all 28 daily cells, and the totals cells that follow), as fractions 0-1 of the ORIGINAL image width and height (x,y = top-left corner).
-If that person is not on this page, return {"found":false}.`;
-    const r=await apiVision(prompt,[await toBlob(rotCanvas(SC.img,0,2000),0.9)],SC.ctl.signal);
+    if(!stripDig(SC.staff)) throw {msg:"اكتبي الرقم الوظيفي أولاً في خانة الرقم عشان أحدد صفّك تلقائياً."};
+    const who=`staff number "${SC.staff}"${SC.name?`, name "${SC.name}"`:""}`;
+    const r=await visionCall(locPrompt(who,true),[await toBlob(rotCanvas(SC.img,0,2600),0.92)],sg); if(!SC) return;
+    if(!r||!r.found||!validB(r.box)) throw {msg:"ما لقيت الرقم "+SC.staff+" في هذه الصورة. جرّبي صورة أوضح أو الصفحة الثانية."};
+    const rot=[0,90,180,270].includes(+r.rotation)?+r.rotation:0; SC.rot=rot;
+    const full=rotCanvas(SC.img,rot,4200);
+    let strip=padB(toRotFrame(nb(r.box),rot),0.01); const head=validB(r.header_box)?toRotFrame(nb(r.header_box),rot):null;
+    prog("تحديد الصف بدقة…");
+    const reg=padB(strip,0.08);
+    try{ const r2=await visionCall(locPrompt(who,false),[await toBlob(cropC(full,reg,2400),0.93)],sg);
+      if(SC&&r2&&r2.found&&validB(r2.box)){ const b=nb(r2.box); strip=padB({x:reg.x+b.x*reg.w,y:reg.y+b.y*reg.h,w:b.w*reg.w,h:b.h*reg.h},0.006); } }
+    catch(e){ if(e&&e.code==="cancelled") throw e; }
     if(!SC) return;
-    const b=r&&r.box;
-    if(!r||!r.found||!b||!(+b.w>0)||!(+b.h>0)) throw {msg:"ما لقيت "+(SC.staff?"الرقم "+SC.staff:"اسمك")+" في هذه الصورة. جرّب صورة أوضح أو صفحة ثانية."};
-    const rot=[0,90,180,270].includes(+r.rotation)?+r.rotation:0;
-    let x=+b.x,y=+b.y,w=+b.w,h=+b.h;
-    const m=0.015; x-=m; y-=m; w+=2*m; h+=2*m;
-    x=Math.max(0,x); y=Math.max(0,y); w=Math.min(1-x,w); h=Math.min(1-y,h);
-    let bx,by,bw,bh;
-    if(rot===0){ bx=x;by=y;bw=w;bh=h; }
-    else if(rot===90){ bx=1-(y+h);by=x;bw=h;bh=w; }
-    else if(rot===180){ bx=1-(x+w);by=1-(y+h);bw=w;bh=h; }
-    else { bx=y;by=1-(x+w);bw=h;bh=w; }
-    SC.rot=rot; SC.sel={x:Math.max(0,bx),y:Math.max(0,by),w:Math.min(1,bw),h:Math.min(1,bh)};
+    const build=ms=>{ const s=cropC(full,strip,ms); if(!head) return s;
+      const hb=strip.w>=strip.h?{x:strip.x,w:strip.w,y:head.y,h:head.h}:{x:head.x,w:head.w,y:strip.y,h:strip.h};
+      return stackC(cropC(full,clampB(hb),ms),s); };
+    const known=S.types.map(t=>t.code).join(", "); const reads=[];
+    const doRead=async ms=>{ const rr=await visionCall(readPrompt(who,known),[await toBlob(build(ms),0.95)],sg); if(SC&&rr&&Array.isArray(rr.cells)) reads.push({r:rr,a:alignCells(rr)}); };
+    prog("جارٍ قراءة الشفتات (1/2)…"); await doRead(2200); if(!SC) return;
+    prog("جارٍ التحقق بقراءة ثانية (2/2)…"); await doRead(3200); if(!SC) return;
+    if(!reads.length) throw {code:"invalid_json"};
+    let fin=combineReads(reads);
+    if((fin.disagree.length||fin.hoursOK===false)&&reads.length<3){ prog("مراجعة إضافية للخانات المشكوك فيها…"); await doRead(2700); if(!SC) return; fin=combineReads(reads); }
+    const R=fin.r; const rs=stripDig(R.staff);
+    if(rs&&rs!==stripDig(SC.staff)) throw {msg:"الصف اللي قرأته رقمه ("+R.staff+") غير رقمك ("+SC.staff+"). جرّبي صورة أوضح حتى ما أعبي صف غيرك."};
+    const unc=[...new Set(fin.disagree)];
+    SC.res={...R,uncertain:unc,worked_hours:fin.worked,old_balance:(R.old_balance&&typeof R.old_balance.po==="number")?{po:R.old_balance.po,hrs:+R.old_balance.hrs||0}:null,engine:engineOf()};
+    SC.codes=fin.codes; SC.start=fin.start; SC.useBal=!!SC.res.old_balance; SC.step="review";
+    if(fin.hoursOK===true&&!unc.length){ applyScan(); scanToast("تمت قراءة الروته وتعبئته تلقائياً ✓ الساعات مطابقة للورقة"); return; }
   }catch(e){
     if(!SC) return;
     if(e&&e.code==="cancelled"){ SC.step="pick"; drawScan(); return; }
-    SC.err=(e&&e.msg)||"تعذّر تحديد صفّك تلقائيًا."; SC.step="error"; drawScan(); return;
+    const m={not_granted:"لم يُسمح للموقع باستخدام Claude.",rate_limited:"وصلتِ للحد المسموح حالياً. حاولي بعد قليل.",image_rejected:"الصورة غير مقبولة (كبيرة جداً أو نوعها غير مدعوم).",invalid_json:"ما قدرت أقرأ الجدول بشكل صحيح. جرّبي صورة أوضح.",refused:"تعذّرت قراءة الصورة. جرّبي صورة أوضح."};
+    SC.err=(e&&e.msg)||m[e&&e.code]||"صار خطأ أثناء القراءة. حاولي مرة أخرى."; SC.step="error";
   }
-  prog("وجدت صفّك — جارٍ قراءة الشفتات…");
-  return runScan();
+  drawScan();
 }
 async function runScan(){
   const full=rotCanvas(SC.img,SC.rot,4200);
@@ -1592,7 +1564,7 @@ async function runScan(){
     const sc=Math.min(Math.max(1,2000/rw),4); const c=document.createElement("canvas"); c.width=Math.round(rw*sc); c.height=Math.round(rh*sc);
     const x=c.getContext("2d"); x.imageSmoothingQuality="high"; x.drawImage(full,rx,ry,rw,rh,0,0,c.width,c.height); imgs.push(await toBlob(c,0.95)); }
   if(!SC.sel||sampleMax>=2){ imgs.push(await toBlob(rotCanvas(SC.img,SC.rot,2000),0.9)); }
-  const who=SC.forceManual?"the person in the image (already cropped to their row)":`staff number "${SC.staff||"?"}"${SC.name?`, name "${SC.name}"`:""}`;
+  const who=`staff number "${SC.staff||"?"}"${SC.name?`, name "${SC.name}"`:""}`;
   const known=S.types.map(t=>t.code).join(", ");
   const prompt=`You are transcribing a hospital nursing duty rota (a 28-day "Nursing Duty Rota" table: one row per staff member, columns are 28 consecutive dates starting on a Sunday, then totals such as Worked Hrs, Due, Overtime, and Balance Old/Final in PO and Hrs).
 ${SC.sel?(imgs.length>1?"Image 1 is a high-resolution close-up crop of ONE staff member's row. Image 2 is the whole page for context (dates, headers, totals).":"The image is a high-resolution close-up crop of ONE staff member's row."):"The image is the whole page. Find the row for the staff member below."}
@@ -1607,7 +1579,7 @@ Use null for anything not visible. The photo may be rotated or skewed; read it u
   try{
     let r;
     if(eng==="claude") r=await sampleFn.json(prompt,{images:imgs,modelTier:"complex",signal:SC.ctl.signal});
-    else if(eng==="api") r=await apiVision(prompt,imgs,SC.ctl.signal);
+    else if(eng==="api"||eng==="gemini") r=await visionCall(prompt,imgs,SC.ctl.signal);
     else { await ocrRow(full,SC.ctl.signal); if(!SC) return; SC.step="groups"; drawScan(); return; }
     if(!SC) return;
     if(!r||!Array.isArray(r.shifts)) throw {code:"invalid_json"};
@@ -1638,7 +1610,7 @@ async function apiVision(prompt,imgs,signal){
   content.push({type:"text",text:prompt});
   let res;
   try{ res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal,headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-    body:JSON.stringify({model:lsGet(APIMODEL_LS)||"claude-sonnet-5",max_tokens:2000,messages:[{role:"user",content}]})}); }
+    body:JSON.stringify({model:lsGet(APIMODEL_LS)||"claude-sonnet-5-5",max_tokens:3500,messages:[{role:"user",content}]})}); }
   catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {msg:"تعذّر الاتصال بـ Claude API. تأكدي من الإنترنت."}; }
   if(!res.ok){ let t=""; try{ const j=await res.json(); t=j&&j.error&&j.error.message||""; }catch(e){}
     throw {msg:res.status===401?"مفتاح API غير صحيح.":res.status===404?"اسم الموديل غير صحيح: "+t:res.status===429?"تجاوزتِ الحد المسموح. حاولي بعد قليل.":res.status===400&&/credit/i.test(t)?"رصيد حساب API غير كافٍ.":"خطأ من Claude API ("+res.status+") "+t}; }
@@ -1646,6 +1618,40 @@ async function apiVision(prompt,imgs,signal){
   const r=parseLooseJSON(txt); if(!r) throw {code:"invalid_json"}; return r;
 }
 
+const visionCall=(pr,im,sg)=>engineOf()==="gemini"?geminiVision(pr,im,sg):apiVision(pr,im,sg);
+async function geminiVision(prompt,imgs,signal){
+  const key=gkey(); if(!key) throw {msg:"الصق مفتاح Gemini المجاني أولاً، أو اختر «قراءة على الجهاز»."};
+  const parts=[]; for(const b of imgs) parts.push({inline_data:{mime_type:"image/jpeg",data:await blobToB64(b)}});
+  parts.push({text:prompt});
+  const body=JSON.stringify({contents:[{parts}],generationConfig:{responseMimeType:"application/json",temperature:0}});
+  const first=lsGet(GMODEL_LS)||"gemini-2.5-pro";
+  const models=[first,...["gemini-flash-latest","gemini-2.5-flash"].filter(m=>m!==first)];
+  const sleep=ms=>new Promise((ok,no)=>{ const t=setTimeout(ok,ms); if(signal) signal.addEventListener("abort",()=>{clearTimeout(t);no({code:"cancelled"});}); });
+  let lastMsg="";
+  for(let mi=0;mi<models.length;mi++){
+    for(let attempt=0;attempt<2;attempt++){
+      let res;
+      try{ res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(models[mi])+":generateContent",{method:"POST",signal,headers:{"content-type":"application/json","x-goog-api-key":key},body}); }
+      catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {msg:"تعذّر الاتصال بـ Gemini. تأكد من الإنترنت."}; }
+      if(res.ok){
+        const j=await res.json(); const c=j.candidates&&j.candidates[0];
+        const txt=((c&&c.content&&c.content.parts)||[]).map(x=>x.text||"").join("");
+        const r=parseLooseJSON(txt); if(!r) throw {code:"invalid_json"}; return r;
+      }
+      let t=""; try{ const j=await res.json(); t=(j&&j.error&&j.error.message)||""; }catch(e){}
+      if(res.status===403||(res.status===400&&/api key/i.test(t))) throw {msg:"مفتاح Gemini غير صحيح أو غير مفعّل."};
+      if(res.status===404){ lastMsg="اسم الموديل غير صحيح: "+t; break; }
+      if(res.status===503||res.status===500||res.status===429){
+        lastMsg=res.status===429?"وصلت للحد المجاني حاليًا. جرّب بعد دقيقة.":"Gemini مزدحم الآن. جرّب بعد قليل.";
+        if(res.status===503&&attempt===0){ prog("الخدمة مزدحمة — إعادة المحاولة…"); await sleep(2500); continue; }
+        break;
+      }
+      throw {msg:"خطأ من Gemini ("+res.status+") "+t};
+    }
+    if(mi<models.length-1) prog("تجربة موديل آخر…");
+  }
+  throw {msg:lastMsg||"تعذّر الاتصال بـ Gemini."};
+}
 function prog(t){ const el=document.getElementById("sc-prog"); if(el) el.textContent=t; }
 /* ---- on-device reader: cell glyphs -> shape groups -> user confirms each group ---- */
 const PROTO_LS=LS_KEY+":ocr-protos"; const GW=24, GH=24;
@@ -1737,13 +1743,11 @@ scanRoot.addEventListener("click",e=>{
   if(el.dataset&&el.dataset.scclose&&el===el.closest("[data-scclose]")){ if(SC&&SC.step!=="busy") closeScan(); return; }
   const a=el.closest("[data-act]"); if(!a) return; const act=a.dataset.act;
   if(act==="sc-close") closeScan();
-  else if(act==="sc-rot"){ SC.rot=(SC.rot+ +a.dataset.r+360)%360; SC.sel=null; SC.guide=null; drawScan(); }
+  else if(act==="sc-rot"){ SC.rot=(SC.rot+ +a.dataset.r+360)%360; SC.sel=null; drawScan(); }
   else if(act==="sc-clear"){ SC.sel=null; drawScan(); }
   else if(act==="sc-read"||act==="sc-retry") runScan();
   else if(act==="sc-stop"){ if(SC.ctl) SC.ctl.abort(); }
-  else if(act==="sc-manual"){ SC.forceManual=true; document.getElementById("sc-file").click(); }
-  else if(act==="sc-autofind") autoLocateOCR();
-  else if(act==="sc-back"){ SC.step="pick"; SC.img=null; SC.sel=null; SC.guide=null; SC.err=""; drawScan(); }
+  else if(act==="sc-back"){ SC.step="pick"; SC.img=null; SC.sel=null; SC.err=""; drawScan(); }
   else if(act==="sc-apply") applyScan();
   else if(act==="grp-ok"){ const codes=new Array(28).fill(""); const unc=[]; SC.ocr.groups.forEach(gr=>gr.idx.forEach(i=>{ codes[i]=gr.code; if(!gr.sure) unc.push(i); }));
     SC.codes=codes; SC.res={from:null,name:SC.name||null,staff:SC.staff||null,shifts:codes,worked_hours:null,old_balance:null,uncertain:unc,notes:"",engine:"ocr"};
@@ -1919,41 +1923,18 @@ async function loadRoster(uid,name,force){
   }catch(e){ console.error("Supabase load:",e); setSave("local",sbErrText(e)); render(); }
 }
 async function loadUsers(){
-  try{ const {data,error}=await supabaseClient.from("profiles").select("id,name,staff,is_admin").order("name"); if(!error) USERS=data||[]; }catch(e){}
+  try{ const {data,error}=await supabaseClient.from("profiles").select("id,name,is_admin").order("name"); if(!error) USERS=data||[]; }catch(e){}
   if(tab==="users") render();
 }
 function viewBanner(){
   if(!ME||TARGET===ME.id) return "";
   return `<div class="banner"><div class="sp">تعرض وتعدّل روته: <b>${esc(TNAME)}</b></div><button class="btn primary" data-u="back">رجوع لروتي</button></div>`;
 }
-let USERS_UNLOCKED=false;
-function usersGate(){
-  if(!ME||!ME.admin) return "";
-  if(USERS_UNLOCKED) return viewUsers();
-  return `<div class="page-head"><div><div class="eyebrow">المدير</div><h1>المستخدمون</h1></div></div>
-  <section class="panel"><form id="ul-f" class="usr-f" style="max-width:340px">
-    <p class="hint">أدخلي كلمة مرور حسابك للمتابعة</p>
-    <input class="inp" id="ul-p" type="password" dir="ltr" autocomplete="current-password" required>
-    <button class="btn primary" type="submit">فتح</button>
-    <div class="sc-err" id="ul-m"></div>
-  </form></section>`;
-}
 function viewUsers(){
   if(!ME||!ME.admin) return "";
   return `<div class="page-head"><div><div class="eyebrow">المدير</div><h1>المستخدمون</h1></div></div>
   <section class="panel"><h2>الحسابات (${USERS.length})</h2>
-    ${USERS.map(u=>`<div class="usr-r" data-row="${esc(u.id)}">
-        <div class="usr-info">
-          <b class="usr-name" data-id="${esc(u.id)}">${esc(u.name||"—")}</b>
-          <span class="hint" dir="ltr">${esc(u.staff||"")}</span>
-          ${u.is_admin?'<span class="tag">مدير</span>':""}
-        </div>
-        <div class="usr-acts">
-          <button class="btn" data-u="open" data-id="${esc(u.id)}" data-name="${esc(u.name||"")}">${u.id===ME.id?"روتي":"فتح الروته"}</button>
-          <button class="icon-btn" data-u="rename" data-id="${esc(u.id)}" data-name="${esc(u.name||"")}" aria-label="تعديل الاسم" title="تعديل الاسم">✏️</button>
-          <button class="icon-btn" data-u="admin" data-id="${esc(u.id)}" data-cur="${u.is_admin?1:0}" aria-label="${u.is_admin?"إزالة صلاحية المدير":"جعله مديرًا"}" title="${u.is_admin?"إزالة صلاحية المدير":"جعله مديرًا"}">${u.is_admin?"🛡️":"🔓"}</button>
-        </div>
-      </div>`).join("")}
+    ${USERS.map(u=>`<div class="usr-r"><b>${esc(u.name||"—")}</b>${u.is_admin?'<span class="hint">مدير</span>':""}<button class="btn" data-u="open" data-id="${esc(u.id)}" data-name="${esc(u.name||"")}">${u.id===ME.id?"روتي":"فتح الروته"}</button></div>`).join("")}
   </section>
   <section class="panel" style="margin-top:12px"><h2>إضافة مستخدم</h2>
     <div class="usr-f">
@@ -1996,25 +1977,7 @@ document.addEventListener("click",async e=>{
   else if(a==="open") await switchTo(el.dataset.id,el.dataset.name);
   else if(a==="back") await switchTo(ME.id,ME.name);
   else if(a==="add") await addUser();
-  else if(a==="rename") await renameUser(el.dataset.id,el.dataset.name);
-  else if(a==="admin") await toggleAdmin(el.dataset.id,el.dataset.cur==="1");
 });
-async function renameUser(id,cur){
-  const name=(prompt("الاسم الجديد:",cur||"")||"").trim();
-  if(!name||name===cur) return;
-  const {error}=await supabaseClient.from("profiles").update({name}).eq("id",id);
-  if(error){ alert("تعذّر التعديل: "+error.message); return; }
-  if(id===ME.id){ ME.name=name; setIdentity(name); }
-  if(id===TARGET) TNAME=name;
-  await loadUsers();
-}
-async function toggleAdmin(id,cur){
-  if(id===ME.id&&cur){ if(!confirm("بتشيل صلاحية المدير عن نفسك، وما تقدر ترجعها إلا من مدير ثاني. متأكد؟")) return; }
-  const {error}=await supabaseClient.from("profiles").update({is_admin:!cur}).eq("id",id);
-  if(error){ alert("تعذّر التعديل: "+error.message); return; }
-  if(id===ME.id) ME.admin=!cur;
-  await loadUsers();
-}
 async function boot(){
   if(!supabaseClient){ loginRoot.innerHTML=""; render(); setSave("local","تعذّر تحميل مكتبة Supabase — محفوظ على الجهاز"); return; }
   try{
