@@ -139,6 +139,10 @@ h2{font-size:15px;margin:0;font-weight:600}
 .cell:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
 .cell.empty{background:var(--surface-2);border-style:dashed;border-top-width:1px}
 .cell.is-today{box-shadow:0 0 0 2px var(--accent)}
+.cell.past{--o:.55;opacity:.55;transition:opacity .15s}
+.cell.past:hover{--o:.9;opacity:.9}
+th.past,td.past .rc{opacity:.55}
+td.past .rc:hover{opacity:.9}
 .cell .top-l{display:flex;justify-content:space-between;align-items:baseline;gap:4px}
 .cell .dnum{font-family:var(--mono);font-size:17px;font-weight:600;line-height:1}
 .cell .mon{font-size:11px;color:var(--muted)}
@@ -433,7 +437,7 @@ td.tdy .rc{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:700px){ .c-was{justify-content:center;gap:0} .c-was-l{display:none} .c-arrow{margin:-2px auto} .cell.chgd{background:var(--warn-soft)} }
 @media (prefers-reduced-motion:no-preference){
   .grid .cell{animation:cellIn .4s cubic-bezier(.2,.7,.3,1) both;animation-delay:calc(var(--i,0) * 14ms)}
-  @keyframes cellIn{from{transform:translateY(6px);opacity:.35}to{transform:none;opacity:1}}
+  @keyframes cellIn{from{transform:translateY(6px);opacity:.35}to{transform:none;opacity:var(--o,1)}}
   .cell.is-today::after,td.tdy .rc::after{content:"";position:absolute;inset:-3px;border-radius:12px;border:2px solid var(--accent);opacity:0;animation:pulse 2.4s ease-out infinite;pointer-events:none}
   @keyframes pulse{0%{opacity:.7;transform:scale(1)}70%{opacity:0;transform:scale(1.06)}100%{opacity:0}}
 }
@@ -1043,7 +1047,7 @@ function viewRoster(){
     ds.forEach(d=>{
       const e=get(d); const t=e&&typeOf(e.code); const ch=!isBase&&isChanged(d);
       const o=S.original[d];
-      g+=`<button class="cell ${e?"":"empty"} ${ch?"chgd":""} ${d===today?"is-today":""} ${officialOf(d)?"":"wkend"}" style="--i:${days.indexOf(d)};${t?`--c:${t.color}`:""}" data-cell="${d}" aria-label="${esc(fmtLong(d))}">
+      g+=`<button class="cell ${e?"":"empty"} ${ch?"chgd":""} ${d===today?"is-today":""} ${d<today?"past":""} ${officialOf(d)?"":"wkend"}" style="--i:${days.indexOf(d)};${t?`--c:${t.color}`:""}" data-cell="${d}" aria-label="${esc(fmtLong(d))}">
         <div class="c-top"><span class="dnum">${toD(d).getUTCDate()}</span>${ch?'<span class="flag">معدَّل</span>':""}</div>
         ${ch?`<div class="c-was">${o?chip(o.code,"xs"):'<span class="chip xs ghost">—</span>'}<span class="c-was-l">الأصلي</span></div><div class="c-arrow" aria-hidden="true">↓</div>`:""}
         ${e?`<div class="c-shift">${chip(e.code)}<span class="nm">${esc(shiftLabel(e))}</span></div>${e.start?`<div class="tm t12">${fmt12(e.start)} – ${fmt12(e.end)}</div>`:""}`:'<div class="c-empty">+</div>'}
@@ -1051,10 +1055,10 @@ function viewRoster(){
     });
   }
   const line=`<div class="panel rota"><div class="tbl-wrap" dir="ltr"><table class="rl">
-    <thead><tr><th class="rl-lab"></th>${days.map((d,i)=>`<th class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}"><span class="wd">${DAY_EN[dow(d)]}</span><span class="dn">${toD(d).getUTCDate()}</span></th>`).join("")}</tr></thead>
+    <thead><tr><th class="rl-lab"></th>${days.map((d,i)=>`<th class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${d<today?"past":""} ${officialOf(d)?"":"we"}"><span class="wd">${DAY_EN[dow(d)]}</span><span class="dn">${toD(d).getUTCDate()}</span></th>`).join("")}</tr></thead>
     <tbody>
-    <tr><th class="rl-lab">${isBase?"Roster":"Original"}</th>${days.map((d,i)=>{const e=isBase?get(d):S.original[d];const t=e&&typeOf(e.code);const ch=!isBase&&isChanged(d);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}"><button class="rc ${e?"":"none"} ${ch?"was":""}" data-cell="${d}" title="${esc(fmtLong(d))}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${e?esc(e.code):"+"}</button></td>`;}).join("")}</tr>
-    ${isBase?"":`<tr class="rl-chg"><th class="rl-lab">Changed</th>${days.map((d,i)=>{const ch=isChanged(d);const e=cur(d);const t=e&&typeOf(e.code);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}">${ch?`<button class="rc chg" data-cell="${d}" title="${esc(fmtLong(d))} · الأصلي ${esc(S.original[d]?S.original[d].code:"—")}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${esc(e.code)}</button>`:'<span class="rc-dot">·</span>'}</td>`;}).join("")}</tr>`}
+    <tr><th class="rl-lab">${isBase?"Roster":"Original"}</th>${days.map((d,i)=>{const e=isBase?get(d):S.original[d];const t=e&&typeOf(e.code);const ch=!isBase&&isChanged(d);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${d<today?"past":""} ${officialOf(d)?"":"we"}"><button class="rc ${e?"":"none"} ${ch?"was":""}" data-cell="${d}" title="${esc(fmtLong(d))}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${e?esc(e.code):"+"}</button></td>`;}).join("")}</tr>
+    ${isBase?"":`<tr class="rl-chg"><th class="rl-lab">Changed</th>${days.map((d,i)=>{const ch=isChanged(d);const e=cur(d);const t=e&&typeOf(e.code);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${d<today?"past":""} ${officialOf(d)?"":"we"}">${ch?`<button class="rc chg" data-cell="${d}" title="${esc(fmtLong(d))} · الأصلي ${esc(S.original[d]?S.original[d].code:"—")}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${esc(e.code)}</button>`:'<span class="rc-dot">·</span>'}</td>`;}).join("")}</tr>`}
     </tbody>
   </table></div></div>`;
   const paint=isBase?`<div class="paint base-bar"><div class="bb-t"><b>تعديل الجدول الأصلي</b><span>التعديل هنا لا يُسجَّل كتغيير. اختاري شفتاً ثم اضغطي على الأيام، أو اضغطي على يوم لتعديله.</span></div><div style="display:flex;gap:8px;flex-wrap:wrap">${scanBtn("btn")}<button class="btn primary" data-mode="current">تم</button></div></div><div class="paint">
@@ -1399,7 +1403,7 @@ async function loadBoard(){
   try{
     const [a,b]=await Promise.all([supabaseClient.from(SUPABASE_TABLE).select("user_id,data"),supabaseClient.from("profiles").select("id,name")]);
     if(a.error) throw a.error; const nm={}; (b.data||[]).forEach(p=>nm[p.id]=p.name);
-    BD.rows=(a.data||[]).map(r=>{ const d=r.data||{}, c=d.cfg||{}; return {id:r.user_id,name:c.name||nm[r.user_id]||"",staff:String(c.staff||""),orig:d.original||{},types:d.types||[],last:c.lastLogin||"",bsel:d.boardSel}; });
+    BD.rows=(a.data||[]).map(r=>{ const d=r.data||{}, c=d.cfg||{}; return {id:r.user_id,name:c.name||nm[r.user_id]||"",staff:String(c.staff||""),orig:d.original||{},days:d.days||{},types:d.types||[],last:c.lastLogin||"",bsel:d.boardSel}; });
     const have=new Set(BD.rows.map(r=>r.id)); (b.data||[]).forEach(p=>{ if(!have.has(p.id)) BD.rows.push({id:p.id,name:p.name||"",staff:"",orig:{},types:[],last:""}); });
     const me=BD.rows.find(r=>r.id===ME.id);
     if(me&&me.bsel!==undefined) BD.sel=me.bsel; else { let o=null; try{ o=JSON.parse(localStorage.getItem(bdKey())||"null"); }catch(e){} BD.sel=o; if(o) bdSave(); }
@@ -1412,7 +1416,9 @@ function bdCompute(){
   return (BD.rows||[]).map(r=>{ let hrs=0,wd=0; days.forEach(d=>{ const e=r.orig[d]; if(!e||!e.code) return; const t=r.types.find(x=>x.code===e.code); if(t&&t.work&&(e.start||t.start)){ hrs+=diffH(e.start||t.start,e.end||t.end); wd++; } }); return {...r,hrs,wd,has:days.some(d=>r.orig[d]&&r.orig[d].code)}; }).sort(bdSort);
 }
 const bdVisible=all=>BD.sel?all.filter(r=>BD.sel.includes(r.id)):all.filter(r=>r.has);
-function boardCell(e,types){
+function boardCell(e,types,n){
+  if(n&&n.code&&!sameShift(n,e)){ const tn=types.find(x=>x.code===n.code)||{}; const cn=/^#[0-9a-f]{6}$/i.test(tn.color||"")?tn.color:"#7A8A91";
+    return `<td title="${esc(e&&e.code||"—")} → ${esc(n.code)}" style="background:${cn}26;color:${cn};font-weight:700;line-height:1.15">${e&&e.code?`<span style="display:block;font-size:9.5px;font-weight:500;opacity:.65;text-decoration:line-through">${esc(e.code)}</span>`:""}${esc(n.code)}</td>`; }
   if(!e||!e.code) return `<td></td>`; const t=types.find(x=>x.code===e.code)||{}; const c=/^#[0-9a-f]{6}$/i.test(t.color||"")?t.color:"#7A8A91";
   return `<td style="background:${c}26;color:${c};font-weight:700">${esc(e.code)}</td>`;
 }
@@ -1425,7 +1431,7 @@ function viewBoard(){
   const all=bdCompute(), rows=bdVisible(all), hidden=BD.sel?all.length-rows.length:all.filter(r=>!r.has).length;
   const wk=d=>dow(d)>=5?"background:#d9dee0":"";
   const th1=days.map(d=>`<th style="${wk(d)}">${toD(d).getUTCDate()}</th>`).join(""), th2=days.map(d=>`<th style="${wk(d)}">${DAY_EN[dow(d)]}</th>`).join("");
-  const body=rows.map((r,i)=>`<tr><td class="nm"><b>${i+1}. ${esc(r.staff||"—")}</b><br><button class="linkish" data-u="open" data-id="${esc(r.id)}" data-name="${esc(r.name)}">${esc(r.name||"—")}</button></td>${days.map(d=>boardCell(r.orig[d],r.types)).join("")}<td><b>${fmtH(r.hrs)}</b></td><td>${r.wd}</td><td style="white-space:nowrap;font-size:11px">${esc(fmtLogin(r.last))}<br>${esc(fmtAgo(r.last))}</td></tr>`).join("");
+  const body=rows.map((r,i)=>`<tr><td class="nm"><b>${i+1}. ${esc(r.staff||"—")}</b><br><button class="linkish" data-u="open" data-id="${esc(r.id)}" data-name="${esc(r.name)}">${esc(r.name||"—")}</button></td>${days.map(d=>boardCell(r.orig[d],r.types,r.days&&r.days[d])).join("")}<td><b>${fmtH(r.hrs)}</b></td><td>${r.wd}</td><td style="white-space:nowrap;font-size:11px">${esc(fmtLogin(r.last))}<br>${esc(fmtAgo(r.last))}</td></tr>`).join("");
   const vis=new Set(rows.map(r=>r.id));
   const manage=BD.manage?`<section class="panel" style="margin-bottom:10px"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><b>من يظهر في الجدول؟</b><button class="btn" data-bd="selall">تحديد الكل</button><button class="btn" data-bd="selnone">مسح الكل</button><button class="btn" data-bd="selauto">تلقائي (كل من عنده روته)</button></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px">${all.map(r=>`<label style="display:flex;gap:6px;align-items:center;padding:4px 6px;border:1px solid var(--line);border-radius:8px"><input type="checkbox" data-bdsel="${esc(r.id)}" ${vis.has(r.id)?"checked":""}><span><b>${esc(r.staff||"—")}</b> ${esc(r.name||"—")}${r.has?"":' <span class="hint">(بدون روته)</span>'} <span class="hint">· آخر دخول ${esc(fmtLogin(r.last))}</span></span></label>`).join("")||'<span class="hint">لا يوجد مستخدمون.</span>'}</div></section>`:"";
