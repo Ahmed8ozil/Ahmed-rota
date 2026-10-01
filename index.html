@@ -6,7 +6,7 @@
 <title>روته أحمد</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230B6E78%22/%3E%3Crect%20x%3D%2211%22%20y%3D%2215%22%20width%3D%2242%22%20height%3D%2238%22%20rx%3D%226%22%20fill%3D%22%23fff%22/%3E%3Crect%20x%3D%2211%22%20y%3D%2215%22%20width%3D%2242%22%20height%3D%2210%22%20rx%3D%225%22%20fill%3D%22%23E8F3F4%22/%3E%3Crect%20x%3D%2211%22%20y%3D%2221%22%20width%3D%2242%22%20height%3D%224%22%20fill%3D%22%23E8F3F4%22/%3E%3Crect%20x%3D%2220%22%20y%3D%2210%22%20width%3D%224%22%20height%3D%2210%22%20rx%3D%222%22%20fill%3D%22%23fff%22/%3E%3Crect%20x%3D%2240%22%20y%3D%2210%22%20width%3D%224%22%20height%3D%2210%22%20rx%3D%222%22%20fill%3D%22%23fff%22/%3E%3Crect%20x%3D%2216%22%20y%3D%2230%22%20width%3D%229%22%20height%3D%228%22%20rx%3D%222%22%20fill%3D%22%23E9A91E%22/%3E%3Crect%20x%3D%2227.5%22%20y%3D%2230%22%20width%3D%229%22%20height%3D%228%22%20rx%3D%222%22%20fill%3D%22%23DD6A34%22/%3E%3Crect%20x%3D%2239%22%20y%3D%2230%22%20width%3D%229%22%20height%3D%228%22%20rx%3D%222%22%20fill%3D%22%233B4FA6%22/%3E%3Crect%20x%3D%2216%22%20y%3D%2241%22%20width%3D%229%22%20height%3D%228%22%20rx%3D%222%22%20fill%3D%22%233B4FA6%22/%3E%3Crect%20x%3D%2227.5%22%20y%3D%2241%22%20width%3D%229%22%20height%3D%228%22%20rx%3D%222%22%20fill%3D%22%238E9CA2%22/%3E%3Crect%20x%3D%2239%22%20y%3D%2241%22%20width%3D%229%22%20height%3D%228%22%20rx%3D%222%22%20fill%3D%22%23E9A91E%22/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -139,10 +139,6 @@ h2{font-size:15px;margin:0;font-weight:600}
 .cell:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
 .cell.empty{background:var(--surface-2);border-style:dashed;border-top-width:1px}
 .cell.is-today{box-shadow:0 0 0 2px var(--accent)}
-.cell.past{--o:.55;opacity:.55;transition:opacity .15s}
-.cell.past:hover{--o:.9;opacity:.9}
-th.past,td.past .rc{opacity:.55}
-td.past .rc:hover{opacity:.9}
 .cell .top-l{display:flex;justify-content:space-between;align-items:baseline;gap:4px}
 .cell .dnum{font-family:var(--mono);font-size:17px;font-weight:600;line-height:1}
 .cell .mon{font-size:11px;color:var(--muted)}
@@ -437,7 +433,7 @@ td.tdy .rc{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:700px){ .c-was{justify-content:center;gap:0} .c-was-l{display:none} .c-arrow{margin:-2px auto} .cell.chgd{background:var(--warn-soft)} }
 @media (prefers-reduced-motion:no-preference){
   .grid .cell{animation:cellIn .4s cubic-bezier(.2,.7,.3,1) both;animation-delay:calc(var(--i,0) * 14ms)}
-  @keyframes cellIn{from{transform:translateY(6px);opacity:.35}to{transform:none;opacity:var(--o,1)}}
+  @keyframes cellIn{from{transform:translateY(6px);opacity:.35}to{transform:none;opacity:1}}
   .cell.is-today::after,td.tdy .rc::after{content:"";position:absolute;inset:-3px;border-radius:12px;border:2px solid var(--accent);opacity:0;animation:pulse 2.4s ease-out infinite;pointer-events:none}
   @keyframes pulse{0%{opacity:.7;transform:scale(1)}70%{opacity:0;transform:scale(1.06)}100%{opacity:0}}
 }
@@ -591,6 +587,91 @@ html[dir="ltr"] .mix-n{text-align:left}
 .usr-r b{flex:1}
 .usr-f{display:grid;gap:8px;margin-top:8px;max-width:420px}
 .bd{border-collapse:collapse;font-size:12px;min-width:max-content}.bd th,.bd td{border:1px solid var(--line);padding:5px 3px;text-align:center;min-width:30px;background:var(--surface)}.bd th{background:var(--bg,#f3f5f5);font-weight:700}.bd .nm{text-align:left;min-width:170px;position:sticky;left:0;z-index:1}@media print{.tabs,.cycle-nav,.btn{display:none!important}}
+/* ---- v15 elegant refresh (visual only) ---- */
+:root{
+  --ground:#F1F4F4; --surface:#FFFFFF; --surface-2:#F7F9F9; --ink:#0E2A30; --muted:#64797F; --line:#E2E9EA; --line-strong:#CAD6D8;
+  --accent:#0B6E78; --accent-soft:#E3F1F2; --brass:#B48A3C;
+  --sans:"IBM Plex Sans Arabic","Readex Pro",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif; --mono:var(--sans);
+  --shadow:0 1px 2px rgba(14,42,48,.05),0 14px 34px -14px rgba(14,42,48,.18);
+  --soft:0 1px 2px rgba(14,42,48,.04),0 10px 28px -16px rgba(14,42,48,.14);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ground:#091316; --surface:#10202A; --surface-2:#0C1A1F; --ink:#E6EFF1; --muted:#8FA6AD; --line:#1C2F36; --line-strong:#2E454D;
+  --accent:#4CC0C9; --accent-soft:#12333A; --brass:#D2AE63; --soft:0 10px 28px -16px rgba(0,0,0,.6);}}
+:root[data-theme="dark"]{
+  --ground:#091316; --surface:#10202A; --surface-2:#0C1A1F; --ink:#E6EFF1; --muted:#8FA6AD; --line:#1C2F36; --line-strong:#2E454D;
+  --accent:#4CC0C9; --accent-soft:#12333A; --brass:#D2AE63; --soft:0 10px 28px -16px rgba(0,0,0,.6);}
+html{-webkit-text-size-adjust:100%}
+body{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 7%,var(--ground)) 0,var(--ground) 380px) no-repeat,var(--ground);font-feature-settings:"tnum" 1,"lnum" 1}
+::selection{background:var(--accent-soft)}
+h1,h2{letter-spacing:-.005em}
+/* header + tabs */
+.top{background:color-mix(in srgb,var(--surface) 80%,transparent);backdrop-filter:blur(16px) saturate(1.5);-webkit-backdrop-filter:blur(16px) saturate(1.5);border-bottom:1px solid color-mix(in srgb,var(--line) 80%,transparent)}
+.top-in{min-height:64px;gap:14px}
+.brand{font-weight:600;font-size:16.5px;line-height:1.25}
+.brand-mark{box-shadow:0 4px 12px -4px color-mix(in srgb,var(--accent) 60%,transparent)}
+.brand small{color:var(--brass);font-weight:600;letter-spacing:.2em;font-size:9.5px}
+nav.tabs{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px}
+nav.tabs button{padding:7px 15px;border:0;border-radius:999px;font-size:13.5px;transition:background .18s,color .18s}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 2px rgba(14,42,48,.08),0 0 0 1px var(--line)}
+@media (max-width:760px){nav.tabs{border-radius:16px}nav.tabs button{padding:8px 13px}}
+.theme-btn{border-color:var(--line);box-shadow:var(--soft);transition:transform .15s,background .15s}
+.theme-btn:hover{transform:translateY(-1px)}
+.save{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 11px}
+/* surfaces */
+.panel,.card,.wg,.wday,.clockc,.stats,.sumrow>div,.d-cyc{border-color:var(--line);box-shadow:var(--soft)}
+.panel{border-radius:18px}.card{border-radius:20px;padding:22px 24px}.wg{border-radius:18px}.wday{border-radius:16px}.clockc{border-radius:22px}.stats{border-radius:18px}
+.card.bal{background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 14%,var(--surface)),var(--surface) 70%)}
+.wg::before{background:var(--c,var(--brass))}
+.wday.is-today{background:color-mix(in srgb,var(--accent) 6%,var(--surface));box-shadow:0 0 0 1.5px var(--accent),var(--soft)}
+.wd-code,.wg-code{box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),0 6px 14px -6px color-mix(in srgb,var(--c) 70%,transparent)}
+.meter,.mix-bar{height:7px;border:0;background:var(--line)}
+.d-head h2{font-size:18px;font-weight:600}
+/* hero */
+.hero{border-radius:26px;padding:34px;border-color:color-mix(in srgb,var(--c) 26%,var(--line));
+  background:radial-gradient(120% 140% at 100% 0,color-mix(in srgb,var(--c) 24%,var(--surface)) 0,transparent 60%),linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--c) 5%,var(--surface)));box-shadow:var(--shadow)}
+.hero::after{width:300px;height:300px;top:-110px;inset-inline-end:-90px;background:transparent;border:1px solid color-mix(in srgb,var(--c) 28%,transparent);box-shadow:0 0 0 38px color-mix(in srgb,var(--c) 5%,transparent)}
+.hero-code{border-radius:26px;width:96px;height:96px;font-size:36px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3),0 16px 30px -12px color-mix(in srgb,var(--c) 70%,transparent)}
+.hero-name{font-size:36px;font-weight:600;letter-spacing:-.01em}
+.hero-date{font-weight:500;letter-spacing:.01em}
+.clock{border:1px solid var(--line);background:var(--surface)}
+.tag{background:var(--surface);border-color:var(--line)}
+@media (max-width:600px){.hero{padding:22px;border-radius:20px}.hero-code{width:66px;height:66px;font-size:26px;border-radius:20px}.hero-name{font-size:27px}}
+/* roster cells */
+.grid{gap:9px}
+.cell{border-radius:14px;padding:11px;border-color:var(--line);box-shadow:inset 0 3px 0 var(--c),var(--soft);transition:transform .15s,box-shadow .15s}
+.cell:hover{transform:translateY(-2px);box-shadow:inset 0 3px 0 var(--c),var(--shadow)}
+.cell.is-today{box-shadow:inset 0 3px 0 var(--c),0 0 0 2px var(--accent),var(--shadow)}
+.cell.empty,.cell.empty:hover{box-shadow:none;transform:none}
+.chip{border-radius:8px}
+.mode{background:var(--surface-2);border-color:var(--line);padding:3px}
+.mode button{background:transparent}
+.mode button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.paint{border-radius:16px;box-shadow:var(--soft)}
+.sumrow>div{background:var(--surface)}
+.rc{border-radius:10px}
+table.rl .we{background:color-mix(in srgb,var(--accent) 5%,var(--surface-2))}
+/* controls */
+.btn{border-radius:11px;padding:8px 15px;border-color:var(--line-strong);transition:background .15s,transform .15s,box-shadow .15s}
+.btn:hover{box-shadow:var(--soft)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 88%,#fff),var(--accent));border-color:var(--accent);box-shadow:0 6px 14px -8px var(--accent)}
+.icon-btn{border-color:var(--line);box-shadow:var(--soft)}
+.inp,.types td input[type=text],.types td input[type=time],select.inp{border-radius:11px;border-color:var(--line-strong);transition:border-color .15s,box-shadow .15s}
+.inp:focus,.types td input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+th{background:var(--surface-2);font-weight:600;font-size:12px}
+tr:hover td{background:color-mix(in srgb,var(--accent) 3%,transparent)}
+/* modal, login, toast */
+.overlay{background:rgba(7,22,26,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal{border-radius:22px;border:1px solid var(--line);box-shadow:0 30px 80px -20px rgba(0,0,0,.4)}
+.m-head{padding:18px 22px}.m-body{padding:18px 22px}.m-foot{padding:14px 22px;background:var(--surface-2);border-radius:0 0 22px 22px}
+.loginov{background:radial-gradient(90% 60% at 50% 0,color-mix(in srgb,var(--accent) 16%,var(--ground)) 0,var(--ground) 70%)}
+.loginov-card{border-radius:24px;padding:30px 26px;box-shadow:var(--shadow);gap:10px}
+.pin-modal{border-radius:24px}
+#toast{background:var(--ink);box-shadow:var(--shadow)}
+/* quiet scrollbars */
+*{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
 </style>
 </head>
 <body>
@@ -1047,7 +1128,7 @@ function viewRoster(){
     ds.forEach(d=>{
       const e=get(d); const t=e&&typeOf(e.code); const ch=!isBase&&isChanged(d);
       const o=S.original[d];
-      g+=`<button class="cell ${e?"":"empty"} ${ch?"chgd":""} ${d===today?"is-today":""} ${d<today?"past":""} ${officialOf(d)?"":"wkend"}" style="--i:${days.indexOf(d)};${t?`--c:${t.color}`:""}" data-cell="${d}" aria-label="${esc(fmtLong(d))}">
+      g+=`<button class="cell ${e?"":"empty"} ${ch?"chgd":""} ${d===today?"is-today":""} ${officialOf(d)?"":"wkend"}" style="--i:${days.indexOf(d)};${t?`--c:${t.color}`:""}" data-cell="${d}" aria-label="${esc(fmtLong(d))}">
         <div class="c-top"><span class="dnum">${toD(d).getUTCDate()}</span>${ch?'<span class="flag">معدَّل</span>':""}</div>
         ${ch?`<div class="c-was">${o?chip(o.code,"xs"):'<span class="chip xs ghost">—</span>'}<span class="c-was-l">الأصلي</span></div><div class="c-arrow" aria-hidden="true">↓</div>`:""}
         ${e?`<div class="c-shift">${chip(e.code)}<span class="nm">${esc(shiftLabel(e))}</span></div>${e.start?`<div class="tm t12">${fmt12(e.start)} – ${fmt12(e.end)}</div>`:""}`:'<div class="c-empty">+</div>'}
@@ -1055,10 +1136,10 @@ function viewRoster(){
     });
   }
   const line=`<div class="panel rota"><div class="tbl-wrap" dir="ltr"><table class="rl">
-    <thead><tr><th class="rl-lab"></th>${days.map((d,i)=>`<th class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${d<today?"past":""} ${officialOf(d)?"":"we"}"><span class="wd">${DAY_EN[dow(d)]}</span><span class="dn">${toD(d).getUTCDate()}</span></th>`).join("")}</tr></thead>
+    <thead><tr><th class="rl-lab"></th>${days.map((d,i)=>`<th class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}"><span class="wd">${DAY_EN[dow(d)]}</span><span class="dn">${toD(d).getUTCDate()}</span></th>`).join("")}</tr></thead>
     <tbody>
-    <tr><th class="rl-lab">${isBase?"Roster":"Original"}</th>${days.map((d,i)=>{const e=isBase?get(d):S.original[d];const t=e&&typeOf(e.code);const ch=!isBase&&isChanged(d);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${d<today?"past":""} ${officialOf(d)?"":"we"}"><button class="rc ${e?"":"none"} ${ch?"was":""}" data-cell="${d}" title="${esc(fmtLong(d))}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${e?esc(e.code):"+"}</button></td>`;}).join("")}</tr>
-    ${isBase?"":`<tr class="rl-chg"><th class="rl-lab">Changed</th>${days.map((d,i)=>{const ch=isChanged(d);const e=cur(d);const t=e&&typeOf(e.code);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${d<today?"past":""} ${officialOf(d)?"":"we"}">${ch?`<button class="rc chg" data-cell="${d}" title="${esc(fmtLong(d))} · الأصلي ${esc(S.original[d]?S.original[d].code:"—")}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${esc(e.code)}</button>`:'<span class="rc-dot">·</span>'}</td>`;}).join("")}</tr>`}
+    <tr><th class="rl-lab">${isBase?"Roster":"Original"}</th>${days.map((d,i)=>{const e=isBase?get(d):S.original[d];const t=e&&typeOf(e.code);const ch=!isBase&&isChanged(d);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}"><button class="rc ${e?"":"none"} ${ch?"was":""}" data-cell="${d}" title="${esc(fmtLong(d))}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${e?esc(e.code):"+"}</button></td>`;}).join("")}</tr>
+    ${isBase?"":`<tr class="rl-chg"><th class="rl-lab">Changed</th>${days.map((d,i)=>{const ch=isChanged(d);const e=cur(d);const t=e&&typeOf(e.code);return `<td class="${i%7===0&&i?"wks":""} ${d===today?"tdy":""} ${officialOf(d)?"":"we"}">${ch?`<button class="rc chg" data-cell="${d}" title="${esc(fmtLong(d))} · الأصلي ${esc(S.original[d]?S.original[d].code:"—")}" style="${t?`--c:${t.color};--ct:${textOn(t.color)}`:""}">${esc(e.code)}</button>`:'<span class="rc-dot">·</span>'}</td>`;}).join("")}</tr>`}
     </tbody>
   </table></div></div>`;
   const paint=isBase?`<div class="paint base-bar"><div class="bb-t"><b>تعديل الجدول الأصلي</b><span>التعديل هنا لا يُسجَّل كتغيير. اختاري شفتاً ثم اضغطي على الأيام، أو اضغطي على يوم لتعديله.</span></div><div style="display:flex;gap:8px;flex-wrap:wrap">${scanBtn("btn")}<button class="btn primary" data-mode="current">تم</button></div></div><div class="paint">
@@ -1388,25 +1469,14 @@ qeRoot.addEventListener("click",e=>{
 /* ---------- manager board: choose who appears, sorted by staff number (descending) ---------- */
 let BD={start:"",rows:null,loading:false,err:"",sel:undefined,manage:false};
 const bdKey=()=>"board:sel:"+((ME&&ME.id)||"admin");
-const fmtLogin=iso=>{ if(!iso) return "—"; try{ return new Date(iso).toLocaleString("ar-SA-u-nu-latn",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}); }catch(e){ return iso.slice(0,16).replace("T"," "); } };
-const fmtAgo=iso=>{ if(!iso) return ""; const m=Math.round((Date.now()-Date.parse(iso))/60000); if(isNaN(m)) return ""; if(m<2) return "(الآن)"; if(m<60) return "(قبل "+m+" د)"; const h=Math.round(m/60); if(h<24) return "(قبل "+h+" س)"; return "(قبل "+Math.round(h/24)+" يوم)"; };
-async function bdSave(){
-  try{ localStorage.removeItem(bdKey()); }catch(e){}
-  if(!ME||!ME.admin) return;
-  if(TARGET===ME.id){ S.boardSel=BD.sel; persist(); return; }
-  try{ const r=await supabaseClient.from(SUPABASE_TABLE).select("data").eq("user_id",ME.id).maybeSingle();
-    if(r.data&&r.data.data){ r.data.data.boardSel=BD.sel; const u=await supabaseClient.from(SUPABASE_TABLE).upsert({user_id:ME.id,data:r.data.data,updated_at:new Date().toISOString()},{onConflict:"user_id"}); if(u.error) throw u.error; } }
-  catch(e){ toast("تعذّر حفظ الاختيار على الموقع"); }
-}
+function bdSave(){ try{ if(BD.sel===null) localStorage.removeItem(bdKey()); else localStorage.setItem(bdKey(),JSON.stringify(BD.sel)); }catch(e){} }
 async function loadBoard(){
   BD.loading=true; BD.err="";
   try{
     const [a,b]=await Promise.all([supabaseClient.from(SUPABASE_TABLE).select("user_id,data"),supabaseClient.from("profiles").select("id,name")]);
     if(a.error) throw a.error; const nm={}; (b.data||[]).forEach(p=>nm[p.id]=p.name);
-    BD.rows=(a.data||[]).map(r=>{ const d=r.data||{}, c=d.cfg||{}; return {id:r.user_id,name:c.name||nm[r.user_id]||"",staff:String(c.staff||""),orig:d.original||{},days:d.days||{},types:d.types||[],last:c.lastLogin||"",bsel:d.boardSel}; });
-    const have=new Set(BD.rows.map(r=>r.id)); (b.data||[]).forEach(p=>{ if(!have.has(p.id)) BD.rows.push({id:p.id,name:p.name||"",staff:"",orig:{},types:[],last:""}); });
-    const me=BD.rows.find(r=>r.id===ME.id);
-    if(me&&me.bsel!==undefined) BD.sel=me.bsel; else { let o=null; try{ o=JSON.parse(localStorage.getItem(bdKey())||"null"); }catch(e){} BD.sel=o; if(o) bdSave(); }
+    BD.rows=(a.data||[]).map(r=>{ const d=r.data||{}, c=d.cfg||{}; return {id:r.user_id,name:c.name||nm[r.user_id]||"",staff:String(c.staff||""),orig:d.original||{},types:d.types||[]}; });
+    const have=new Set(BD.rows.map(r=>r.id)); (b.data||[]).forEach(p=>{ if(!have.has(p.id)) BD.rows.push({id:p.id,name:p.name||"",staff:"",orig:{},types:[]}); });
   }catch(e){ BD.err="تعذّر تحميل الروتات: "+((e&&e.message)||"تأكدي من صلاحيات المدير في Supabase"); BD.rows=[]; }
   BD.loading=false; if(tab==="board") render();
 }
@@ -1416,30 +1486,28 @@ function bdCompute(){
   return (BD.rows||[]).map(r=>{ let hrs=0,wd=0; days.forEach(d=>{ const e=r.orig[d]; if(!e||!e.code) return; const t=r.types.find(x=>x.code===e.code); if(t&&t.work&&(e.start||t.start)){ hrs+=diffH(e.start||t.start,e.end||t.end); wd++; } }); return {...r,hrs,wd,has:days.some(d=>r.orig[d]&&r.orig[d].code)}; }).sort(bdSort);
 }
 const bdVisible=all=>BD.sel?all.filter(r=>BD.sel.includes(r.id)):all.filter(r=>r.has);
-function boardCell(e,types,n){
-  if(n&&n.code&&!sameShift(n,e)){ const tn=types.find(x=>x.code===n.code)||{}; const cn=/^#[0-9a-f]{6}$/i.test(tn.color||"")?tn.color:"#7A8A91";
-    return `<td title="${esc(e&&e.code||"—")} → ${esc(n.code)}" style="background:${cn}26;color:${cn};font-weight:700;line-height:1.15">${e&&e.code?`<span style="display:block;font-size:9.5px;font-weight:500;opacity:.65;text-decoration:line-through">${esc(e.code)}</span>`:""}${esc(n.code)}</td>`; }
+function boardCell(e,types){
   if(!e||!e.code) return `<td></td>`; const t=types.find(x=>x.code===e.code)||{}; const c=/^#[0-9a-f]{6}$/i.test(t.color||"")?t.color:"#7A8A91";
   return `<td style="background:${c}26;color:${c};font-weight:700">${esc(e.code)}</td>`;
 }
 function viewBoard(){
   if(!ME||!ME.admin) return "";
-  if(BD.sel===undefined) BD.sel=null;
+  if(BD.sel===undefined){ try{ BD.sel=JSON.parse(localStorage.getItem(bdKey())||"null"); }catch(e){ BD.sel=null; } }
   if(!BD.start) BD.start=alignCycle(S.start);
   if(!BD.rows&&!BD.loading) loadBoard();
   const st=BD.start, days=Array.from({length:28},(_,i)=>addDays(st,i)), en=days[27];
   const all=bdCompute(), rows=bdVisible(all), hidden=BD.sel?all.length-rows.length:all.filter(r=>!r.has).length;
   const wk=d=>dow(d)>=5?"background:#d9dee0":"";
   const th1=days.map(d=>`<th style="${wk(d)}">${toD(d).getUTCDate()}</th>`).join(""), th2=days.map(d=>`<th style="${wk(d)}">${DAY_EN[dow(d)]}</th>`).join("");
-  const body=rows.map((r,i)=>`<tr><td class="nm"><b>${i+1}. ${esc(r.staff||"—")}</b><br><button class="linkish" data-u="open" data-id="${esc(r.id)}" data-name="${esc(r.name)}">${esc(r.name||"—")}</button></td>${days.map(d=>boardCell(r.orig[d],r.types,r.days&&r.days[d])).join("")}<td><b>${fmtH(r.hrs)}</b></td><td>${r.wd}</td><td style="white-space:nowrap;font-size:11px">${esc(fmtLogin(r.last))}<br>${esc(fmtAgo(r.last))}</td></tr>`).join("");
+  const body=rows.map((r,i)=>`<tr><td class="nm"><b>${i+1}. ${esc(r.staff||"—")}</b><br><button class="linkish" data-u="open" data-id="${esc(r.id)}" data-name="${esc(r.name)}">${esc(r.name||"—")}</button></td>${days.map(d=>boardCell(r.orig[d],r.types)).join("")}<td><b>${fmtH(r.hrs)}</b></td><td>${r.wd}</td></tr>`).join("");
   const vis=new Set(rows.map(r=>r.id));
   const manage=BD.manage?`<section class="panel" style="margin-bottom:10px"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><b>من يظهر في الجدول؟</b><button class="btn" data-bd="selall">تحديد الكل</button><button class="btn" data-bd="selnone">مسح الكل</button><button class="btn" data-bd="selauto">تلقائي (كل من عنده روته)</button></div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px">${all.map(r=>`<label style="display:flex;gap:6px;align-items:center;padding:4px 6px;border:1px solid var(--line);border-radius:8px"><input type="checkbox" data-bdsel="${esc(r.id)}" ${vis.has(r.id)?"checked":""}><span><b>${esc(r.staff||"—")}</b> ${esc(r.name||"—")}${r.has?"":' <span class="hint">(بدون روته)</span>'} <span class="hint">· آخر دخول ${esc(fmtLogin(r.last))}</span></span></label>`).join("")||'<span class="hint">لا يوجد مستخدمون.</span>'}</div></section>`:"";
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px">${all.map(r=>`<label style="display:flex;gap:6px;align-items:center;padding:4px 6px;border:1px solid var(--line);border-radius:8px"><input type="checkbox" data-bdsel="${esc(r.id)}" ${vis.has(r.id)?"checked":""}><span><b>${esc(r.staff||"—")}</b> ${esc(r.name||"—")}${r.has?"":' <span class="hint">(بدون روته)</span>'}</span></label>`).join("")||'<span class="hint">لا يوجد مستخدمون.</span>'}</div></section>`:"";
   return `<div class="page-head"><div><div class="eyebrow">المدير</div><h1>جدول الروتات</h1><p>مرتّبة تنازلياً حسب الرقم الوظيفي · كل الروتات تبدأ بنفس اليوم</p></div>
     <div class="cycle-nav" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="btn" data-bd="prev">▶</button><input class="inp" type="date" id="bd-start" value="${st}" style="max-width:160px"><button class="btn" data-bd="next">◀</button><button class="btn" data-bd="reload">↻</button><button class="btn ${BD.manage?"primary":""}" data-bd="manage">⚙ اختيار المستخدمين</button><button class="btn" onclick="window.print()">🖨</button></div></div>
   <div class="hint" style="margin-bottom:8px">From ${esc(fmtLong(st))} — To ${esc(fmtLong(en))} · ${rows.length} في الجدول${hidden>0?` · ${hidden} غير معروض`:""}</div>
   ${manage}${BD.err?`<div class="sc-err">${esc(BD.err)}</div>`:""}${BD.loading?`<div class="hint">جارٍ التحميل…</div>`:""}
-  <section class="panel tbl-wrap"><table class="bd" dir="ltr"><thead><tr><th rowspan="2" class="nm">St.No / Name</th>${th1}<th rowspan="2">Worked<br>Hrs</th><th rowspan="2">Work<br>Days</th><th rowspan="2">آخر<br>دخول</th></tr><tr>${th2}</tr></thead><tbody>${body||`<tr><td colspan="32" class="hint" style="padding:18px">لا أحد في الجدول. اضغطي «اختيار المستخدمين» وحددي من يظهر، أو غيّري الفترة.</td></tr>`}</tbody></table></section>`;
+  <section class="panel tbl-wrap"><table class="bd" dir="ltr"><thead><tr><th rowspan="2" class="nm">St.No / Name</th>${th1}<th rowspan="2">Worked<br>Hrs</th><th rowspan="2">Work<br>Days</th></tr><tr>${th2}</tr></thead><tbody>${body||`<tr><td colspan="31" class="hint" style="padding:18px">لا أحد في الجدول. اضغطي «اختيار المستخدمين» وحددي من يظهر، أو غيّري الفترة.</td></tr>`}</tbody></table></section>`;
 }
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-bd]"); if(!b) return; const a=b.dataset.bd;
@@ -1546,8 +1614,7 @@ async function enter(user){
   if((tab==="users"||tab==="board")&&!ME.admin) tab="dash";
   loginRoot.innerHTML=""; document.getElementById("out-btn").hidden=false;
   await loadRoster(ME.id,name,false);
-  try{ S.cfg.lastLogin=new Date().toISOString(); persist(); }catch(e){}
-  if(ME.admin){ loadUsers(); loadBoard(); }
+  if(ME.admin) loadUsers();
 }
 async function loadRoster(uid,name,force){
   setSave("busy","جارٍ التحميل…");
@@ -1584,7 +1651,7 @@ function viewUsers(){
   if(!ME||!ME.admin) return "";
   return `<div class="page-head"><div><div class="eyebrow">المدير</div><h1>المستخدمون</h1></div></div>
   <section class="panel"><h2>الحسابات (${USERS.length})</h2>
-    ${USERS.map(u=>`<div class="usr-r"><b>${esc(u.name||"—")}</b><span class="hint"> · آخر دخول ${esc(fmtLogin(((BD.rows||[]).find(r=>r.id===u.id)||{}).last))} ${esc(fmtAgo(((BD.rows||[]).find(r=>r.id===u.id)||{}).last))}</span>${u.is_admin?'<span class="hint">مدير</span>':""}<button class="btn" data-u="open" data-id="${esc(u.id)}" data-name="${esc(u.name||"")}">${u.id===ME.id?"روتي":"فتح الروته"}</button></div>`).join("")}
+    ${USERS.map(u=>`<div class="usr-r"><b>${esc(u.name||"—")}</b>${u.is_admin?'<span class="hint">مدير</span>':""}<button class="btn" data-u="open" data-id="${esc(u.id)}" data-name="${esc(u.name||"")}">${u.id===ME.id?"روتي":"فتح الروته"}</button></div>`).join("")}
   </section>
   <section class="panel" style="margin-top:12px"><h2>إضافة مستخدم</h2>
     <div class="usr-f">
@@ -1627,11 +1694,6 @@ document.addEventListener("click",async e=>{
   else if(a==="open") await switchTo(el.dataset.id,el.dataset.name);
   else if(a==="back") await switchTo(ME.id,ME.name);
   else if(a==="add") await addUser();
-});
-document.addEventListener("visibilitychange",()=>{
-  if(document.visibilityState!=="visible"||!ME||TARGET!==ME.id||!S||!S.cfg) return;
-  const l=Date.parse(S.cfg.lastLogin||"")||0;
-  if(Date.now()-l>10*60000){ S.cfg.lastLogin=new Date().toISOString(); persist(); }
 });
 async function boot(){
   if(!supabaseClient){ loginRoot.innerHTML=""; render(); setSave("local","تعذّر تحميل مكتبة Supabase — محفوظ على الجهاز"); return; }
