@@ -726,6 +726,15 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 3%,transparent)}
   .grid .c-arrow{display:none}
   .grid .c-empty{width:26px;height:26px;font-size:16px}
 }
+
+/* last login */
+.usr-r .usr-n{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.usr-r .usr-n b{flex:none}
+.lastin{font-size:12px;color:var(--muted)}
+.lastin-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px}
+.lastin-box>div{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:10px 14px;display:flex;flex-direction:column;gap:3px}
+.lastin-box span{font-size:12px;color:var(--muted)}
+.lastin-box b{font-size:14px;font-weight:600}
 </style>
 </head>
 <body>
@@ -1658,6 +1667,33 @@ function showLogin(msg){
     await enter(data.user);
   });
 }
+let LOGINS={}, MELOGIN=null;
+function fmtDT(iso){
+  if(!iso) return "";
+  const d=new Date(iso); if(isNaN(d)) return "";
+  const loc=EN?"en-GB":"ar-SA-u-ca-gregory-nu-latn";
+  const abs=d.toLocaleString(loc,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+  const m=Math.floor((Date.now()-d.getTime())/60000);
+  let rel;
+  if(m<1) rel=EN?"just now":"الآن";
+  else if(m<60) rel=EN?m+" min ago":"قبل "+m+" دقيقة";
+  else if(m<1440) rel=EN?Math.floor(m/60)+" h ago":"قبل "+Math.floor(m/60)+" ساعة";
+  else rel=EN?Math.floor(m/1440)+" d ago":"قبل "+Math.floor(m/1440)+" يوم";
+  return rel+" · "+abs;
+}
+async function recordLogin(){
+  if(!ME||!S||TARGET!==ME.id) return;
+  const key=LS_KEY+":sess"; let seen=false;
+  try{ seen=sessionStorage.getItem(key)===ME.id; }catch(e){}
+  const old=S.login||{};
+  if(seen){ MELOGIN={last:old.last||null,prev:old.prev||null}; return; }
+  const now=new Date().toISOString();
+  S.login={last:now,prev:old.last||null};
+  MELOGIN={last:now,prev:old.last||null};
+  LOGINS[ME.id]=now;
+  try{ sessionStorage.setItem(key,ME.id); }catch(e){}
+  persist();
+}
 async function enter(user){
   let p=null;
   try{ const r=await supabaseClient.from("profiles").select("name,is_admin").eq("id",user.id).maybeSingle(); p=r.data; }catch(e){}
@@ -1668,7 +1704,9 @@ async function enter(user){
   if((tab==="users"||tab==="board")&&!ME.admin) tab="dash";
   loginRoot.innerHTML=""; document.getElementById("out-btn").hidden=false;
   await loadRoster(ME.id,name,false);
+  await recordLogin();
   if(ME.admin) loadUsers();
+  render();
 }
 async function loadRoster(uid,name,force){
   setSave("busy","جارٍ التحميل…");
@@ -1695,6 +1733,7 @@ async function loadRoster(uid,name,force){
 }
 async function loadUsers(){
   try{ const {data,error}=await supabaseClient.from("profiles").select("id,name,is_admin").order("name"); if(!error) USERS=data||[]; }catch(e){}
+  try{ const r=await supabaseClient.from(SUPABASE_TABLE).select("user_id,login:data->login"); if(!r.error&&r.data){ r.data.forEach(x=>{ if(x.login&&x.login.last) LOGINS[x.user_id]=x.login.last; }); } }catch(e){}
   if(tab==="users") render();
 }
 function viewBanner(){
@@ -1705,7 +1744,7 @@ function viewUsers(){
   if(!ME||!ME.admin) return "";
   return `<div class="page-head"><div><div class="eyebrow">المدير</div><h1>المستخدمون</h1></div></div>
   <section class="panel"><h2>الحسابات (${USERS.length})</h2>
-    ${USERS.map(u=>`<div class="usr-r"><b>${esc(u.name||"—")}</b>${u.is_admin?'<span class="hint">مدير</span>':""}<button class="btn" data-u="open" data-id="${esc(u.id)}" data-name="${esc(u.name||"")}">${u.id===ME.id?"روتي":"فتح الروته"}</button></div>`).join("")}
+    ${USERS.map(u=>`<div class="usr-r"><div class="usr-n"><b>${esc(u.name||"—")}</b><small class="lastin">${LOGINS[u.id]?(EN?"Last login: ":"آخر دخول: ")+fmtDT(LOGINS[u.id]):(EN?"Never logged in":"لم يسجّل دخولاً بعد")}</small></div>${u.is_admin?'<span class="hint">مدير</span>':""}<button class="btn" data-u="open" data-id="${esc(u.id)}" data-name="${esc(u.name||"")}">${u.id===ME.id?"روتي":"فتح الروته"}</button></div>`).join("")}
   </section>
   <section class="panel" style="margin-top:12px"><h2>إضافة مستخدم</h2>
     <div class="usr-f">
@@ -1718,7 +1757,7 @@ function viewUsers(){
   </section>`;
 }
 function accountPanel(){
-  return `<section class="panel settings sbp"><div class="field" style="grid-column:1/-1"><span class="label">الحساب</span><span class="hint">${esc(ME.name)} · ${esc(staffOf(ME.email))}</span><div style="margin-top:8px"><button class="btn ghost" data-u="out">تسجيل الخروج</button></div></div></section>`;
+  return `<section class="panel settings sbp"><div class="field" style="grid-column:1/-1"><span class="label">الحساب</span><span class="hint">${esc(ME.name)} · ${esc(staffOf(ME.email))}</span>${MELOGIN?`<div class="lastin-box"><div><span>${EN?"This login":"هذا الدخول"}</span><b>${fmtDT(MELOGIN.last)}</b></div><div><span>${EN?"Previous login":"آخر دخول سابق"}</span><b>${MELOGIN.prev?fmtDT(MELOGIN.prev):(EN?"First login":"أول دخول")}</b></div></div>`:""}<div style="margin-top:8px"><button class="btn ghost" data-u="out">تسجيل الخروج</button></div></div></section>`;
 }
 async function switchTo(id,name){
   clearTimeout(saveTimer); if(dirty&&TARGET) await flush();
