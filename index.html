@@ -1724,8 +1724,9 @@ async function enter(user){
 }
 async function loadRoster(uid,name,force){
   setSave("busy","جارٍ التحميل…");
+  if(!app.innerHTML.trim()) app.innerHTML='<div class="hint" style="padding:32px 16px;text-align:center">جارٍ التحميل… <span dir="ltr">(v3)</span></div>';
   try{
-    const {data,error}=await sbTimeout(supabaseClient.from(SUPABASE_TABLE).select("data,updated_at").eq("user_id",uid).maybeSingle(),10000);
+    const {data,error}=await sbTimeout(supabaseClient.from(SUPABASE_TABLE).select("data,updated_at").eq("user_id",uid).maybeSingle(),7000);
     if(error) throw error;
     const own=uid===ME.id;
     let lts=0,synced="",owner=""; try{ lts=+localStorage.getItem(LS_KEY+":ts")||0; synced=localStorage.getItem(LS_KEY+":synced")||""; owner=localStorage.getItem(LS_KEY+":owner")||""; }catch(e){}
@@ -1743,7 +1744,7 @@ async function loadRoster(uid,name,force){
       await flush();
     }
     render(); setSave("","محفوظ في Supabase");
-  }catch(e){ console.error("Supabase load:",e); setSave("local",sbErrText(e)); if(uid===ME.id&&!force){ showLogin("تعذّر الاتصال — سجّل الدخول مرة أخرى"); } else render(); }
+  }catch(e){ console.error("Supabase load:",e); setSave("local",sbErrText(e)); if(uid===ME.id&&!force){ showLogin("تعذّر الاتصال — سجّل الدخول مرة أخرى ("+((e&&(e.message||e.code))||"?")+")"); } else render(); }
 }
 async function loadUsers(){
   try{ const {data,error}=await supabaseClient.from("profiles").select("id,name,is_admin").order("name"); if(!error) USERS=data||[]; }catch(e){}
@@ -1807,7 +1808,7 @@ async function boot(){
   try{
     const {data}=await sbTimeout(supabaseClient.auth.getSession(),5000);
     if(data&&data.session) await enter(data.session.user); else showLogin();
-  }catch(e){ showLogin("تعذّر الاتصال — سجّل الدخول مرة أخرى"); }
+  }catch(e){ showLogin("تعذّر الاتصال — سجّل الدخول مرة أخرى ("+((e&&(e.message||e.code))||"?")+")"); }
 }
 boot();
 })();
