@@ -1657,7 +1657,9 @@ const STAFF_DOMAIN="@roster.app";
 const staffEmail=n=>{ const v=String(n||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/\s+/g,"").toLowerCase(); return v.includes("@")?v:v+STAFF_DOMAIN; };
 const staffOf=e=>String(e||"").split("@")[0];
 const loginRoot=document.createElement("div"); document.body.appendChild(loginRoot);
-loginRoot.innerHTML='<div class="loginov"></div>';
+(function(){ let o=""; try{ o=localStorage.getItem(LS_KEY+":owner")||""; }catch(e){}
+  if(o){ loginRoot.innerHTML=""; setTimeout(()=>{ try{ render(); }catch(e){} },0); }
+  else loginRoot.innerHTML='<div class="loginov"><div class="hint" style="text-align:center">…</div></div>'; })();
 function freshState(name,staff){
   const st={v:1,sample:false,cfg:{official:7,weekend:[5,6],unit:"",name:name||"",staff:staff||""},start:alignCycle(todayIso()),types:JSON.parse(JSON.stringify(DEFAULT_TYPES)),original:{},days:{},log:[],adj:{}};
   st.bal={from:st.start,po:0,hrs:0}; return st;
@@ -1709,8 +1711,8 @@ async function recordLogin(){
   persist();
 }
 async function enter(user){
-  let p=null;
-  try{ const r=await sbTimeout(supabaseClient.from("profiles").select("name,is_admin").eq("id",user.id).maybeSingle(),8000); p=r.data; }catch(e){}
+  let p=null; loginRoot.innerHTML="";
+  try{ const r=await sbTimeout(supabaseClient.from("profiles").select("name,is_admin").eq("id",user.id).maybeSingle(),5000); p=r.data; }catch(e){}
   const name=(p&&p.name)||(user.user_metadata&&user.user_metadata.name)||(user.email||"").split("@")[0];
   ME={id:user.id,email:user.email,name,admin:!!(p&&p.is_admin)};
   TARGET=ME.id; TNAME=name; setIdentity(name);
@@ -1806,7 +1808,7 @@ document.addEventListener("click",async e=>{
 async function boot(){
   if(!supabaseClient){ loginRoot.innerHTML=""; render(); setSave("local","تعذّر تحميل مكتبة Supabase — محفوظ على الجهاز"); return; }
   try{
-    const {data}=await sbTimeout(supabaseClient.auth.getSession(),8000);
+    const {data}=await sbTimeout(supabaseClient.auth.getSession(),5000);
     if(data&&data.session) await enter(data.session.user); else showLogin();
   }catch(e){
     let own=""; try{ own=localStorage.getItem(LS_KEY+":owner")||""; }catch(x){}
