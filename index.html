@@ -835,7 +835,8 @@ const SUPABASE_URL = "https://uprtxqnjajtmvhxwicaq.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwcnR4cW5qYWp0bXZoeHdpY2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxODE0NzYsImV4cCI6MjEwNTc1NzQ3Nn0.DAWlaysrAViFIZS6ss3bWWRWf0lf555KZA_oNiPZjo4";
 const SUPABASE_TABLE = "roster_data";
 let ME=null, TARGET=null, TNAME="", USERS=[];
-const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+const sbTimeout=(p,ms)=>Promise.race([Promise.resolve(p),new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),ms||8000))]);
+const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{lock:async (n,t,fn)=>await fn()}}) : null;
 
 let db=null, docRef=null, saveTimer=null, saving=false, pendingSave=false, dirty=false, gotRemote=false;
 const saveEl=document.getElementById("save");
@@ -861,7 +862,7 @@ async function flush(){
     if(docRef){ await docRef.set(JSON.parse(JSON.stringify(S))); }
     else {
       const now=new Date().toISOString();
-      const {error}=await supabaseClient.from(SUPABASE_TABLE).upsert({user_id:TARGET,data:S,updated_at:now},{onConflict:"user_id"});
+      const {error}=await sbTimeout(supabaseClient.from(SUPABASE_TABLE).upsert({user_id:TARGET,data:S,updated_at:now},{onConflict:"user_id"}),15000);
       if(error) throw error;
       if(ME&&TARGET===ME.id){ try{localStorage.setItem(LS_KEY+":synced",now);}catch(e){} }
     }
@@ -921,6 +922,7 @@ function sbErrText(e){
   const m=(e&&(e.message||e.msg))||"";
   if(/row-level security|42501|permission denied/i.test(m+(e&&e.code||""))) return "Supabase رفض الحفظ — فعّلي سياسة RLS للجدول";
   if(/relation .* does not exist|42P01|Could not find the table/i.test(m+(e&&e.code||""))) return "جدول roster_data غير موجود في Supabase";
+  if(/timeout/i.test(m)) return "الاتصال بطيء — محفوظ على الجهاز";
   if(/Failed to fetch|NetworkError|network/i.test(m)) return "لا يوجد اتصال — محفوظ على الجهاز";
   return "تعذّر الحفظ في Supabase — محفوظ على الجهاز";
 }
@@ -1708,7 +1710,7 @@ async function recordLogin(){
 }
 async function enter(user){
   let p=null;
-  try{ const r=await supabaseClient.from("profiles").select("name,is_admin").eq("id",user.id).maybeSingle(); p=r.data; }catch(e){}
+  try{ const r=await sbTimeout(supabaseClient.from("profiles").select("name,is_admin").eq("id",user.id).maybeSingle(),8000); p=r.data; }catch(e){}
   const name=(p&&p.name)||(user.user_metadata&&user.user_metadata.name)||(user.email||"").split("@")[0];
   ME={id:user.id,email:user.email,name,admin:!!(p&&p.is_admin)};
   TARGET=ME.id; TNAME=name; setIdentity(name);
@@ -1722,8 +1724,9 @@ async function enter(user){
 }
 async function loadRoster(uid,name,force){
   setSave("busy","جارٍ التحميل…");
+  try{ if(uid===ME.id&&localStorage.getItem(LS_KEY+":owner")===uid) render(); }catch(e){}
   try{
-    const {data,error}=await supabaseClient.from(SUPABASE_TABLE).select("data,updated_at").eq("user_id",uid).maybeSingle();
+    const {data,error}=await sbTimeout(supabaseClient.from(SUPABASE_TABLE).select("data,updated_at").eq("user_id",uid).maybeSingle(),10000);
     if(error) throw error;
     const own=uid===ME.id;
     let lts=0,synced="",owner=""; try{ lts=+localStorage.getItem(LS_KEY+":ts")||0; synced=localStorage.getItem(LS_KEY+":synced")||""; owner=localStorage.getItem(LS_KEY+":owner")||""; }catch(e){}
@@ -1803,9 +1806,12 @@ document.addEventListener("click",async e=>{
 async function boot(){
   if(!supabaseClient){ loginRoot.innerHTML=""; render(); setSave("local","تعذّر تحميل مكتبة Supabase — محفوظ على الجهاز"); return; }
   try{
-    const {data}=await supabaseClient.auth.getSession();
+    const {data}=await sbTimeout(supabaseClient.auth.getSession(),8000);
     if(data&&data.session) await enter(data.session.user); else showLogin();
-  }catch(e){ showLogin(); }
+  }catch(e){
+    let own=""; try{ own=localStorage.getItem(LS_KEY+":owner")||""; }catch(x){}
+    if(own){ loginRoot.innerHTML=""; render(); setSave("local","لا يوجد اتصال — محفوظ على الجهاز"); } else showLogin();
+  }
 }
 boot();
 })();
