@@ -2,6 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>روته أحمد</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -766,7 +768,7 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 3%,transparent)}
   </div>
 </header>
 
-<main class="wrap" id="app"></main>
+<main class="wrap" id="app"><div class="hint" style="padding:32px 16px;text-align:center">جارٍ التحميل… <span dir="ltr">(v4)</span></div></main>
 <div id="modal-root"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -1657,6 +1659,8 @@ const STAFF_DOMAIN="@roster.app";
 const staffEmail=n=>{ const v=String(n||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/\s+/g,"").toLowerCase(); return v.includes("@")?v:v+STAFF_DOMAIN; };
 const staffOf=e=>String(e||"").split("@")[0];
 const loginRoot=document.createElement("div"); document.body.appendChild(loginRoot);
+let WD=null;
+function armWatchdog(){ clearTimeout(WD); WD=setTimeout(()=>{ if(!document.getElementById("lg-f")) showLogin("انتهت مهلة التحميل — سجّل الدخول مرة أخرى"); },12000); }
 loginRoot.innerHTML='<div class="loginov"><div class="hint" style="text-align:center">…</div></div>';
 function freshState(name,staff){
   const st={v:1,sample:false,cfg:{official:7,weekend:[5,6],unit:"",name:name||"",staff:staff||""},start:alignCycle(todayIso()),types:JSON.parse(JSON.stringify(DEFAULT_TYPES)),original:{},days:{},log:[],adj:{}};
@@ -1668,6 +1672,7 @@ function setIdentity(name){
   const m=document.querySelector('meta[name="apple-mobile-web-app-title"]'); if(m) m.setAttribute("content",f);
 }
 function showLogin(msg){
+  clearTimeout(WD);
   loginRoot.innerHTML=`<div class="loginov"><form class="loginov-card" id="lg-f">
     <h1>تسجيل الدخول</h1>
     <label class="label" for="lg-e">الرقم الوظيفي</label><input class="inp" id="lg-e" type="text" inputmode="numeric" dir="ltr" autocomplete="username" required>
@@ -1709,6 +1714,7 @@ async function recordLogin(){
   persist();
 }
 async function enter(user){
+  armWatchdog();
   let p=null; loginRoot.innerHTML="";
   try{ const r=await sbTimeout(supabaseClient.from("profiles").select("name,is_admin").eq("id",user.id).maybeSingle(),5000); p=r.data; }catch(e){}
   const name=(p&&p.name)||(user.user_metadata&&user.user_metadata.name)||(user.email||"").split("@")[0];
@@ -1724,7 +1730,7 @@ async function enter(user){
 }
 async function loadRoster(uid,name,force){
   setSave("busy","جارٍ التحميل…");
-  if(!app.innerHTML.trim()) app.innerHTML='<div class="hint" style="padding:32px 16px;text-align:center">جارٍ التحميل… <span dir="ltr">(v3)</span></div>';
+  
   try{
     const {data,error}=await sbTimeout(supabaseClient.from(SUPABASE_TABLE).select("data,updated_at").eq("user_id",uid).maybeSingle(),7000);
     if(error) throw error;
@@ -1743,7 +1749,7 @@ async function loadRoster(uid,name,force){
       if(own){ try{ localStorage.setItem(LS_KEY,JSON.stringify(S)); localStorage.setItem(LS_KEY+":owner",uid); }catch(e){} }
       await flush();
     }
-    render(); setSave("","محفوظ في Supabase");
+    clearTimeout(WD); render(); setSave("","محفوظ في Supabase");
   }catch(e){ console.error("Supabase load:",e); setSave("local",sbErrText(e)); if(uid===ME.id&&!force){ showLogin("تعذّر الاتصال — سجّل الدخول مرة أخرى ("+((e&&(e.message||e.code))||"?")+")"); } else render(); }
 }
 async function loadUsers(){
@@ -1804,6 +1810,7 @@ document.addEventListener("click",async e=>{
   else if(a==="add") await addUser();
 });
 async function boot(){
+  armWatchdog();
   if(!supabaseClient){ loginRoot.innerHTML='<div class="loginov"><div class="loginov-card"><div class="sc-err">تعذّر الاتصال — تأكد من الإنترنت</div><button class="btn primary" onclick="location.reload()">إعادة المحاولة</button></div></div>'; return; }
   try{
     const {data}=await sbTimeout(supabaseClient.auth.getSession(),5000);
