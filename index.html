@@ -602,7 +602,16 @@ html[dir="ltr"] .mix-n{text-align:left}
 .cmp-d{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:30px;font-size:11px;color:var(--muted);padding:3px 0;border-radius:8px}.cmp-d.both{background:var(--accent-soft)}
 .cmp-d i{font-style:normal;font-weight:700;border-radius:5px;padding:2px 0;width:26px;text-align:center}.cmp-d i.e{opacity:.4}
 .cmp-l{align-items:flex-start;min-width:78px;position:sticky;left:0;background:var(--surface);z-index:1}.cmp-l em{font-style:normal;font-size:11px;color:var(--ink);height:19px;max-width:78px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.bd td[data-ed]{cursor:pointer}.bd td[data-ed]:hover{outline:2px solid var(--accent);outline-offset:-2px}
+.bd td.bdc{box-shadow:inset 0 0 0 2px var(--warn)}.cmpt tbody td i{display:inline-block;font-style:normal;font-weight:700;border-radius:5px;padding:2px 0;width:26px}.cmpt tbody td i.e{opacity:.35}.cmpt td.cb{background:var(--accent-soft)}.cmpt .nm{min-width:96px;max-width:96px}
+
+.sc-err:empty{display:none}.wh{margin-top:12px}.wh-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:8px}.wh-h h2{margin:0}.wh-seg button{padding:6px 16px}
+.wh-sum{font-size:13px;margin-bottom:10px;color:var(--ink)}.wh-sum span{color:var(--muted)}
+.wh-l{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.wh-g{border:1px solid var(--line);border-inline-start:4px solid var(--c);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.wh-gh{display:flex;align-items:center;gap:10px}.wh-c{font-weight:700;border-radius:8px;min-width:34px;height:34px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--c)}
+.wh-m{flex:1;display:flex;flex-direction:column;line-height:1.3}.wh-m span{font-size:12px;color:var(--muted)}.wh-n{font-weight:700;font-size:15px;color:var(--c)}
+.wh-p{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.wh-p span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12.5px}.wh-p .me{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.ar-f{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.ar textarea{width:100%;font-family:inherit}
 @media print{.tabs,.cycle-nav,.btn,.top,.bd-foot .bd-leg{display:none!important}@page{size:landscape;margin:8mm}}
 .bd{border-collapse:separate;border-spacing:0;font-size:12px}
 .bd th,.bd td{border:0;border-bottom:1px solid var(--line);border-inline-end:1px solid var(--line);padding:6px 2px;min-width:30px}
@@ -973,7 +982,7 @@ function render(){
   if(!viewStart) viewStart=S.start;
   let h=viewBanner();
   if(S.sample) h+=`<div class="banner"><div class="sp"><b>هذه بيانات مثال</b> لتري كيف يعمل الموقع. ابدئي جدولك الحقيقي، ثم أدخلي الروته الأصلية من صفحة «الروته» بوضع <b>الجدول الأصلي</b>.</div><button class="btn primary" data-act="start-fresh">ابدئي جدولي</button><button class="btn ghost" data-act="keep-sample">إخفاء</button></div>`;
-  h+= tab==="dash"?viewDash()+viewWho()+viewSummary(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?viewUsers(): tab==="board"?viewBoard()+viewCompare(): viewTypes();
+  h+= tab==="dash"?viewDash()+viewWho()+viewSummary(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?viewUsers(): tab==="board"?viewBoard()+viewAddRota()+viewCompare(): viewTypes();
   app.innerHTML=h;
 }
 
@@ -1609,28 +1618,28 @@ function viewBoard(){
   if(!BD.rows&&!BD.loading) loadBoard();
   const st=BD.start, days=Array.from({length:28},(_,i)=>addDays(st,i)), en=days[27], today=todayIso();
   const all=bdCompute(), rows=all.filter(r=>r.has), noRota=all.length-rows.length;
-  const isOrig=BD.view==="orig", totalChg=rows.reduce((a,r)=>a+r.chg,0);
+  const isOrig=false, totalChg=rows.reduce((a,r)=>a+r.chg,0);
   const wkStart=(i)=>i%7===0?" ws":"";
   const th1=days.map((d,i)=>`<th class="${(dow(d)>=5?"bwe ":"")}${d===today?"td ":""}${wkStart(i)}">${toD(d).getUTCDate()}</th>`).join(""),
         th2=days.map((d,i)=>`<th class="${(dow(d)>=5?"bwe ":"")}${d===today?"td ":""}${wkStart(i)}">${DAY_EN[dow(d)]}</th>`).join("");
   const used={}; // legend of shift codes in view
-  const cell=(r,d,i)=>{ const e=bdGet(r,d), o=r.orig[d], ch=!isOrig&&bdChg(r,d); let h=boardCell(e,r.types,o,ch);
+  const cell=(r,d,i)=>{ const e=bdGet(r,d), o=r.orig[d], ch=!isOrig&&bdChg(r,d); let h=boardCell(e,r.types,o,false);
     if(e&&e.code){ const t=r.types.find(x=>x.code===e.code); if(t&&!used[e.code]) used[e.code]={color:t.color,name:t.name,code:e.code}; }
-    const c=(dow(d)>=5?"bwe ":"")+(d===today?"td ":"")+wkStart(i); const out=h.replace("<td",`<td class="${c}"`).replace(/<td class="([^"]*)" class="/,'<td class="$1 '); return ME.admin&&!isOrig&&r.raw?out.replace("<td",`<td data-ed="${esc(r.id)}|${d}"`):out; };
+    const c=(ch?"bdc ":"")+(dow(d)>=5?"bwe ":"")+(d===today?"td ":"")+wkStart(i); const out=h.replace("<td",`<td class="${c}"`).replace(/<td class="([^"]*)" class="/,'<td class="$1 '); return out; };
   const body=rows.map((r,i)=>{ const me=r.id===ME.id;
     const nameBtn=ME.admin?`<button class="linkish" data-u="open" data-id="${esc(r.id)}" data-name="${esc(r.name)}">${esc(r.name||"—")}</button>`:`<span>${esc(r.name||"—")}</span>`;
     return `<tr class="${me?"me":""}"><td class="nm"><span class="no">${i+1}</span><span class="who"><b>${esc(r.staff||"—")}</b>${nameBtn}</span></td>${days.map((d,k)=>cell(r,d,k)).join("")}<td class="sm"><b>${fmtH(r.hrs)}</b></td><td class="sm">${r.wd}</td><td class="sm ${r.chg&&!isOrig?"bchg-n":""}">${isOrig?"–":(r.chg||"–")}</td></tr>`; }).join("");
   const legend=Object.values(used).map(u=>{ const c=/^#[0-9a-f]{6}$/i.test(u.color||"")?u.color:"#7A8A91"; return `<span class="bd-k"><i style="background:${c}26;color:${c}">${esc(u.code)}</i>${esc(u.name&&u.name!==u.code?u.name:"")}</span>`; }).join("");
   return `<div class="page-head"><div><div class="eyebrow">${EN?"Everyone":"الجميع"}</div><h1>جدول الروتات</h1><p>${esc(fmtLong(st))} → ${esc(fmtLong(en))} · ٢٨ يوماً · مرتّبة تنازلياً حسب الرقم الوظيفي</p></div>
-    <div class="cycle-nav bd-nav"><div class="mode" role="group" aria-label="العرض"><button data-bd="vcur" aria-pressed="${!isOrig}">${EN?"Current":"الحالي"}</button><button data-bd="vorig" aria-pressed="${isOrig}">${EN?"Original":"الأصلي"}</button></div><div class="bd-pager"><button class="btn" data-bd="prev" aria-label="prev">▶</button><input class="inp" type="date" id="bd-start" value="${st}"><button class="btn" data-bd="next" aria-label="next">◀</button></div><button class="btn" data-bd="today">${EN?"Today":"اليوم"}</button><button class="btn" data-bd="reload" aria-label="reload">↻</button><button class="btn" onclick="window.print()" aria-label="print">🖨</button></div></div>
+    <div class="cycle-nav bd-nav"><div class="bd-pager"><button class="btn" data-bd="prev" aria-label="prev">▶</button><input class="inp" type="date" id="bd-start" value="${st}"><button class="btn" data-bd="next" aria-label="next">◀</button></div><button class="btn" data-bd="today">${EN?"Today":"اليوم"}</button><button class="btn" data-bd="reload" aria-label="reload">↻</button><button class="btn" onclick="window.print()" aria-label="print">🖨</button></div></div>
   <div class="bd-sum"><span><b>${rows.length}</b> ${EN?"people":"موظف"}</span>${!isOrig?`<span><b>${totalChg}</b> ${EN?"changes":"تغيير"}</span>`:""}${noRota>0?`<span class="mut">${noRota} ${EN?"without a rota":"بدون روته"}</span>`:""}</div>
   ${BD.err?`<div class="sc-err">${esc(BD.err)}</div>`:""}${BD.loading?`<div class="hint">جارٍ التحميل…</div>`:""}
   <section class="panel tbl-wrap bd-wrap" dir="ltr"><table class="bd" dir="ltr"><thead><tr><th rowspan="2" class="nm">St.No / Name</th>${th1}<th rowspan="2" class="sm">Hrs</th><th rowspan="2" class="sm">Days</th><th rowspan="2" class="sm">Chg</th></tr><tr>${th2}</tr></thead><tbody>${body||`<tr><td colspan="32" class="hint" style="padding:18px">لا توجد روتات في هذه الفترة.</td></tr>`}</tbody></table></section>
-  <div class="bd-foot">${legend?`<div class="bd-keys">${legend}</div>`:""}${!isOrig?`<div class="bd-leg"><span class="bd-sw"></span>${EN?"Changed shift — new code on top, original struck below":"خانة معدَّلة — الشفت الجديد فوق والأصلي مشطوب تحته"}</div>`:""}</div>`;
+  <div class="bd-foot">${legend?`<div class="bd-keys">${legend}</div>`:""}${!isOrig?`<div class="bd-leg"><span class="bd-sw"></span>${EN?"Changed from the original rota":"إطار برتقالي = شفت مُعدَّل عن الروته الأصلي"}</div>`:""}</div>`;
 }
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-bd]"); if(!b) return; const a=b.dataset.bd;
-  if(a==="prev") BD.start=addDays(BD.start,-28); else if(a==="next") BD.start=addDays(BD.start,28); else if(a==="today") BD.start=alignCycle(todayIso()); else if(a==="reload") BD.rows=null; else if(a==="vcur") BD.view="cur"; else if(a==="vorig") BD.view="orig";
+  if(a==="prev") BD.start=addDays(BD.start,-28); else if(a==="next") BD.start=addDays(BD.start,28); else if(a==="today") BD.start=alignCycle(todayIso()); else if(a==="reload") BD.rows=null; else if(a==="who0") BD.whoDay=0; else if(a==="who1") BD.whoDay=1;
   render();
 });
 document.addEventListener("change",e=>{
@@ -1640,15 +1649,19 @@ document.addEventListener("change",e=>{
 
 
 /* ---------- who's on duty / compare / summary / admin edit ---------- */
-function bdShift(r,d){ const e=(r.days&&r.days[d])||r.orig[d]; if(!e||!e.code) return null; const t=r.types.find(x=>x.code===e.code)||{}; return {code:e.code,color:/^#[0-9a-f]{6}$/i.test(t.color||"")?t.color:"#7A8A91",work:!!t.work,start:e.start||t.start||"",end:e.end||t.end||""}; }
+function bdShift(r,d){ const e=(r.days&&r.days[d])||r.orig[d]; if(!e||!e.code) return null; const t=r.types.find(x=>x.code===e.code)||{}; return {code:e.code,name:t.name||e.code,color:/^#[0-9a-f]{6}$/i.test(t.color||"")?t.color:"#7A8A91",work:!!t.work,start:e.start||t.start||"",end:e.end||t.end||""}; }
 function viewWho(){
   if(!ME) return ""; if(!BD.rows&&!BD.loading) loadBoard();
-  const head='<section class="panel who"><h2>من يداوم؟</h2>'; if(!BD.rows) return head+'<div class="hint">جارٍ التحميل…</div></section>';
-  const t0=todayIso(), t1=addDays(t0,1);
-  const col=(d,label)=>{ const g={}; BD.rows.forEach(r=>{ const s=bdShift(r,d); if(s&&s.work) (g[s.code]=g[s.code]||{s,n:[]}).n.push(r); });
-    const it=Object.values(g).map(({s,n})=>`<div class="who-g"><span class="who-c" style="background:${s.color}26;color:${s.color}">${esc(s.code)}</span><span class="who-t" dir="ltr">${s.start&&s.end?esc(s.start+"–"+s.end):""}</span><div class="who-n">${n.map(r=>`<span class="${r.id===ME.id?"me":""}">${esc(r.name||r.staff||"—")}</span>`).join("")}</div></div>`).join("");
-    return `<div><h3>${label}</h3>${it||'<div class="hint">لا أحد</div>'}</div>`; };
-  return head+`<div class="who-cols">${col(t0,"اليوم")}${col(t1,"غداً")}</div></section>`;
+  const day=BD.whoDay?1:0, d=addDays(todayIso(),day);
+  const seg=`<div class="mode wh-seg" role="group"><button data-bd="who0" aria-pressed="${!day}">اليوم</button><button data-bd="who1" aria-pressed="${!!day}">غداً</button></div>`;
+  const head=`<section class="panel wh"><div class="wh-h"><div><h2>من يداوم؟</h2><span class="hint">${esc(fmtLong(d))}</span></div>${seg}</div>`;
+  if(!BD.rows) return head+'<div class="hint">جارٍ التحميل…</div></section>';
+  const g={}; let off=0;
+  BD.rows.forEach(r=>{ const s=bdShift(r,d); if(s&&s.work){ (g[s.code]=g[s.code]||{s,n:[]}).n.push(r); } else off++; });
+  const keys=Object.values(g).sort((a,b)=>(a.s.start||"").localeCompare(b.s.start||""));
+  const total=keys.reduce((a,x)=>a+x.n.length,0);
+  const body=keys.map(({s,n})=>{ n.sort((a,b)=>(a.name||"").localeCompare(b.name||"")); return `<div class="wh-g" style="--c:${s.color}"><div class="wh-gh"><span class="wh-c">${esc(s.code)}</span><div class="wh-m"><b>${esc(s.name)}</b><span dir="ltr">${s.start&&s.end?esc(s.start+" – "+s.end):""}</span></div><span class="wh-n">${n.length}</span></div><div class="wh-p">${n.map(r=>`<span class="${r.id===ME.id?"me":""}">${esc(r.name||r.staff||"—")}</span>`).join("")}</div></div>`; }).join("");
+  return head+(body?`<div class="wh-sum"><b>${total}</b> على رأس العمل · <span>${off} راحة / إجازة</span></div><div class="wh-l">${body}</div>`:'<div class="hint">لا أحد على رأس العمل.</div>')+'</section>';
 }
 function mySummary(){
   const r=(BD.rows||[]).find(x=>x.id===ME.id); if(!r) return null; const st=alignCycle(todayIso()); let hrs=0,wd=0,chg=0,off=0; const cnt={};
@@ -1665,10 +1678,13 @@ function viewCompare(){
   const all=bdCompute(), me=all.find(r=>r.id===ME.id), others=all.filter(r=>r.id!==ME.id&&r.has), sel=others.find(r=>r.id===BD.cmp);
   const opts='<option value="">— اختر زميلاً —</option>'+others.map(r=>`<option value="${esc(r.id)}" ${sel&&sel.id===r.id?"selected":""}>${esc(r.staff?r.staff+" · ":"")}${esc(r.name||"—")}</option>`).join("");
   let body="";
-  if(sel&&me){ const days=Array.from({length:28},(_,i)=>addDays(BD.start,i)); let both=0,same=0,offB=0;
-    const chip=s=>s?`<i style="background:${s.color}26;color:${s.color}">${esc(s.code)}</i>`:'<i class="e">–</i>';
-    const cells=days.map(d=>{ const a=bdShift(me,d), b=bdShift(sel,d), w=a&&a.work&&b&&b.work; if(w){ both++; if(a.code===b.code) same++; } if(!(a&&a.work)&&!(b&&b.work)) offB++; return `<div class="cmp-d ${w?"both":""}"><span>${toD(d).getUTCDate()}</span>${chip(a)}${chip(b)}</div>`; }).join("");
-    body=`<div class="bd-sum" style="margin-top:10px"><span><b>${both}</b> يوم دوام مشترك</span><span><b>${same}</b> نفس الشفت</span><span><b>${offB}</b> راحة مشتركة</span></div><div class="cmp-g" dir="ltr"><div class="cmp-d cmp-l"><span></span><em>${esc(me.name||"Me")}</em><em>${esc(sel.name||"")}</em></div>${cells}</div>`; }
+  if(sel&&me){ const days=Array.from({length:28},(_,i)=>addDays(BD.start,i)), today=todayIso(); let both=0,same=0,offB=0;
+    const chip=(s,w)=>s?`<td class="${w?"cb":""}"><i style="background:${s.color}26;color:${s.color}">${esc(s.code)}</i></td>`:`<td class="${w?"cb":""}"><i class="e">–</i></td>`;
+    const A=[],B=[];
+    days.forEach(d=>{ const a=bdShift(me,d), b=bdShift(sel,d), w=!!(a&&a.work&&b&&b.work); if(w){ both++; if(a.code===b.code) same++; } if(!(a&&a.work)&&!(b&&b.work)) offB++; A.push(chip(a,w)); B.push(chip(b,w)); });
+    const h1=days.map(d=>`<th class="${d===today?"td":""}">${toD(d).getUTCDate()}</th>`).join(""), h2=days.map(d=>`<th class="${d===today?"td":""}">${DAY_EN[dow(d)]}</th>`).join("");
+    body=`<div class="bd-sum" style="margin:10px 0"><span><b>${both}</b> يوم دوام مشترك</span><span><b>${same}</b> نفس الشفت</span><span><b>${offB}</b> راحة مشتركة</span></div>
+    <div class="tbl-wrap" dir="ltr"><table class="bd cmpt"><thead><tr><th class="nm"></th>${h1}</tr><tr><th class="nm"></th>${h2}</tr></thead><tbody><tr class="me"><td class="nm"><span class="who"><b>${esc(me.name||"Me")}</b><span>${esc(me.staff||"")}</span></span></td>${A.join("")}</tr><tr><td class="nm"><span class="who"><b>${esc(sel.name||"—")}</b><span>${esc(sel.staff||"")}</span></span></td>${B.join("")}</tr></tbody></table></div>`; }
   return `<section class="panel" style="margin-top:14px"><h2>مقارنة روتي مع زميل</h2><select class="inp" id="bd-cmp">${opts}</select>${body}</section>`;
 }
 document.addEventListener("click",async e=>{
@@ -1676,16 +1692,27 @@ document.addEventListener("click",async e=>{
   try{ if(navigator.share) await navigator.share({text:m.text}); else { await navigator.clipboard.writeText(m.text); toast("تم النسخ"); } }
   catch(err){ if(err&&err.name==="AbortError") return; try{ await navigator.clipboard.writeText(m.text); toast("تم النسخ"); }catch(x){} }
 });
+
+function viewAddRota(){
+  if(!ME||!ME.admin||!BD.rows) return "";
+  const us=BD.rows.filter(r=>r.raw).sort(bdSort), st=addDays(alignCycle(todayIso()),28);
+  return `<section class="panel ar" style="margin-top:14px"><h2>إضافة الروته الجاية</h2><p class="hint">اكتب رموز الشفتات مفصولة بمسافة أو سطر: ٧ رموز (تتكرر ٤ مرات) أو ١٤ أو ٢٨. استخدم - ليوم بدون شفت.</p>
+  <div class="ar-f"><select class="inp" id="ar-u">${us.map(r=>`<option value="${esc(r.id)}">${esc(r.staff?r.staff+" · ":"")}${esc(r.name||"—")}</option>`).join("")}</select><input class="inp" type="date" id="ar-d" value="${st}"></div>
+  <textarea class="inp" id="ar-t" rows="3" dir="ltr" placeholder="M M N N - - M"></textarea>
+  <div class="ar-f"><button class="btn primary" data-x="addrota">حفظ الروته</button><span class="sc-err" id="ar-m"></span></div></section>`;
+}
 document.addEventListener("click",async e=>{
-  const td=e.target.closest("td[data-ed]"); if(!td||!ME||!ME.admin) return;
-  const [uid,d]=td.dataset.ed.split("|"), r=(BD.rows||[]).find(x=>x.id===uid); if(!r||!r.raw) return;
-  const v=prompt(`${r.name||r.staff} — ${d}\nرمز الشفت: ${r.types.map(t=>t.code).join(" / ")}\nفارغ = إفراغ اليوم · = للرجوع للأصلي`,(bdShift(r,d)||{}).code||""); if(v===null) return;
-  const c=v.trim(), raw=r.raw; raw.days=raw.days||{};
-  if(c==="=") delete raw.days[d]; else if(c==="") raw.days[d]={code:"",start:"",end:""};
-  else { const t=r.types.find(x=>String(x.code).toLowerCase()===c.toLowerCase()); if(!t){ alert("رمز غير موجود"); return; } raw.days[d]={code:t.code,start:t.start||"",end:t.end||""}; }
-  r.days=raw.days; render();
-  try{ const {error}=await sbTimeout(supabaseClient.from(SUPABASE_TABLE).upsert({user_id:uid,data:raw,updated_at:new Date().toISOString()},{onConflict:"user_id"}),15000); if(error) throw error; toast("تم الحفظ"); }
-  catch(err){ alert("تعذّر الحفظ: "+((err&&err.message)||"")); BD.rows=null; render(); }
+  const b=e.target.closest("[data-x=addrota]"); if(!b||!ME||!ME.admin) return; const m=document.getElementById("ar-m"); m.textContent="";
+  const uid=document.getElementById("ar-u").value, st=document.getElementById("ar-d").value, toks=document.getElementById("ar-t").value.split(/[\s,،]+/).filter(Boolean);
+  const r=(BD.rows||[]).find(x=>x.id===uid); if(!r||!r.raw||!st) return;
+  if(![7,14,28].includes(toks.length)){ m.textContent="اكتب ٧ أو ١٤ أو ٢٨ رمزاً (الحالي: "+toks.length+")"; return; }
+  const bad=[...new Set(toks.filter(t=>t!=="-"&&!r.types.some(x=>String(x.code).toLowerCase()===t.toLowerCase())))];
+  if(bad.length){ m.textContent="رموز غير موجودة عند هذا المستخدم: "+bad.join(" "); return; }
+  const raw=r.raw; raw.original=raw.original||{};
+  for(let i=0;i<28;i++){ const d=addDays(st,i), c=toks[i%toks.length]; if(c==="-"){ delete raw.original[d]; continue; } const t=r.types.find(x=>String(x.code).toLowerCase()===c.toLowerCase()); raw.original[d]={code:t.code,start:t.start||"",end:t.end||""}; }
+  r.orig=raw.original; b.disabled=true; m.textContent="جارٍ الحفظ…";
+  try{ const {error}=await sbTimeout(supabaseClient.from(SUPABASE_TABLE).upsert({user_id:uid,data:raw,updated_at:new Date().toISOString()},{onConflict:"user_id"}),15000); if(error) throw error; BD.start=st; toast("تم حفظ الروته"); render(); }
+  catch(err){ b.disabled=false; m.textContent="تعذّر الحفظ: "+((err&&err.message)||""); BD.rows=null; }
 });
 let hiddenAt=0;
 document.addEventListener("visibilitychange",()=>{ if(document.hidden){ hiddenAt=Date.now(); return; } if(ME&&hiddenAt&&Date.now()-hiddenAt>120000){ BD.rows=null; if(ME.admin) loadUsers(); if(!dirty&&TARGET===ME.id) loadRoster(ME.id,ME.name,false); else render(); } });
