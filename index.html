@@ -604,7 +604,7 @@ html[dir="ltr"] .mix-n{text-align:left}
 .cmp-l{align-items:flex-start;min-width:78px;position:sticky;left:0;background:var(--surface);z-index:1}.cmp-l em{font-style:normal;font-size:11px;color:var(--ink);height:19px;max-width:78px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .bd td.bdc{box-shadow:inset 0 0 0 2px var(--warn)}.cmpt tbody td i{display:inline-block;font-style:normal;font-weight:700;border-radius:5px;padding:2px 0;width:26px}.cmpt tbody td i.e{opacity:.35}.cmpt td.cb{background:var(--accent-soft)}.cmpt .nm{min-width:96px;max-width:96px}
 
-.sc-err:empty{display:none}.wh{margin-top:12px}.wh-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:8px}.wh-h h2{margin:0}.wh-seg button{padding:6px 16px}
+.sc-err:empty{display:none}.wh,.sumc{padding:14px!important}.wh-h h2{margin:0 0 10px}.wh{margin-top:12px}.wh-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:8px}.wh-h h2{margin:0}.wh-seg button{padding:6px 16px}
 .wh-sum{font-size:13px;margin-bottom:10px;color:var(--ink)}.wh-sum span{color:var(--muted)}
 .wh-l{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
 .wh-g{border:1px solid var(--line);border-inline-start:4px solid var(--c);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
@@ -612,6 +612,12 @@ html[dir="ltr"] .mix-n{text-align:left}
 .wh-m{flex:1;display:flex;flex-direction:column;line-height:1.3}.wh-m span{font-size:12px;color:var(--muted)}.wh-n{font-weight:700;font-size:15px;color:var(--c)}
 .wh-p{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.wh-p span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12.5px}.wh-p .me{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 .ar-f{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.ar textarea{width:100%;font-family:inherit}
+
+.wh-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:700px){.wh-cols{grid-template-columns:1fr;gap:18px}}
+.wh-col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.wh-ch{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:var(--accent-soft)}
+.wh-ch>div:first-child{display:flex;flex-direction:column;line-height:1.3}.wh-ch b{font-size:15px;color:var(--accent)}.wh-ch span{font-size:12px;color:var(--muted)}
+.wh-cs{text-align:center;font-size:12px;color:var(--muted);display:flex;flex-direction:column;line-height:1.2}.wh-cs b{font-size:20px;color:var(--ink)}.wh-cs small{font-size:11px}
 @media print{.tabs,.cycle-nav,.btn,.top,.bd-foot .bd-leg{display:none!important}@page{size:landscape;margin:8mm}}
 .bd{border-collapse:separate;border-spacing:0;font-size:12px}
 .bd th,.bd td{border:0;border-bottom:1px solid var(--line);border-inline-end:1px solid var(--line);padding:6px 2px;min-width:30px}
@@ -982,7 +988,7 @@ function render(){
   if(!viewStart) viewStart=S.start;
   let h=viewBanner();
   if(S.sample) h+=`<div class="banner"><div class="sp"><b>هذه بيانات مثال</b> لتري كيف يعمل الموقع. ابدئي جدولك الحقيقي، ثم أدخلي الروته الأصلية من صفحة «الروته» بوضع <b>الجدول الأصلي</b>.</div><button class="btn primary" data-act="start-fresh">ابدئي جدولي</button><button class="btn ghost" data-act="keep-sample">إخفاء</button></div>`;
-  h+= tab==="dash"?viewDash()+viewWho()+viewSummary(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?viewUsers(): tab==="board"?viewBoard()+viewAddRota()+viewCompare(): viewTypes();
+  h+= tab==="dash"?viewDash()+viewWho()+viewSummary(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?viewUsers(): tab==="board"?viewBoard()+viewCompare(): viewTypes();
   app.innerHTML=h;
 }
 
@@ -1652,16 +1658,17 @@ document.addEventListener("change",e=>{
 function bdShift(r,d){ const e=(r.days&&r.days[d])||r.orig[d]; if(!e||!e.code) return null; const t=r.types.find(x=>x.code===e.code)||{}; return {code:e.code,name:t.name||e.code,color:/^#[0-9a-f]{6}$/i.test(t.color||"")?t.color:"#7A8A91",work:!!t.work,start:e.start||t.start||"",end:e.end||t.end||""}; }
 function viewWho(){
   if(!ME) return ""; if(!BD.rows&&!BD.loading) loadBoard();
-  const day=BD.whoDay?1:0, d=addDays(todayIso(),day);
-  const seg=`<div class="mode wh-seg" role="group"><button data-bd="who0" aria-pressed="${!day}">اليوم</button><button data-bd="who1" aria-pressed="${!!day}">غداً</button></div>`;
-  const head=`<section class="panel wh"><div class="wh-h"><div><h2>من يداوم؟</h2><span class="hint">${esc(fmtLong(d))}</span></div>${seg}</div>`;
+  const head='<section class="panel wh"><div class="wh-h"><h2>من يداوم؟</h2></div>';
   if(!BD.rows) return head+'<div class="hint">جارٍ التحميل…</div></section>';
-  const g={}; let off=0;
-  BD.rows.forEach(r=>{ const s=bdShift(r,d); if(s&&s.work){ (g[s.code]=g[s.code]||{s,n:[]}).n.push(r); } else off++; });
-  const keys=Object.values(g).sort((a,b)=>(a.s.start||"").localeCompare(b.s.start||""));
-  const total=keys.reduce((a,x)=>a+x.n.length,0);
-  const body=keys.map(({s,n})=>{ n.sort((a,b)=>(a.name||"").localeCompare(b.name||"")); return `<div class="wh-g" style="--c:${s.color}"><div class="wh-gh"><span class="wh-c">${esc(s.code)}</span><div class="wh-m"><b>${esc(s.name)}</b><span dir="ltr">${s.start&&s.end?esc(s.start+" – "+s.end):""}</span></div><span class="wh-n">${n.length}</span></div><div class="wh-p">${n.map(r=>`<span class="${r.id===ME.id?"me":""}">${esc(r.name||r.staff||"—")}</span>`).join("")}</div></div>`; }).join("");
-  return head+(body?`<div class="wh-sum"><b>${total}</b> على رأس العمل · <span>${off} راحة / إجازة</span></div><div class="wh-l">${body}</div>`:'<div class="hint">لا أحد على رأس العمل.</div>')+'</section>';
+  const col=(d,label)=>{
+    const g={}; let off=0;
+    BD.rows.forEach(r=>{ const s=bdShift(r,d); if(s&&s.work) (g[s.code]=g[s.code]||{s,n:[]}).n.push(r); else off++; });
+    const keys=Object.values(g).sort((a,b)=>(a.s.start||"").localeCompare(b.s.start||"")), total=keys.reduce((a,x)=>a+x.n.length,0);
+    const body=keys.map(({s,n})=>{ n.sort((a,b)=>(a.name||"").localeCompare(b.name||"")); return `<div class="wh-g" style="--c:${s.color}"><div class="wh-gh"><span class="wh-c">${esc(s.code)}</span><div class="wh-m"><b>${esc(s.name)}</b><span dir="ltr">${s.start&&s.end?esc(s.start+" – "+s.end):""}</span></div><span class="wh-n">${n.length}</span></div><div class="wh-p">${n.map(r=>`<span class="${r.id===ME.id?"me":""}">${esc(r.name||r.staff||"—")}</span>`).join("")}</div></div>`; }).join("");
+    return `<div class="wh-col"><div class="wh-ch"><div><b>${label}</b><span>${esc(fmtLong(d))}</span></div><div class="wh-cs"><b>${total}</b> دوام<small>${off} راحة</small></div></div>${body||'<div class="hint" style="padding:8px 0">لا أحد على رأس العمل.</div>'}</div>`;
+  };
+  const t0=todayIso();
+  return head+`<div class="wh-cols">${col(t0,"اليوم")}${col(addDays(t0,1),"غداً")}</div></section>`;
 }
 function mySummary(){
   const r=(BD.rows||[]).find(x=>x.id===ME.id); if(!r) return null; const st=alignCycle(todayIso()); let hrs=0,wd=0,chg=0,off=0; const cnt={};
@@ -1693,27 +1700,6 @@ document.addEventListener("click",async e=>{
   catch(err){ if(err&&err.name==="AbortError") return; try{ await navigator.clipboard.writeText(m.text); toast("تم النسخ"); }catch(x){} }
 });
 
-function viewAddRota(){
-  if(!ME||!ME.admin||!BD.rows) return "";
-  const us=BD.rows.filter(r=>r.raw).sort(bdSort), st=addDays(alignCycle(todayIso()),28);
-  return `<section class="panel ar" style="margin-top:14px"><h2>إضافة الروته الجاية</h2><p class="hint">اكتب رموز الشفتات مفصولة بمسافة أو سطر: ٧ رموز (تتكرر ٤ مرات) أو ١٤ أو ٢٨. استخدم - ليوم بدون شفت.</p>
-  <div class="ar-f"><select class="inp" id="ar-u">${us.map(r=>`<option value="${esc(r.id)}">${esc(r.staff?r.staff+" · ":"")}${esc(r.name||"—")}</option>`).join("")}</select><input class="inp" type="date" id="ar-d" value="${st}"></div>
-  <textarea class="inp" id="ar-t" rows="3" dir="ltr" placeholder="M M N N - - M"></textarea>
-  <div class="ar-f"><button class="btn primary" data-x="addrota">حفظ الروته</button><span class="sc-err" id="ar-m"></span></div></section>`;
-}
-document.addEventListener("click",async e=>{
-  const b=e.target.closest("[data-x=addrota]"); if(!b||!ME||!ME.admin) return; const m=document.getElementById("ar-m"); m.textContent="";
-  const uid=document.getElementById("ar-u").value, st=document.getElementById("ar-d").value, toks=document.getElementById("ar-t").value.split(/[\s,،]+/).filter(Boolean);
-  const r=(BD.rows||[]).find(x=>x.id===uid); if(!r||!r.raw||!st) return;
-  if(![7,14,28].includes(toks.length)){ m.textContent="اكتب ٧ أو ١٤ أو ٢٨ رمزاً (الحالي: "+toks.length+")"; return; }
-  const bad=[...new Set(toks.filter(t=>t!=="-"&&!r.types.some(x=>String(x.code).toLowerCase()===t.toLowerCase())))];
-  if(bad.length){ m.textContent="رموز غير موجودة عند هذا المستخدم: "+bad.join(" "); return; }
-  const raw=r.raw; raw.original=raw.original||{};
-  for(let i=0;i<28;i++){ const d=addDays(st,i), c=toks[i%toks.length]; if(c==="-"){ delete raw.original[d]; continue; } const t=r.types.find(x=>String(x.code).toLowerCase()===c.toLowerCase()); raw.original[d]={code:t.code,start:t.start||"",end:t.end||""}; }
-  r.orig=raw.original; b.disabled=true; m.textContent="جارٍ الحفظ…";
-  try{ const {error}=await sbTimeout(supabaseClient.from(SUPABASE_TABLE).upsert({user_id:uid,data:raw,updated_at:new Date().toISOString()},{onConflict:"user_id"}),15000); if(error) throw error; BD.start=st; toast("تم حفظ الروته"); render(); }
-  catch(err){ b.disabled=false; m.textContent="تعذّر الحفظ: "+((err&&err.message)||""); BD.rows=null; }
-});
 let hiddenAt=0;
 document.addEventListener("visibilitychange",()=>{ if(document.hidden){ hiddenAt=Date.now(); return; } if(ME&&hiddenAt&&Date.now()-hiddenAt>120000){ BD.rows=null; if(ME.admin) loadUsers(); if(!dirty&&TARGET===ME.id) loadRoster(ME.id,ME.name,false); else render(); } });
 
