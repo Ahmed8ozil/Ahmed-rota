@@ -588,7 +588,29 @@ html[dir="ltr"] .mix-n{text-align:left}
 .usr-r{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .usr-r b{flex:1}
 .usr-f{display:grid;gap:8px;margin-top:8px;max-width:420px}
-.bd{border-collapse:collapse;font-size:12px;min-width:max-content}.bd th,.bd td{border:1px solid var(--line);padding:5px 3px;text-align:center;min-width:30px;background:var(--surface)}.bd th{background:var(--bg,#f3f5f5);font-weight:700}.bd .nm{text-align:left;min-width:170px;position:sticky;left:0;z-index:1}@media print{.tabs,.cycle-nav,.btn{display:none!important}}
+.bd{border-collapse:collapse;font-size:12px;min-width:max-content}.bd th,.bd td{border:1px solid var(--line);padding:5px 3px;text-align:center;min-width:30px;background:var(--surface)}.bd th{background:var(--bg,#f3f5f5);font-weight:700}.bd .nm{text-align:left;min-width:170px;position:sticky;left:0;z-index:1}@media print{.tabs,.cycle-nav,.btn,.top,.bd-foot .bd-leg{display:none!important}@page{size:landscape;margin:8mm}}
+.bd{border-collapse:separate;border-spacing:0;font-size:12px}
+.bd th,.bd td{border:0;border-bottom:1px solid var(--line);border-inline-end:1px solid var(--line);padding:6px 2px;min-width:30px}
+.bd thead th{background:var(--surface-2);font-weight:600;color:var(--muted)}
+.bd thead tr:nth-child(2) th{font-size:10.5px;font-weight:500}
+.bd .nm{position:sticky;left:0;z-index:3;min-width:150px;max-width:150px;text-align:left;background:var(--surface);display:table-cell;padding:6px 8px;box-shadow:1px 0 0 var(--line-strong)}
+.bd thead .nm{z-index:4;background:var(--surface-2)}
+.bd .nm .no{display:inline-block;width:20px;color:var(--muted);font-size:10.5px}
+.bd .nm .who{display:inline-flex;flex-direction:column;vertical-align:middle;line-height:1.25;max-width:118px;overflow:hidden}
+.bd .nm .who b{font-size:12px}.bd .nm .who span,.bd .nm .who .linkish{font-size:11px;color:var(--muted);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bd .ws{border-inline-start:2px solid var(--line-strong)}
+.bd th.bwe,.bd td.bwe{background-image:linear-gradient(rgba(14,42,48,.045),rgba(14,42,48,.045))}
+.bd th.td{background:var(--accent)!important;color:#fff!important}
+.bd td.td{box-shadow:inset 2px 0 0 var(--accent),inset -2px 0 0 var(--accent)}
+.bd tr.me td{background-color:var(--accent-soft)}.bd tr.me td.nm{background:var(--accent-soft)}
+.bd tbody tr:hover td.nm{background:var(--surface-2)}
+.bd .sm{min-width:36px;background:var(--surface-2);font-size:11.5px}
+.bd-wrap{overflow-x:auto;padding:0}
+@media (max-width:760px){.bd .nm{min-width:112px;max-width:112px;padding:6px 6px}.bd .nm .no{width:14px}.bd .nm .who{max-width:88px}.bd th,.bd td{min-width:28px}}
+.bd-nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.bd-pager{display:flex;gap:4px;align-items:center}.bd-pager .inp{max-width:150px}
+.bd-sum{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}.bd-sum span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12.5px}.bd-sum .mut{color:var(--muted)}
+.bd-foot{display:flex;flex-direction:column;gap:8px;margin-top:10px}.bd-keys{display:flex;flex-wrap:wrap;gap:6px 12px}
+.bd-k{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}.bd-k i{font-style:normal;font-weight:700;border-radius:6px;padding:2px 7px;min-width:28px;text-align:center}
 /* ---- v15 elegant refresh (visual only) ---- */
 :root{
   --ground:#F1F4F4; --surface:#FFFFFF; --surface-2:#F7F9F9; --ink:#0E2A30; --muted:#64797F; --line:#E2E9EA; --line-strong:#CAD6D8;
@@ -759,6 +781,7 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 3%,transparent)}
       <button role="tab" data-tab="stats" aria-selected="false">الإحصائيات</button>
       <button role="tab" data-tab="log" aria-selected="false">سجل التغييرات</button>
       <button role="tab" data-tab="types" aria-selected="false">الشفتات والإعدادات</button>
+      <button role="tab" data-tab="board" aria-selected="false">جدول الروتات</button>
     </nav>
     <div class="hclock" dir="ltr"><span data-clk="hm2">--:--</span> <span data-clk="ap2"></span><span class="hc-d" data-clk="short"></span></div>
     <button class="theme-btn lang-btn" id="lang-btn" aria-label="Language" title="English / العربية"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg><span class="lb-t">EN</span></button>
@@ -1540,18 +1563,16 @@ qeRoot.addEventListener("click",e=>{
   qeDraw();
 });
 
-/* ---------- manager board: choose who appears, sorted by staff number (descending) ---------- */
-let BD={start:"",rows:null,loading:false,err:"",sel:undefined,manage:false,view:"cur"};
-const bdKey=()=>"board:sel:"+((ME&&ME.id)||"admin");
-function bdSave(){ try{ if(BD.sel===null) localStorage.removeItem(bdKey()); else localStorage.setItem(bdKey(),JSON.stringify(BD.sel)); }catch(e){} }
+/* ---------- roster board for everyone, sorted by staff number (descending) ---------- */
+let BD={start:"",rows:null,loading:false,err:"",view:"cur"};
 async function loadBoard(){
   BD.loading=true; BD.err="";
   try{
-    const [a,b]=await Promise.all([supabaseClient.from(SUPABASE_TABLE).select("user_id,data"),supabaseClient.from("profiles").select("id,name")]);
+    const [a,b]=await sbTimeout(Promise.all([supabaseClient.from(SUPABASE_TABLE).select("user_id,data"),supabaseClient.from("profiles").select("id,name")]),10000);
     if(a.error) throw a.error; const nm={}; (b.data||[]).forEach(p=>nm[p.id]=p.name);
     BD.rows=(a.data||[]).map(r=>{ const d=r.data||{}, c=d.cfg||{}; return {id:r.user_id,name:c.name||nm[r.user_id]||"",staff:String(c.staff||""),orig:d.original||{},days:d.days||{},types:d.types||[]}; });
     const have=new Set(BD.rows.map(r=>r.id)); (b.data||[]).forEach(p=>{ if(!have.has(p.id)) BD.rows.push({id:p.id,name:p.name||"",staff:"",orig:{},days:{},types:[]}); });
-  }catch(e){ BD.err="تعذّر تحميل الروتات: "+((e&&e.message)||"تأكدي من صلاحيات المدير في Supabase"); BD.rows=[]; }
+  }catch(e){ BD.err="تعذّر تحميل الروتات: "+((e&&e.message)||"تأكد من صلاحيات القراءة في Supabase"); BD.rows=[]; }
   BD.loading=false; if(tab==="board") render();
 }
 const bdSort=(a,b)=>{ const x=parseInt(a.staff), y=parseInt(b.staff); return (isNaN(y)?-1:y)-(isNaN(x)?-1:x); };
@@ -1561,7 +1582,6 @@ function bdCompute(){
   const days=Array.from({length:28},(_,i)=>addDays(BD.start,i));
   return (BD.rows||[]).map(r=>{ let hrs=0,wd=0,chg=0; days.forEach(d=>{ if(bdChg(r,d)) chg++; const e=bdGet(r,d); if(!e||!e.code) return; const t=r.types.find(x=>x.code===e.code); if(t&&t.work&&(e.start||t.start)){ hrs+=diffH(e.start||t.start,e.end||t.end); wd++; } }); return {...r,hrs,wd,chg,has:days.some(d=>(r.orig[d]&&r.orig[d].code)||(r.days&&r.days[d]&&r.days[d].code))}; }).sort(bdSort);
 }
-const bdVisible=all=>BD.sel?all.filter(r=>BD.sel.includes(r.id)):all.filter(r=>r.has);
 function boardCell(e,types,o,changed){
   if(!e||!e.code){ return changed?`<td class="bchg" title="${EN?"Original":"الأصلي"}: ${esc(o&&o.code||"—")} → ${EN?"Off":"فارغ"}"><s>${esc(o&&o.code||"—")}</s></td>`:`<td></td>`; }
   const t=types.find(x=>x.code===e.code)||{}; const c=/^#[0-9a-f]{6}$/i.test(t.color||"")?t.color:"#7A8A91";
@@ -1569,36 +1589,37 @@ function boardCell(e,types,o,changed){
   return `<td style="background:${c}26;color:${c};font-weight:700">${esc(e.code)}</td>`;
 }
 function viewBoard(){
-  if(!ME||!ME.admin) return "";
-  if(BD.sel===undefined){ try{ BD.sel=JSON.parse(localStorage.getItem(bdKey())||"null"); }catch(e){ BD.sel=null; } }
+  if(!ME) return "";
   if(!BD.start) BD.start=alignCycle(S.start);
   if(!BD.rows&&!BD.loading) loadBoard();
-  const st=BD.start, days=Array.from({length:28},(_,i)=>addDays(st,i)), en=days[27];
-  const all=bdCompute(), rows=bdVisible(all), hidden=BD.sel?all.length-rows.length:all.filter(r=>!r.has).length;
-  const wk=d=>dow(d)>=5?"background:#d9dee0":"";
-  const th1=days.map(d=>`<th style="${wk(d)}">${toD(d).getUTCDate()}</th>`).join(""), th2=days.map(d=>`<th style="${wk(d)}">${DAY_EN[dow(d)]}</th>`).join("");
-  const body=rows.map((r,i)=>`<tr><td class="nm"><b>${i+1}. ${esc(r.staff||"—")}</b><br><button class="linkish" data-u="open" data-id="${esc(r.id)}" data-name="${esc(r.name)}">${esc(r.name||"—")}</button></td>${days.map(d=>boardCell(bdGet(r,d),r.types,r.orig[d],BD.view!=="orig"&&bdChg(r,d))).join("")}<td><b>${fmtH(r.hrs)}</b></td><td>${r.wd}</td><td class="${r.chg&&BD.view!=="orig"?"bchg-n":""}">${BD.view==="orig"?"–":(r.chg||"–")}</td></tr>`).join("");
-  const vis=new Set(rows.map(r=>r.id));
-  const manage=BD.manage?`<section class="panel" style="margin-bottom:10px"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><b>من يظهر في الجدول؟</b><button class="btn" data-bd="selall">تحديد الكل</button><button class="btn" data-bd="selnone">مسح الكل</button><button class="btn" data-bd="selauto">تلقائي (كل من عنده روته)</button></div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px">${all.map(r=>`<label style="display:flex;gap:6px;align-items:center;padding:4px 6px;border:1px solid var(--line);border-radius:8px"><input type="checkbox" data-bdsel="${esc(r.id)}" ${vis.has(r.id)?"checked":""}><span><b>${esc(r.staff||"—")}</b> ${esc(r.name||"—")}${r.has?"":' <span class="hint">(بدون روته)</span>'}</span></label>`).join("")||'<span class="hint">لا يوجد مستخدمون.</span>'}</div></section>`:"";
-  return `<div class="page-head"><div><div class="eyebrow">المدير</div><h1>جدول الروتات</h1><p>مرتّبة تنازلياً حسب الرقم الوظيفي · كل الروتات تبدأ بنفس اليوم</p></div>
-    <div class="cycle-nav" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><div class="mode" role="group" aria-label="العرض"><button data-bd="vcur" aria-pressed="${BD.view!=="orig"}">${EN?"Current":"الحالي (مع التغييرات)"}</button><button data-bd="vorig" aria-pressed="${BD.view==="orig"}">${EN?"Original":"الأصلي"}</button></div><button class="btn" data-bd="prev">▶</button><input class="inp" type="date" id="bd-start" value="${st}" style="max-width:160px"><button class="btn" data-bd="next">◀</button><button class="btn" data-bd="reload">↻</button><button class="btn ${BD.manage?"primary":""}" data-bd="manage">⚙ اختيار المستخدمين</button><button class="btn" onclick="window.print()">🖨</button></div></div>
-  <div class="hint" style="margin-bottom:8px">From ${esc(fmtLong(st))} — To ${esc(fmtLong(en))} · ${rows.length} في الجدول${hidden>0?` · ${hidden} غير معروض`:""}${BD.view!=="orig"?` · ${rows.reduce((a,r)=>a+r.chg,0)} ${EN?"changes":"تغيير"}`:""}</div>
-  ${BD.view!=="orig"?`<div class="bd-leg"><span class="bd-sw"></span>${EN?"Changed shift — new code on top, original struck below":"خانة معدَّلة — الشفت الجديد فوق والأصلي مشطوب تحته"}</div>`:""}
-  ${manage}${BD.err?`<div class="sc-err">${esc(BD.err)}</div>`:""}${BD.loading?`<div class="hint">جارٍ التحميل…</div>`:""}
-  <section class="panel tbl-wrap"><table class="bd" dir="ltr"><thead><tr><th rowspan="2" class="nm">St.No / Name</th>${th1}<th rowspan="2">Worked<br>Hrs</th><th rowspan="2">Work<br>Days</th><th rowspan="2">Changes</th></tr><tr>${th2}</tr></thead><tbody>${body||`<tr><td colspan="32" class="hint" style="padding:18px">لا أحد في الجدول. اضغطي «اختيار المستخدمين» وحددي من يظهر، أو غيّري الفترة.</td></tr>`}</tbody></table></section>`;
+  const st=BD.start, days=Array.from({length:28},(_,i)=>addDays(st,i)), en=days[27], today=todayIso();
+  const all=bdCompute(), rows=all.filter(r=>r.has), noRota=all.length-rows.length;
+  const isOrig=BD.view==="orig", totalChg=rows.reduce((a,r)=>a+r.chg,0);
+  const wkStart=(i)=>i%7===0?" ws":"";
+  const th1=days.map((d,i)=>`<th class="${(dow(d)>=5?"bwe ":"")}${d===today?"td ":""}${wkStart(i)}">${toD(d).getUTCDate()}</th>`).join(""),
+        th2=days.map((d,i)=>`<th class="${(dow(d)>=5?"bwe ":"")}${d===today?"td ":""}${wkStart(i)}">${DAY_EN[dow(d)]}</th>`).join("");
+  const used={}; // legend of shift codes in view
+  const cell=(r,d,i)=>{ const e=bdGet(r,d), o=r.orig[d], ch=!isOrig&&bdChg(r,d); let h=boardCell(e,r.types,o,ch);
+    if(e&&e.code){ const t=r.types.find(x=>x.code===e.code); if(t&&!used[e.code]) used[e.code]={color:t.color,name:t.name,code:e.code}; }
+    const c=(dow(d)>=5?"bwe ":"")+(d===today?"td ":"")+wkStart(i); return h.replace("<td",`<td class="${c}"`).replace(/<td class="([^"]*)" class="/,'<td class="$1 '); };
+  const body=rows.map((r,i)=>{ const me=r.id===ME.id;
+    const nameBtn=ME.admin?`<button class="linkish" data-u="open" data-id="${esc(r.id)}" data-name="${esc(r.name)}">${esc(r.name||"—")}</button>`:`<span>${esc(r.name||"—")}</span>`;
+    return `<tr class="${me?"me":""}"><td class="nm"><span class="no">${i+1}</span><span class="who"><b>${esc(r.staff||"—")}</b>${nameBtn}</span></td>${days.map((d,k)=>cell(r,d,k)).join("")}<td class="sm"><b>${fmtH(r.hrs)}</b></td><td class="sm">${r.wd}</td><td class="sm ${r.chg&&!isOrig?"bchg-n":""}">${isOrig?"–":(r.chg||"–")}</td></tr>`; }).join("");
+  const legend=Object.values(used).map(u=>{ const c=/^#[0-9a-f]{6}$/i.test(u.color||"")?u.color:"#7A8A91"; return `<span class="bd-k"><i style="background:${c}26;color:${c}">${esc(u.code)}</i>${esc(u.name&&u.name!==u.code?u.name:"")}</span>`; }).join("");
+  return `<div class="page-head"><div><div class="eyebrow">${EN?"Everyone":"الجميع"}</div><h1>جدول الروتات</h1><p>${esc(fmtLong(st))} → ${esc(fmtLong(en))} · ٢٨ يوماً · مرتّبة تنازلياً حسب الرقم الوظيفي</p></div>
+    <div class="cycle-nav bd-nav"><div class="mode" role="group" aria-label="العرض"><button data-bd="vcur" aria-pressed="${!isOrig}">${EN?"Current":"الحالي"}</button><button data-bd="vorig" aria-pressed="${isOrig}">${EN?"Original":"الأصلي"}</button></div><div class="bd-pager"><button class="btn" data-bd="prev" aria-label="prev">▶</button><input class="inp" type="date" id="bd-start" value="${st}"><button class="btn" data-bd="next" aria-label="next">◀</button></div><button class="btn" data-bd="today">${EN?"Today":"اليوم"}</button><button class="btn" data-bd="reload" aria-label="reload">↻</button><button class="btn" onclick="window.print()" aria-label="print">🖨</button></div></div>
+  <div class="bd-sum"><span><b>${rows.length}</b> ${EN?"people":"موظف"}</span>${!isOrig?`<span><b>${totalChg}</b> ${EN?"changes":"تغيير"}</span>`:""}${noRota>0?`<span class="mut">${noRota} ${EN?"without a rota":"بدون روته"}</span>`:""}</div>
+  ${BD.err?`<div class="sc-err">${esc(BD.err)}</div>`:""}${BD.loading?`<div class="hint">جارٍ التحميل…</div>`:""}
+  <section class="panel tbl-wrap bd-wrap" dir="ltr"><table class="bd" dir="ltr"><thead><tr><th rowspan="2" class="nm">St.No / Name</th>${th1}<th rowspan="2" class="sm">Hrs</th><th rowspan="2" class="sm">Days</th><th rowspan="2" class="sm">Chg</th></tr><tr>${th2}</tr></thead><tbody>${body||`<tr><td colspan="32" class="hint" style="padding:18px">لا توجد روتات في هذه الفترة.</td></tr>`}</tbody></table></section>
+  <div class="bd-foot">${legend?`<div class="bd-keys">${legend}</div>`:""}${!isOrig?`<div class="bd-leg"><span class="bd-sw"></span>${EN?"Changed shift — new code on top, original struck below":"خانة معدَّلة — الشفت الجديد فوق والأصلي مشطوب تحته"}</div>`:""}</div>`;
 }
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-bd]"); if(!b) return; const a=b.dataset.bd;
-  if(a==="prev") BD.start=addDays(BD.start,-28); else if(a==="next") BD.start=addDays(BD.start,28); else if(a==="reload") BD.rows=null; else if(a==="manage") BD.manage=!BD.manage; else if(a==="vcur") BD.view="cur"; else if(a==="vorig") BD.view="orig";
-  else if(a==="selall"){ BD.sel=bdCompute().map(r=>r.id); bdSave(); } else if(a==="selnone"){ BD.sel=[]; bdSave(); } else if(a==="selauto"){ BD.sel=null; bdSave(); }
+  if(a==="prev") BD.start=addDays(BD.start,-28); else if(a==="next") BD.start=addDays(BD.start,28); else if(a==="today") BD.start=alignCycle(todayIso()); else if(a==="reload") BD.rows=null; else if(a==="vcur") BD.view="cur"; else if(a==="vorig") BD.view="orig";
   render();
 });
 document.addEventListener("change",e=>{
-  if(e.target.id==="bd-start"&&e.target.value){ BD.start=alignCycle(e.target.value); render(); return; }
-  const id=e.target.dataset&&e.target.dataset.bdsel; if(!id) return;
-  const cur=new Set(bdVisible(bdCompute()).map(r=>r.id)); if(e.target.checked) cur.add(id); else cur.delete(id);
-  BD.sel=[...cur]; bdSave(); render();
+  if(e.target.id==="bd-start"&&e.target.value){ BD.start=alignCycle(e.target.value); render(); }
 });
 
 /* ---------- live clock ---------- */
@@ -1720,8 +1741,8 @@ async function enter(user){
   const name=(p&&p.name)||(user.user_metadata&&user.user_metadata.name)||(user.email||"").split("@")[0];
   ME={id:user.id,email:user.email,name,admin:!!(p&&p.is_admin)};
   TARGET=ME.id; TNAME=name; setIdentity(name);
-  if(ME.admin&&!document.querySelector('#tabs [data-tab="board"]')) document.getElementById("tabs").insertAdjacentHTML("beforeend",'<button role="tab" data-tab="users" aria-selected="false">المستخدمون</button><button role="tab" data-tab="board" aria-selected="false">جدول الروتات</button>');
-  if((tab==="users"||tab==="board")&&!ME.admin) tab="dash";
+  if(ME.admin&&!document.querySelector('#tabs [data-tab="users"]')) document.getElementById("tabs").insertAdjacentHTML("beforeend",'<button role="tab" data-tab="users" aria-selected="false">المستخدمون</button>');
+  if(tab==="users"&&!ME.admin) tab="dash";
   loginRoot.innerHTML=""; document.getElementById("out-btn").hidden=false;
   await loadRoster(ME.id,name,false);
   await recordLogin();
