@@ -618,9 +618,14 @@ html[dir="ltr"] .mix-n{text-align:left}
 .wh-ch{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:var(--accent-soft)}
 .wh-ch>div:first-child{display:flex;flex-direction:column;line-height:1.3}.wh-ch b{font-size:15px;color:var(--accent)}.wh-ch span{font-size:12px;color:var(--muted)}
 .wh-cs{text-align:center;font-size:12px;color:var(--muted);display:flex;flex-direction:column;line-height:1.2}.wh-cs b{font-size:20px;color:var(--ink)}.wh-cs small{font-size:11px}
-.cell.done{filter:grayscale(1);opacity:.5}.cell.done.is-today{opacity:.75}
-.wday.past .wd-code{filter:grayscale(1);opacity:.55}.wday.past{opacity:.85}
-.bd td.bdone{filter:grayscale(1);opacity:.5}
+.cell.done{filter:saturate(.55);opacity:.62}.cell.done.is-today{opacity:.85}
+.wday.past .wd-code{filter:saturate(.55);opacity:.6}.wday.past{opacity:.9}
+.bd td.bdone{filter:saturate(.55);opacity:.62}
+.splash{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
+.splash-logo{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,#0B6E78,#14919b);display:grid;place-items:center;box-shadow:0 14px 30px -12px rgba(11,110,120,.6);animation:spFloat 2.2s ease-in-out infinite}
+.splash h1{margin:6px 0 0;font-size:24px}.splash p{margin:0;color:var(--muted)}
+.splash-dots{display:flex;gap:6px;margin-top:8px}.splash-dots i{width:8px;height:8px;border-radius:50%;background:var(--accent);opacity:.3;animation:spDot 1.2s infinite}.splash-dots i:nth-child(2){animation-delay:.2s}.splash-dots i:nth-child(3){animation-delay:.4s}
+@keyframes spDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}@keyframes spFloat{50%{transform:translateY(-6px)}}
 @media print{.tabs,.cycle-nav,.btn,.top,.bd-foot .bd-leg{display:none!important}@page{size:landscape;margin:8mm}}
 .bd{border-collapse:separate;border-spacing:0;font-size:12px}
 .bd th,.bd td{border:0;border-bottom:1px solid var(--line);border-inline-end:1px solid var(--line);padding:6px 2px;min-width:30px}
@@ -824,7 +829,7 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 3%,transparent)}
   </div>
 </header>
 
-<main class="wrap" id="app"><div class="hint" style="padding:32px 16px;text-align:center">جارٍ التحميل… <span dir="ltr">(v4)</span></div></main>
+<main class="wrap" id="app"><div class="splash"><div class="splash-logo"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div><h1>جدول دوامي</h1><p>جارٍ فتح الروته…</p><div class="splash-dots"><i></i><i></i><i></i></div></div></main>
 <div id="modal-root"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -1017,14 +1022,15 @@ function shiftClock(){
 }
 function fmtDur(m){ const h=Math.floor(m/60), r=m%60; return (h?h+" س ":"")+(r||!h?r+" د":""); }
 function viewDash(){
+  const CS=todayCycle();
   const today=todayIso(); const e=cur(today); const t=e&&typeOf(e.code);
   const wkStart=sundayOf(today); const wk=Array.from({length:7},(_,i)=>addDays(wkStart,i));
   const wkH=wk.reduce((a,d)=>a+hoursOf(cur(d)),0);
-  const cyc=cycleDays(S.start); const cycH=cyc.reduce((a,d)=>a+hoursOf(cur(d)),0); const due=dueOf(cyc);
+  const cyc=cycleDays(CS); const cycH=cyc.reduce((a,d)=>a+hoursOf(cur(d)),0); const due=dueOf(cyc);
   let work=0,off=0,leave=0; cyc.forEach(d=>{const x=cur(d); if(!x) return; const ty=typeOf(x.code); if(!ty) return; if(ty.work) work++; else if(x.code==="O") off++; else leave++;});
-  const inCycle=today>=S.start&&today<=addDays(S.start,27);
+  const inCycle=today>=CS&&today<=addDays(CS,27);
   const clk=shiftClock();
-  const L=ledger(); const rNow=L.rows.find(r=>r.start===S.start)||L.rows[L.rows.length-1];
+  const L=ledger(); const rNow=L.rows.find(r=>r.start===CS)||L.rows[L.rows.length-1];
   const change=rNow?rNow.ot+rNow.man:0; const balNow=rNow?rNow.fin:L.open;
   const pct=due?Math.min(100,cycH/due*100):0;
   const col=t?t.color:"#8E9CA2";
@@ -1080,7 +1086,7 @@ function viewDash(){
   const tmr=addDays(today,1), tE=cur(tmr), tT=tE&&typeOf(tE.code);
   let nW=null; for(let i=1;i<=60;i++){ const d=addDays(today,i); if(isWorkE(cur(d))){ nW=d; break; } }
   let nO=null; for(let i=1;i<=60;i++){ const d=addDays(today,i), x=cur(d); if(x&&!isWorkE(x)){ nO=d; break; } }
-  const endC=addDays(S.start,27); let leftDays=0, leftWork=0, leftH=0;
+  const endC=addDays(CS,27); let leftDays=0, leftWork=0, leftH=0;
   if(today<=endC){ for(let d=addDays(today,1); d<=endC; d=addDays(d,1)){ leftDays++; const x=cur(d); if(isWorkE(x)){ leftWork++; leftH+=hoursOf(x); } } }
   const inDays=d=>{ const n=Math.round((toD(d)-toD(today))/864e5); return n===1?(EN?"tomorrow":"بكرة"):(EN?`in ${n} days`:(n===2?"بعد يومين":`بعد ${n} ${n>2&&n<11?"أيام":"يوم"}`)); };
   const nWE=nW&&cur(nW), nWT=nWE&&typeOf(nWE.code), nOE=nO&&cur(nO), nOT=nOE&&typeOf(nOE.code);
@@ -1102,11 +1108,11 @@ function viewDash(){
       <div class="wg-m"><span class="wg-big">${leftDays}</span><span class="wg-v">${leftDays>2&&leftDays<11?"أيام":"يوم"}</span></div>
       <div class="wg-s">${leftWork} دوام · ${fmtH(leftH)} ساعة</div></button>
   </div>`;
-  const dayN=inCycle?Math.round((toD(today)-toD(S.start))/864e5)+1:0;
+  const dayN=inCycle?Math.round((toD(today)-toD(CS))/864e5)+1:0;
   const clockCard=`<section class="clockc" aria-live="off">
     <div class="lc-t" dir="ltr"><span data-clk="hm">--:--</span><span class="lc-s" data-clk="s">:--</span><span class="lc-ap" data-clk="ap"></span></div>
     <div class="cc-dates"><span data-clk="date"></span><span class="cc-h" data-clk="hijri"></span></div>
-    <div class="cc-prog">${inCycle?`<div class="cc-row"><span>${EN?`Day <b>${dayN}</b> of 28`:`اليوم <b>${dayN}</b> من 28`}</span><span>${fmtShort(S.start)} – ${fmtShort(addDays(S.start,27))}</span></div><div class="meter"><i style="width:${dayN/28*100}%"></i></div>`:`<span>اليوم خارج الروته الحالية</span>`}</div>
+    <div class="cc-prog">${inCycle?`<div class="cc-row"><span>${EN?`Day <b>${dayN}</b> of 28`:`اليوم <b>${dayN}</b> من 28`}</span><span>${fmtShort(CS)} – ${fmtShort(addDays(CS,27))}</span></div><div class="meter"><i style="width:${dayN/28*100}%"></i></div>`:`<span>اليوم خارج الروته الحالية</span>`}</div>
   </section>`;
   return `<div class="d-top"><div><h1>${greet()} ${esc((S.cfg.name||"").split(" ")[0]||"")}</h1><p>${esc(S.cfg.unit||"")}</p></div></div>
   <div class="d-main">${hero}${clockCard}</div>
