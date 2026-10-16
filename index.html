@@ -618,6 +618,9 @@ html[dir="ltr"] .mix-n{text-align:left}
 .wh-ch{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:var(--accent-soft)}
 .wh-ch>div:first-child{display:flex;flex-direction:column;line-height:1.3}.wh-ch b{font-size:15px;color:var(--accent)}.wh-ch span{font-size:12px;color:var(--muted)}
 .wh-cs{text-align:center;font-size:12px;color:var(--muted);display:flex;flex-direction:column;line-height:1.2}.wh-cs b{font-size:20px;color:var(--ink)}.wh-cs small{font-size:11px}
+.cell.done{filter:grayscale(1);opacity:.5}.cell.done.is-today{opacity:.75}
+.wday.past .wd-code{filter:grayscale(1);opacity:.55}.wday.past{opacity:.85}
+.bd td.bdone{filter:grayscale(1);opacity:.5}
 @media print{.tabs,.cycle-nav,.btn,.top,.bd-foot .bd-leg{display:none!important}@page{size:landscape;margin:8mm}}
 .bd{border-collapse:separate;border-spacing:0;font-size:12px}
 .bd th,.bd td{border:0;border-bottom:1px solid var(--line);border-inline-end:1px solid var(--line);padding:6px 2px;min-width:30px}
@@ -966,12 +969,14 @@ const DAY_EN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const cycleDays=start=>Array.from({length:28},(_,i)=>addDays(start,i));
 
 /* ---------- view state ---------- */
+const todayCycle=()=>alignCycle(todayIso());
+function shiftDone(d,e){ const t=todayIso(); if(d<t) return true; if(d>t||!e||!e.code) return false; const ty=typeOf(e.code); const st=e.start||(ty&&ty.start)||"", en=e.end||(ty&&ty.end)||""; if(!st||!en||en<=st) return false; const n=new Date(), hm=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0"); return hm>=en; }
 let tab="dash"; let viewStart=null; let mode="current"; let brush=null; let layout="grid";
 try{const l=localStorage.getItem(LS_KEY+":layout"); if(l) layout=l;}catch(e){}
 try{const t=localStorage.getItem(LS_KEY+":tab"); if(t) tab=t;}catch(e){}
 const app=document.getElementById("app");
 
-document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]"); if(!b) return; tab=b.dataset.tab; try{localStorage.setItem(LS_KEY+":tab",tab);}catch(e){} render();});
+document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]"); if(!b) return; tab=b.dataset.tab; try{localStorage.setItem(LS_KEY+":tab",tab);}catch(e){} if(tab==="roster"){ viewStart=todayCycle(); mode="current"; } render();});
 
 function sbErrText(e){
   const m=(e&&(e.message||e.msg))||"";
@@ -1043,7 +1048,7 @@ function viewDash(){
 
   const week=`<section class="d-sec">
     <div class="d-head"><h2>هذا الأسبوع</h2><span>${fmtShort(wk[0])} – ${fmtShort(wk[6])} · <b>${fmtH(wkH)}</b> ساعة</span></div>
-    <div class="wkrow">${wk.map(d=>{const x=cur(d);const ty=x&&typeOf(x.code);const past=d<today;return `<button class="wday ${d===today?"is-today":""} ${past?"past":""} ${isChanged(d)?"chg":""}" data-edit="${d}" style="--c:${ty?ty.color:"var(--line-strong)"};--ct:${textOn(ty?ty.color:"#cccccc")}">
+    <div class="wkrow">${wk.map(d=>{const x=cur(d);const ty=x&&typeOf(x.code);const past=shiftDone(d,x);return `<button class="wday ${d===today?"is-today":""} ${past?"past":""} ${isChanged(d)?"chg":""}" data-edit="${d}" style="--c:${ty?ty.color:"var(--line-strong)"};--ct:${textOn(ty?ty.color:"#cccccc")}">
       <span class="wd-n">${EN?DAYS[dow(d)].slice(0,3):DAYS[dow(d)]}</span><span class="wd-d">${toD(d).getUTCDate()}</span>
       <span class="wd-code">${x?esc(x.code):"+"}</span>
       <span class="wd-h">${x&&x.start?fmt12(x.start).replace(":00",""):(x?shiftLabel(x):"")}</span></button>`;}).join("")}</div>
@@ -1137,9 +1142,9 @@ function viewBal(){
 /* ---------- statistics ---------- */
 let statScope="cycle";
 function statDates(){
-  if(statScope==="cycle") return cycleDays(S.start);
+  if(statScope==="cycle") return cycleDays(todayCycle());
   const keys=[...Object.keys(S.original),...Object.keys(S.days)].sort();
-  if(!keys.length) return cycleDays(S.start);
+  if(!keys.length) return cycleDays(todayCycle());
   const out=[]; for(let d=keys[0]; d<=keys[keys.length-1]; d=addDays(d,1)) out.push(d); return out;
 }
 function barsSVG(items,maxV,refs){
@@ -1196,7 +1201,7 @@ function viewStats(){
   // balance
   const L=ledger(); const balRows=L.rows.filter(r=>r.has);
   const tot=Math.max(1,workDays+offDays+leaveDays);
-  return `<div class="page-head"><div><h1>الإحصائيات</h1><p>${statScope==="cycle"?`الروته ${fmtShort(S.start)} – ${fmtShort(addDays(S.start,27))}`:`من ${fmtShort(D[0])} ${toD(D[0]).getUTCFullYear()} إلى ${fmtShort(D[D.length-1])}`}</p></div>
+  return `<div class="page-head"><div><h1>الإحصائيات</h1><p>${statScope==="cycle"?`الروته ${fmtShort(todayCycle())} – ${fmtShort(addDays(todayCycle(),27))}`:`من ${fmtShort(D[0])} ${toD(D[0]).getUTCFullYear()} إلى ${fmtShort(D[D.length-1])}`}</p></div>
     <div class="mode" role="group" aria-label="الفترة"><button data-scope="cycle" aria-pressed="${statScope==="cycle"}">هذه الروته</button><button data-scope="all" aria-pressed="${statScope==="all"}">كل الفترة</button></div></div>
 
   <div class="st-kpis">
@@ -1255,7 +1260,7 @@ function viewRoster(){
     ds.forEach(d=>{
       const e=get(d); const t=e&&typeOf(e.code); const ch=!isBase&&isChanged(d);
       const o=S.original[d];
-      g+=`<button class="cell ${e?"":"empty"} ${ch?"chgd":""} ${d===today?"is-today":""} ${officialOf(d)?"":"wkend"}" style="--i:${days.indexOf(d)};${t?`--c:${t.color}`:""}" data-cell="${d}" aria-label="${esc(fmtLong(d))}">
+      g+=`<button class="cell ${e?"":"empty"} ${ch?"chgd":""} ${d===today?"is-today":""} ${(!isBase&&shiftDone(d,e))?"done":""} ${officialOf(d)?"":"wkend"}" style="--i:${days.indexOf(d)};${t?`--c:${t.color}`:""}" data-cell="${d}" aria-label="${esc(fmtLong(d))}">
         <div class="c-top"><span class="dnum">${toD(d).getUTCDate()}</span>${ch?'<span class="flag">معدَّل</span>':""}</div>
         ${ch?`<div class="c-was">${o?chip(o.code,"xs"):'<span class="chip xs ghost">—</span>'}<span class="c-was-l">الأصلي</span></div><div class="c-arrow" aria-hidden="true">↓</div>`:""}
         ${e?`<div class="c-shift">${chip(e.code)}<span class="nm">${esc(shiftLabel(e))}</span></div>${e.start?`<div class="tm t12">${fmt12(e.start)} – ${fmt12(e.end)}</div>`:""}`:'<div class="c-empty">+</div>'}
@@ -1631,7 +1636,7 @@ function viewBoard(){
   const used={}; // legend of shift codes in view
   const cell=(r,d,i)=>{ const e=bdGet(r,d), o=r.orig[d], ch=!isOrig&&bdChg(r,d); let h=boardCell(e,r.types,o,false);
     if(e&&e.code){ const t=r.types.find(x=>x.code===e.code); if(t&&!used[e.code]) used[e.code]={color:t.color,name:t.name,code:e.code}; }
-    const c=(ch?"bdc ":"")+(dow(d)>=5?"bwe ":"")+(d===today?"td ":"")+wkStart(i); const out=h.replace("<td",`<td class="${c}"`).replace(/<td class="([^"]*)" class="/,'<td class="$1 '); return out; };
+    const c=(shiftDone(d,e)?"bdone ":"")+(ch?"bdc ":"")+(dow(d)>=5?"bwe ":"")+(d===today?"td ":"")+wkStart(i); const out=h.replace("<td",`<td class="${c}"`).replace(/<td class="([^"]*)" class="/,'<td class="$1 '); return out; };
   const body=rows.map((r,i)=>{ const me=r.id===ME.id;
     const nameBtn=ME.admin?`<button class="linkish" data-u="open" data-id="${esc(r.id)}" data-name="${esc(r.name)}">${esc(r.name||"—")}</button>`:`<span>${esc(r.name||"—")}</span>`;
     return `<tr class="${me?"me":""}"><td class="nm"><span class="no">${i+1}</span><span class="who"><b>${esc(r.staff||"—")}</b>${nameBtn}</span></td>${days.map((d,k)=>cell(r,d,k)).join("")}<td class="sm"><b>${fmtH(r.hrs)}</b></td><td class="sm">${r.wd}</td><td class="sm ${r.chg&&!isOrig?"bchg-n":""}">${isOrig?"–":(r.chg||"–")}</td></tr>`; }).join("");
