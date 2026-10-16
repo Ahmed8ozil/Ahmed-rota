@@ -620,7 +620,7 @@ html[dir="ltr"] .mix-n{text-align:left}
 .wh-cs{text-align:center;font-size:12px;color:var(--muted);display:flex;flex-direction:column;line-height:1.2}.wh-cs b{font-size:20px;color:var(--ink)}.wh-cs small{font-size:11px}
 .cell.done{filter:saturate(.55);opacity:.62}.cell.done.is-today{opacity:.85}
 .wday.past .wd-code{filter:saturate(.55);opacity:.6}.wday.past{opacity:.9}
-.bd td.bdone{filter:saturate(.55);opacity:.62}
+.st-nav{margin:0 0 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.bd td.bdone{filter:saturate(.55);opacity:.62}
 .splash{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
 .splash-logo{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,#0B6E78,#14919b);display:grid;place-items:center;box-shadow:0 14px 30px -12px rgba(11,110,120,.6);animation:spFloat 2.2s ease-in-out infinite}
 .splash h1{margin:6px 0 0;font-size:24px}.splash p{margin:0;color:var(--muted)}
@@ -995,7 +995,7 @@ function sbErrText(e){
 
 function render(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===tab)));
-  if(!viewStart) viewStart=S.start;
+  if(!viewStart) viewStart=todayCycle();
   let h=viewBanner();
   if(S.sample) h+=`<div class="banner"><div class="sp"><b>هذه بيانات مثال</b> لتري كيف يعمل الموقع. ابدئي جدولك الحقيقي، ثم أدخلي الروته الأصلية من صفحة «الروته» بوضع <b>الجدول الأصلي</b>.</div><button class="btn primary" data-act="start-fresh">ابدئي جدولي</button><button class="btn ghost" data-act="keep-sample">إخفاء</button></div>`;
   h+= tab==="dash"?viewDash()+viewWho()+viewSummary(): tab==="roster"?viewRoster(): tab==="log"?viewLog(): tab==="bal"?viewBal(): tab==="stats"?viewStats(): tab==="users"?viewUsers(): tab==="board"?viewBoard()+viewCompare(): viewTypes();
@@ -1146,11 +1146,11 @@ function viewBal(){
 }
 
 /* ---------- statistics ---------- */
-let statScope="cycle";
+let statScope="cycle"; let statStart=null; const statCS=()=>statStart||todayCycle();
 function statDates(){
-  if(statScope==="cycle") return cycleDays(todayCycle());
+  if(statScope==="cycle") return cycleDays(statCS());
   const keys=[...Object.keys(S.original),...Object.keys(S.days)].sort();
-  if(!keys.length) return cycleDays(todayCycle());
+  if(!keys.length) return cycleDays(statCS());
   const out=[]; for(let d=keys[0]; d<=keys[keys.length-1]; d=addDays(d,1)) out.push(d); return out;
 }
 function barsSVG(items,maxV,refs){
@@ -1207,8 +1207,9 @@ function viewStats(){
   // balance
   const L=ledger(); const balRows=L.rows.filter(r=>r.has);
   const tot=Math.max(1,workDays+offDays+leaveDays);
-  return `<div class="page-head"><div><h1>الإحصائيات</h1><p>${statScope==="cycle"?`الروته ${fmtShort(todayCycle())} – ${fmtShort(addDays(todayCycle(),27))}`:`من ${fmtShort(D[0])} ${toD(D[0]).getUTCFullYear()} إلى ${fmtShort(D[D.length-1])}`}</p></div>
+  return `<div class="page-head"><div><h1>الإحصائيات</h1><p>${statScope==="cycle"?`الروته ${fmtShort(statCS())} – ${fmtShort(addDays(statCS(),27))}`:`من ${fmtShort(D[0])} ${toD(D[0]).getUTCFullYear()} إلى ${fmtShort(D[D.length-1])}`}</p></div>
     <div class="mode" role="group" aria-label="الفترة"><button data-scope="cycle" aria-pressed="${statScope==="cycle"}">هذه الروته</button><button data-scope="all" aria-pressed="${statScope==="all"}">كل الفترة</button></div></div>
+  ${statScope==="cycle"?`<div class="cycle-nav st-nav"><button class="icon-btn" data-sshift="-28" aria-label="prev">${EN?"‹":"›"}</button><span class="lbl">${fmtShort(statCS())} – ${fmtShort(addDays(statCS(),27))}</span><button class="icon-btn" data-sshift="28" aria-label="next">${EN?"›":"‹"}</button>${statCS()!==todayCycle()?`<button class="btn" data-sshift="0">الحالية</button>`:""}<input class="inp" type="date" id="st-pick" value="${statCS()}" style="max-width:150px"></div>`:""}
 
   <div class="st-kpis">
     <div class="card"><div class="card-l">ساعات العمل</div><div class="big">${fmtH(hours)}<span> / ${fmtH(due)}</span></div><div class="card-f"><span>Due</span><b class="${hours-due>0?"pos":hours-due<0?"neg":""}">${hours-due>0?"زيادة "+fmtH(hours-due):hours-due<0?"نقص "+fmtH(due-hours):"مطابق"} س</b></div></div>
@@ -1428,6 +1429,7 @@ document.addEventListener("click",e=>{
     if(mode==="original"&&brush){ if(brush==="__clear") delete S.original[d]; else { const t=typeOf(brush); S.original[d]={code:t.code,start:t.start,end:t.end}; } persist(); render(); return; }
     openEdit(d); return; }
   const sc=el.closest("[data-scope]"); if(sc){ statScope=sc.dataset.scope; render(); return; }
+  const ss=el.closest("[data-sshift]"); if(ss){ const n=+ss.dataset.sshift; statStart=n===0?null:addDays(statCS(),n); render(); return; }
   const ly=el.closest("[data-layout]"); if(ly){ layout=ly.dataset.layout; try{localStorage.setItem(LS_KEY+":layout",layout);}catch(e){} render(); return; }
   const md=el.closest("[data-mode]"); if(md){mode=md.dataset.mode; if(mode!=="original") brush=null; render(); return;}
   const br=el.closest("[data-brush]"); if(br){ const v=br.dataset.brush; brush=(v===""||brush===v)?null:v; render(); return;}
@@ -1445,7 +1447,7 @@ document.addEventListener("click",e=>{
   if(act==="start-fresh"){ S=emptyState(S.types); viewStart=S.start; mode="original"; tab="roster"; persist(); render(); }
   else if(act==="keep-sample"){ S.sample=false; persist(); render(); }
   else if(act==="add-type"){ let c="X",i=1; while(typeOf(c)) c="X"+(i++); S.types.push({code:c,name:"شفت جديد",start:"08:00",end:"16:00",color:"#5B7FA3",work:true}); persist(); render(); }
-  else if(act==="next-copy"||act==="next-empty"){ const ns=addDays(S.start,28); if(act==="next-copy") cycleDays(S.start).forEach((d,i)=>{ const nd=addDays(ns,i); if(!S.original[nd]&&S.original[d]) S.original[nd]={...S.original[d]}; }); S.start=ns; viewStart=ns; S.sample=false; persist(); tab="roster"; mode="original"; render(); }
+  else if(act==="next-copy"||act==="next-empty"){ const ns=addDays(S.start,28); if(act==="next-copy") cycleDays(S.start).forEach((d,i)=>{ const nd=addDays(ns,i); if(!S.original[nd]&&S.original[d]) S.original[nd]={...S.original[d]}; }); S.start=ns; viewStart=todayCycle(); S.sample=false; persist(); tab="roster"; mode="original"; render(); }
   else if(act==="wipe"){ if(!wipeArm){ wipeArm=true; a.textContent="اضغطي مرة أخرى للتأكيد"; setTimeout(()=>{wipeArm=false;},4000); return;} wipeArm=false; S=emptyState(S.types); viewStart=S.start; persist(); render(); }
 });
 document.addEventListener("keydown",e=>{
@@ -1462,6 +1464,7 @@ app.addEventListener("change",e=>{
   if(el.id==="set-staff"){ S.cfg.staff=el.value.trim(); persist(); render(); return; }
   if(el.id==="set-unit"){ S.cfg.unit=el.value.trim(); persist(); render(); return; }
   if(el.id==="set-off"){ S.cfg.official=Math.max(0,+el.value||0); persist(); render(); return; }
+  if(el.id==="st-pick"&&el.value){ statStart=alignCycle(el.value); render(); return; }
   if(el.id==="set-start"&&el.value){ S.start=alignCycle(el.value); viewStart=S.start; persist(); render(); return; }
   if(el.dataset.ti!=null){
     const t=S.types[+el.dataset.ti], f=el.dataset.f;
@@ -1523,7 +1526,7 @@ async function sbPull(){
     const row=rows&&rows[0];
     if(row&&row.data&&row.data.types){
       const remoteT=Date.parse(row.updated_at)||0;
-      if(remoteT>=localTs()||!SB.synced){ S=row.data; norm(); try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){} setLocalTs(remoteT); viewStart=S.start; SB.synced=row.updated_at; sbSave(); render(); setSave("","متزامن مع Supabase"); }
+      if(remoteT>=localTs()||!SB.synced){ S=row.data; norm(); try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){} setLocalTs(remoteT); viewStart=todayCycle(); SB.synced=row.updated_at; sbSave(); render(); setSave("","متزامن مع Supabase"); }
       else { await sbPush(); }
     } else { await sbPush(); }
     sbMsg="";
@@ -1600,7 +1603,7 @@ qeRoot.addEventListener("click",e=>{
   else if(q==="text") qeText();
   else if(q==="apply"){ const st=alignCycle(QE.start);
     QE.codes.forEach((c,k)=>{ const d=addDays(st,k); if(!c){ delete S.original[d]; return; } let t=typeOf(c); if(!t){ t={code:c,name:c,start:"",end:"",color:"#7A8A91",work:false}; S.types.push(t); } S.original[d]={code:c,start:t.start,end:t.end}; });
-    S.start=st; viewStart=st; S.sample=false; persist(); qeClose(); tab="roster"; mode="current"; render(); return; }
+    S.start=st; viewStart=todayCycle(); S.sample=false; persist(); qeClose(); tab="roster"; mode="current"; render(); return; }
   qeDraw();
 });
 
@@ -1854,11 +1857,11 @@ async function loadRoster(uid,name,force){
       const localUnsynced=!force&&own&&owner===uid&&lts&&(!synced||lts>Date.parse(synced)+2000);
       if(localUnsynced&&lts>rts){ await flush(); }
       else{
-        S=data.data; norm(); viewStart=S.start;
+        S=data.data; norm(); viewStart=todayCycle();
         if(own){ try{ localStorage.setItem(LS_KEY,JSON.stringify(S)); localStorage.setItem(LS_KEY+":synced",data.updated_at); localStorage.setItem(LS_KEY+":ts",String(rts)); localStorage.setItem(LS_KEY+":owner",uid); }catch(e){} }
       }
     } else {
-      S=freshState(name,own?staffOf(ME.email):""); viewStart=S.start; dirty=true;
+      S=freshState(name,own?staffOf(ME.email):""); viewStart=todayCycle(); dirty=true;
       if(own){ try{ localStorage.setItem(LS_KEY,JSON.stringify(S)); localStorage.setItem(LS_KEY+":owner",uid); }catch(e){} }
       await flush();
     }
